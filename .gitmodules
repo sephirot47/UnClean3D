@@ -1,0 +1,3 @@
+[submodule "BangEditor"]
+	path = BangEditor
+	url = ./BangEditor/
