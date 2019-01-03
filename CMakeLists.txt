@@ -5,7 +5,7 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 set(BANG_EDITOR_DIR ${CMAKE_CURRENT_LIST_DIR}/BangEditor)
 add_subdirectory("${BANG_EDITOR_DIR}")
 
-project(Ronya C CXX)
+project(UnClean3D C CXX)
 
 macro(add_misc_files)
 endmacro()
@@ -25,8 +25,6 @@ add_misc_files(${OTHER_FILES})
 
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
-add_executable(Ronya ${SRC_FILES})
-# target_include_directories(Ronya PUBLIC BangEditor)
-# target_include_directories(Ronya PUBLIC "${BANG_EDITOR_DIR}/Bang/include")
-add_dependencies(Ronya BangLib BangEditorLib)
-target_link_libraries(Ronya BangLib BangEditorLib)
+add_executable(UnClean3D ${SRC_FILES})
+add_dependencies(UnClean3D BangLib BangEditorLib)
+target_link_libraries(UnClean3D BangLib BangEditorLib)

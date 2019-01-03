@@ -51,7 +51,7 @@ int main(int, char **)
 
     Window *mainWindow = WindowManager::CreateWindow<Window>();
     Window::SetActive(mainWindow);
-    mainWindow->SetTitle("Ronya");
+    mainWindow->SetTitle("UnClean3D");
     mainWindow->Maximize();
 
     Path AssetsPath =
