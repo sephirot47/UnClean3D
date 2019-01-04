@@ -3,6 +3,7 @@
 #include "Bang/Dialog.h"
 #include "Bang/Extensions.h"
 #include "Bang/GameObjectFactory.h"
+#include "Bang/Input.h"
 #include "Bang/UIButton.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -42,14 +43,13 @@ ControlPanel::ControlPanel()
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
             ->SetParent(this);
 
-        UIButton *openModelButton = GameObjectFactory::CreateUIButton("Open");
-        openModelButton->AddClickedCallback([this]() { OpenModel(); });
-        openModelButton->GetGameObject()->SetParent(buttonsRow);
+        p_openModelButton = GameObjectFactory::CreateUIButton("Open");
+        p_openModelButton->AddClickedCallback([this]() { OpenModel(); });
+        p_openModelButton->GetGameObject()->SetParent(buttonsRow);
 
-        UIButton *exportModelButton =
-            GameObjectFactory::CreateUIButton("Export");
-        exportModelButton->AddClickedCallback([this]() { ExportModel(); });
-        exportModelButton->GetGameObject()->SetParent(buttonsRow);
+        p_exportModelButton = GameObjectFactory::CreateUIButton("Export");
+        p_exportModelButton->AddClickedCallback([this]() { ExportModel(); });
+        p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
     }
 }
 
@@ -57,24 +57,61 @@ ControlPanel::~ControlPanel()
 {
 }
 
+void ControlPanel::Update()
+{
+    GameObject::Update();
+
+    if (Input::GetKeyDown(Key::O))
+    {
+        OpenModel();
+    }
+    else if (Input::GetKeyDown(Key::E))
+    {
+        ExportModel();
+    }
+
+    p_exportModelButton->SetBlocked(!(GetOpenModelPath().IsFile()));
+}
+
 void ControlPanel::OpenModel()
 {
     Path modelPath = Dialog::OpenFilePath(
-        "Open model", Extensions::GetModelExtensions(), EditorPaths::GetHome());
+        "Open model", Extensions::GetModelExtensions(), GetInitialDir());
+    OpenModel(modelPath);
+}
+
+void ControlPanel::OpenModel(const Path &modelPath)
+{
     if (modelPath.IsFile())
     {
-        p_editScene->OpenModel(modelPath);
+        m_openModelPath = modelPath;
+        p_editScene->LoadModel(modelPath);
     }
 }
 
 void ControlPanel::ExportModel()
 {
-    Dialog::OpenFilePath("Export model",
-                         Extensions::GetModelExtensions(),
-                         EditorPaths::GetHome());
+    const String extension = "dae";
+    const Path exportedModelPath = Dialog::SaveFilePath(
+        "Export model",
+        extension,
+        GetInitialDir(),
+        GetOpenModelPath().GetName() + String(".") + extension);
+
+    ModelIO::ExportModel(p_editScene->GetModelGameObject(), exportedModelPath);
 }
 
 void ControlPanel::SetEditScene(EditScene *editScene)
 {
     p_editScene = editScene;
+}
+
+Path ControlPanel::GetInitialDir() const
+{
+    return EditorPaths::GetExecutableDir();
+}
+
+Path ControlPanel::GetOpenModelPath() const
+{
+    return m_openModelPath;
 }

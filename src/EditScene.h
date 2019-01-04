@@ -20,10 +20,14 @@ public:
 
     void Update() override;
 
-    void OpenModel(const Path &modelPath);
+    void LoadModel(const Path &modelPath, bool resetCamera = true);
     void RenderScene(const Vector2i &renderSize);
 
+    void AddDirt();
+    void ResetModel();
+
     Camera *GetCamera() const;
+    GameObject *GetModelGameObject() const;
 
 private:
     AH<Model> p_currentModel;

@@ -4,6 +4,9 @@
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
+#include "Bang/Material.h"
+#include "Bang/MeshRenderer.h"
+#include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
 
 using namespace Bang;
@@ -19,9 +22,6 @@ EditScene::EditScene()
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
-
-    OpenModel(Path("/home/sephirot47/Projects/MIRI/CA_SV/Assets/Models/"
-                   "Character/Character.dae"));
 }
 
 EditScene::~EditScene()
@@ -31,6 +31,15 @@ EditScene::~EditScene()
 void EditScene::Update()
 {
     GameObject::Update();
+
+    if (Input::GetKeyDown(Key::A))
+    {
+        AddDirt();
+    }
+    else if (Input::GetKeyDown(Key::R))
+    {
+        ResetModel();
+    }
 
     Transform *camTR = p_cam->GetGameObject()->GetTransform();
     {
@@ -66,24 +75,23 @@ void EditScene::Update()
     p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
 }
 
-void EditScene::OpenModel(const Path &modelPath)
+void EditScene::LoadModel(const Path &modelPath, bool resetCamera)
 {
-    AH<Model> model = Assets::Load<Model>(modelPath);
-
-    if (model)
+    p_currentModel = Assets::Load<Model>(modelPath);
+    if (p_currentModel)
     {
-        if (GameObject *previousModelGo =
-                p_modelContainer->GetChildren().Size() >= 1
-                    ? p_modelContainer->GetChild(0)
-                    : nullptr)
+        if (GameObject *previousModelGo = GetModelGameObject())
         {
-            // GameObject::Destroy(previousModelGo);
+            GameObject::Destroy(previousModelGo);
         }
 
-        GameObject *modelGo = model.Get()->CreateGameObjectFromModel();
+        GameObject *modelGo = p_currentModel.Get()->CreateGameObjectFromModel();
         modelGo->SetParent(p_modelContainer);
 
-        ResetCamera();
+        if (resetCamera)
+        {
+            ResetCamera();
+        }
     }
 }
 
@@ -100,9 +108,73 @@ void EditScene::RenderScene(const Vector2i &renderSize)
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }
 
+void EditScene::AddDirt()
+{
+    if (GameObject *modelGo = GetModelGameObject())
+    {
+        auto mrs = modelGo->GetComponentsInDescendantsAndThis<MeshRenderer>();
+        for (MeshRenderer *mr : mrs)
+        {
+            if (Texture2D *originalAlbedoTex =
+                    mr->GetMaterial()->GetAlbedoTexture())
+            {
+                Image originalAlbedoImg = originalAlbedoTex->ToImage();
+                Image dirtImg = TextureFactory::GetSimplexNoiseTexture2D(
+                                    originalAlbedoImg.GetSize())
+                                    .Get()
+                                    ->ToImage();
+                Image finalAlbedoImg = originalAlbedoImg;
+
+                for (uint y = 0; y < originalAlbedoImg.GetHeight(); ++y)
+                {
+                    for (uint x = 0; x < originalAlbedoImg.GetWidth(); ++x)
+                    {
+                        Color originalColor = originalAlbedoImg.GetPixel(x, y);
+                        Color dirtColor = dirtImg.GetPixel(x, y);
+                        Vector4 originalColorV = originalColor.ToVector4();
+                        Vector4 dirtColorV = dirtColor.ToVector4();
+
+                        Color finalColor =
+                            Color::FromVector4(
+                                Math::Clamp(originalColorV - dirtColorV,
+                                            Vector4::Zero(),
+                                            Vector4::One()))
+                                .WithAlpha(originalColor.a);
+
+                        finalAlbedoImg.SetPixel(x, y, finalColor);
+                    }
+                }
+
+                AH<Texture2D> finalAlbedoTex = Assets::Create<Texture2D>();
+                finalAlbedoTex.Get()->Import(finalAlbedoImg);
+
+                mr->GetMaterial()->SetAlbedoTexture(finalAlbedoTex.Get());
+
+                // finalAlbedoImg.Export(Path("finalAlbedoImg.png"));
+            }
+        }
+    }
+}
+
+void EditScene::ResetModel()
+{
+    if (p_currentModel)
+    {
+        LoadModel(p_currentModel.Get()->GetAssetFilepath(), false);
+    }
+}
+
 Camera *EditScene::GetCamera() const
 {
     return p_cam;
+}
+
+GameObject *EditScene::GetModelGameObject() const
+{
+    GameObject *modelGo = p_modelContainer->GetChildren().Size() >= 1
+                              ? p_modelContainer->GetChild(0)
+                              : nullptr;
+    return modelGo;
 }
 
 void EditScene::ResetCamera()

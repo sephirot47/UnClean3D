@@ -72,6 +72,13 @@ int main(int, char **)
         ControlPanel *controlPanel = new ControlPanel();
         controlPanel->SetEditScene(editScene);
         controlPanel->SetParent(scene);
+
+        // controlPanel->OpenModel(
+        //     Path("/home/sephirot47/Projects/MIRI/CA_SV/Assets/Models/"
+        //          "Character/Character.dae"));
+        controlPanel->OpenModel(
+            Path("/home/sephirot47/Downloads/64fbnxybfw8w-console_table/"
+                 "console_table.FBX"));
     }
 
     SceneManager::LoadSceneInstantly(scene, false);
