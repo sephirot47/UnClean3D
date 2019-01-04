@@ -1,11 +1,13 @@
 #include "EditScene.h"
 
 #include "Bang/Assets.h"
+#include "Bang/DirectionalLight.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
 #include "Bang/Material.h"
 #include "Bang/MeshRenderer.h"
+#include "Bang/PointLight.h"
 #include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
 
@@ -17,8 +19,22 @@ EditScene::EditScene()
 
     GameObject *camGo = GameObjectFactory::CreateGameObject();
     p_cam = GameObjectFactory::CreateDefaultCameraInto(camGo);
+    p_cam->SetZFar(100.0f);
     camGo->SetParent(this);
     SetCamera(p_cam);
+
+    GameObject *dlGo = GameObjectFactory::CreateGameObject();
+    DirectionalLight *dl = dlGo->AddComponent<DirectionalLight>();
+    dl->SetShadowStrength(1.0f);
+    dl->SetShadowDistance(100.0f);
+    dl->SetIntensity(3.0f);
+    dl->SetShadowBias(0.003f);
+    dl->SetCastShadows(true);
+    dl->SetShadowSoftness(2);
+    dl->SetShadowMapSize(Vector2i(1024));
+    dlGo->GetTransform()->SetPosition(Vector3(5, 10, 10));
+    dlGo->GetTransform()->LookAt(Vector3::Zero());
+    dlGo->SetParent(this);
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
@@ -86,6 +102,10 @@ void EditScene::LoadModel(const Path &modelPath, bool resetCamera)
         }
 
         GameObject *modelGo = p_currentModel.Get()->CreateGameObjectFromModel();
+        AABox modelAABox = modelGo->GetAABBoxWorld();
+        float modelSize = modelAABox.GetSize().x;
+        modelGo->GetTransform()->SetScale(Vector3(1.0f / modelSize));
+        modelGo->GetTransform()->SetPosition(-modelAABox.GetCenter());
         modelGo->SetParent(p_modelContainer);
 
         if (resetCamera)
@@ -102,7 +122,7 @@ void EditScene::RenderScene(const Vector2i &renderSize)
     GL::Push(GL::Pushable::VIEWPORT);
 
     p_cam->SetRenderSize(renderSize);
-    GEngine::GetInstance()->RenderToGBuffer(this, p_cam);
+    GEngine::GetInstance()->Render(this, p_cam);
 
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);

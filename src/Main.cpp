@@ -73,12 +73,8 @@ int main(int, char **)
         controlPanel->SetEditScene(editScene);
         controlPanel->SetParent(scene);
 
-        // controlPanel->OpenModel(
-        //     Path("/home/sephirot47/Projects/MIRI/CA_SV/Assets/Models/"
-        //          "Character/Character.dae"));
         controlPanel->OpenModel(
-            Path("/home/sephirot47/Downloads/64fbnxybfw8w-console_table/"
-                 "console_table.FBX"));
+            Path("/home/sephirot47/Downloads/MyTable/MyTable.dae"));
     }
 
     SceneManager::LoadSceneInstantly(scene, false);
