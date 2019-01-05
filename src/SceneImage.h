@@ -4,7 +4,7 @@
 #include "Bang/GameObject.h"
 #include "Bang/UIImageRenderer.h"
 
-class EditScene;
+class MainScene;
 
 class SceneImage : public GameObject
 {
@@ -14,9 +14,8 @@ public:
 
     void Render(RenderPass renderPass, bool renderChildren) override;
 
-    void SetEditScene(EditScene *editScene);
+    void SetImageTexture(Texture2D *texture);
 
 private:
-    EditScene *p_editScene = nullptr;
     UIImageRenderer *p_sceneImgRend = nullptr;
 };

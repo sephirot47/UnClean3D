@@ -4,7 +4,6 @@
 #include "Bang/BehaviourManager.h"
 #include "Bang/Camera.h"
 #include "Bang/Debug.h"
-#include "Bang/DirectionalLight.h"
 #include "Bang/Extensions.h"
 #include "Bang/GameObject.h"
 #include "Bang/GameObjectFactory.h"
@@ -24,18 +23,13 @@
 #include "Bang/Shader.h"
 #include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
-#include "Bang/UICanvas.h"
-#include "Bang/UIHorizontalLayout.h"
-#include "Bang/UIImageRenderer.h"
 #include "Bang/UITextRenderer.h"
 #include "Bang/Window.h"
 #include "Bang/WindowManager.h"
 #include "BangEditor/EditorApplication.h"
 #include "BangEditor/UIInputFile.h"
 
-#include "ControlPanel.h"
-#include "EditScene.h"
-#include "SceneImage.h"
+#include "MainScene.h"
 
 using namespace Bang;
 using namespace BangEditor;
@@ -59,25 +53,8 @@ int main(int, char **)
             "Assets");
     MetaFilesManager::CreateMissingMetaFiles(AssetsPath);
 
-    Scene *scene = GameObjectFactory::CreateUIScene();
-    {
-        UIHorizontalLayout *hl = scene->AddComponent<UIHorizontalLayout>();
-
-        EditScene *editScene = new EditScene();
-
-        SceneImage *sceneImage = new SceneImage();
-        sceneImage->SetEditScene(editScene);
-        sceneImage->SetParent(scene);
-
-        ControlPanel *controlPanel = new ControlPanel();
-        controlPanel->SetEditScene(editScene);
-        controlPanel->SetParent(scene);
-
-        controlPanel->OpenModel(
-            Path("/home/sephirot47/Downloads/MyTable/MyTable.dae"));
-    }
-
-    SceneManager::LoadSceneInstantly(scene, false);
+    MainScene *mainScene = new MainScene();
+    SceneManager::LoadSceneInstantly(mainScene, false);
 
     return app.MainLoop();
 }

@@ -6,7 +6,9 @@
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILayoutElement.h"
 #include "Bang/UIVerticalLayout.h"
-#include "EditScene.h"
+
+#include "MainScene.h"
+#include "View3DScene.h"
 
 SceneImage::SceneImage()
 {
@@ -26,24 +28,10 @@ SceneImage::~SceneImage()
 
 void SceneImage::Render(RenderPass renderPass, bool renderChildren)
 {
-    if (renderPass == RenderPass::CANVAS)
-    {
-        p_editScene->Update();
-
-        Vector2i renderSize(p_sceneImgRend->GetGameObject()
-                                ->GetRectTransform()
-                                ->GetViewportAARect()
-                                .GetSize());
-        p_editScene->RenderScene(renderSize);
-
-        p_sceneImgRend->SetImageTexture(
-            p_editScene->GetCamera()->GetGBuffer()->GetDrawColorTexture());
-    }
-
     GameObject::Render(renderPass, renderChildren);
 }
 
-void SceneImage::SetEditScene(EditScene *editScene)
+void SceneImage::SetImageTexture(Texture2D *texture)
 {
-    p_editScene = editScene;
+    p_sceneImgRend->SetImageTexture(texture);
 }

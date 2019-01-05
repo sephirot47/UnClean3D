@@ -1,5 +1,5 @@
-#ifndef EDITSCENE_H
-#define EDITSCENE_H
+#ifndef VIEW3DSCENE_H
+#define VIEW3DSCENE_H
 
 #include "Bang/AssetHandle.h"
 #include "Bang/Bang.h"
@@ -12,28 +12,27 @@
 
 using namespace Bang;
 
-class EditScene : public Scene
+class View3DScene : public Scene
 {
 public:
-    EditScene();
-    virtual ~EditScene();
+    View3DScene();
+    virtual ~View3DScene();
 
+    // Scene
     void Update() override;
 
-    void LoadModel(const Path &modelPath, bool resetCamera = true);
-    void RenderScene(const Vector2i &renderSize);
-
     void AddDirt();
-    void ResetModel();
+    void OnModelChanged(Model *newModel);
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
+    Model *GetCurrentModel() const;
 
 private:
-    AH<Model> p_currentModel;
     GameObject *p_modelContainer = nullptr;
 
     Camera *p_cam = nullptr;
+    bool m_orbiting = false;
     float m_currentCameraZoom = 0.0f;
     Vector3 m_cameraOrbitPoint = Vector3::Zero();
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
@@ -41,4 +40,4 @@ private:
     void ResetCamera();
 };
 
-#endif  // EDITSCENE_H
+#endif  // VIEW3DSCENE_H

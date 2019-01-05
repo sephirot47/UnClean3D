@@ -7,11 +7,16 @@
 #include "Bang/UIButton.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
+#include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "Bang/UITextRenderer.h"
+#include "Bang/UIToolButton.h"
 #include "Bang/UIVerticalLayout.h"
 #include "BangEditor/EditorDialog.h"
 #include "BangEditor/EditorPaths.h"
-#include "EditScene.h"
+
+#include "MainScene.h"
+#include "View3DScene.h"
 
 using namespace Bang;
 using namespace BangEditor;
@@ -51,6 +56,37 @@ ControlPanel::ControlPanel()
         p_exportModelButton->AddClickedCallback([this]() { ExportModel(); });
         p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
     }
+
+    // View buttons row
+    {
+        GameObject *sceneModeRow = GameObjectFactory::CreateUIGameObject();
+        UIHorizontalLayout *hl =
+            sceneModeRow->AddComponent<UIHorizontalLayout>();
+        hl->SetSpacing(10);
+        UILayoutElement *rowLE = sceneModeRow->AddComponent<UILayoutElement>();
+        rowLE->SetMinHeight(20);
+        sceneModeRow->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
+            ->SetParent(this);
+
+        UILabel *label = GameObjectFactory::CreateUILabel();
+        label->GetText()->SetContent("Scene mode:");
+        label->GetGameObject()->SetParent(sceneModeRow);
+
+        p_sceneModeComboBox = GameObjectFactory::CreateUIComboBox();
+        p_sceneModeComboBox->AddItem("View 3D",
+                                     SCAST<uint>(MainScene::SceneMode::VIEW3D));
+        p_sceneModeComboBox->AddItem("Uv",
+                                     SCAST<uint>(MainScene::SceneMode::UV));
+        p_sceneModeComboBox->AddItem(
+            "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
+
+        p_sceneModeComboBox->GetGameObject()->SetParent(sceneModeRow);
+
+        GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
+            ->SetParent(sceneModeRow);
+    }
 }
 
 ControlPanel::~ControlPanel()
@@ -70,6 +106,9 @@ void ControlPanel::Update()
         ExportModel();
     }
 
+    MainScene::GetInstance()->SetSceneMode(
+        SCAST<MainScene::SceneMode>(p_sceneModeComboBox->GetSelectedValue()));
+
     p_exportModelButton->SetBlocked(!(GetOpenModelPath().IsFile()));
 }
 
@@ -85,7 +124,7 @@ void ControlPanel::OpenModel(const Path &modelPath)
     if (modelPath.IsFile())
     {
         m_openModelPath = modelPath;
-        p_editScene->LoadModel(modelPath);
+        MainScene::GetInstance()->LoadModel(modelPath);
     }
 }
 
@@ -98,12 +137,14 @@ void ControlPanel::ExportModel()
         GetInitialDir(),
         GetOpenModelPath().GetName() + String(".") + extension);
 
-    ModelIO::ExportModel(p_editScene->GetModelGameObject(), exportedModelPath);
+    ModelIO::ExportModel(
+        MainScene::GetInstance()->GetView3DScene()->GetModelGameObject(),
+        exportedModelPath);
 }
 
-void ControlPanel::SetEditScene(EditScene *editScene)
+void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
 {
-    p_editScene = editScene;
+    p_sceneModeComboBox->SetSelectionByValue(SCAST<uint>(sceneMode));
 }
 
 Path ControlPanel::GetInitialDir() const

@@ -1,4 +1,4 @@
-#include "EditScene.h"
+#include "View3DScene.h"
 
 #include "Bang/Assets.h"
 #include "Bang/DirectionalLight.h"
@@ -11,9 +11,11 @@
 #include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
 
+#include "MainScene.h"
+
 using namespace Bang;
 
-EditScene::EditScene()
+View3DScene::View3DScene()
 {
     AddComponent<Transform>();
 
@@ -40,11 +42,11 @@ EditScene::EditScene()
     p_modelContainer->SetParent(this);
 }
 
-EditScene::~EditScene()
+View3DScene::~View3DScene()
 {
 }
 
-void EditScene::Update()
+void View3DScene::Update()
 {
     GameObject::Update();
 
@@ -52,25 +54,30 @@ void EditScene::Update()
     {
         AddDirt();
     }
-    else if (Input::GetKeyDown(Key::R))
+
+    if (Input::IsMouseInsideContext() &&
+        Input::GetMouseButtonDown(MouseButton::LEFT))
     {
-        ResetModel();
+        m_orbiting = true;
+    }
+
+    if (!Input::GetMouseButton(MouseButton::LEFT))
+    {
+        m_orbiting = false;
     }
 
     Transform *camTR = p_cam->GetGameObject()->GetTransform();
+    if (m_orbiting)
     {
-        if (Input::GetMouseButton(MouseButton::LEFT))
-        {
-            Vector2 mouseCurrentAxisMovement = Input::GetMouseAxis();
-            m_currentCameraRotAngles += mouseCurrentAxisMovement * 360.0f;
+        Vector2 mouseCurrentAxisMovement = Input::GetMouseAxis();
+        m_currentCameraRotAngles += mouseCurrentAxisMovement * 360.0f;
 
-            m_currentCameraRotAngles.y =
-                Math::Clamp(m_currentCameraRotAngles.y, -80.0f, 80.0f);
-        }
-
-        m_currentCameraZoom +=
-            (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
+        m_currentCameraRotAngles.y =
+            Math::Clamp(m_currentCameraRotAngles.y, -80.0f, 80.0f);
     }
+
+    m_currentCameraZoom +=
+        (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
 
     Sphere goSphere = p_modelContainer->GetBoundingSphere();
     float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
@@ -91,44 +98,7 @@ void EditScene::Update()
     p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
 }
 
-void EditScene::LoadModel(const Path &modelPath, bool resetCamera)
-{
-    p_currentModel = Assets::Load<Model>(modelPath);
-    if (p_currentModel)
-    {
-        if (GameObject *previousModelGo = GetModelGameObject())
-        {
-            GameObject::Destroy(previousModelGo);
-        }
-
-        GameObject *modelGo = p_currentModel.Get()->CreateGameObjectFromModel();
-        AABox modelAABox = modelGo->GetAABBoxWorld();
-        float modelSize = modelAABox.GetSize().x;
-        modelGo->GetTransform()->SetScale(Vector3(1.0f / modelSize));
-        modelGo->GetTransform()->SetPosition(-modelAABox.GetCenter());
-        modelGo->SetParent(p_modelContainer);
-
-        if (resetCamera)
-        {
-            ResetCamera();
-        }
-    }
-}
-
-void EditScene::RenderScene(const Vector2i &renderSize)
-{
-    // Render camera
-    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-    GL::Push(GL::Pushable::VIEWPORT);
-
-    p_cam->SetRenderSize(renderSize);
-    GEngine::GetInstance()->Render(this, p_cam);
-
-    GL::Pop(GL::Pushable::VIEWPORT);
-    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-}
-
-void EditScene::AddDirt()
+void View3DScene::AddDirt()
 {
     if (GameObject *modelGo = GetModelGameObject())
     {
@@ -176,20 +146,32 @@ void EditScene::AddDirt()
     }
 }
 
-void EditScene::ResetModel()
+void View3DScene::OnModelChanged(Model *newModel)
 {
-    if (p_currentModel)
+    if (GameObject *previousModelGo = GetModelGameObject())
     {
-        LoadModel(p_currentModel.Get()->GetAssetFilepath(), false);
+        GameObject::Destroy(previousModelGo);
+    }
+
+    if (newModel)
+    {
+        GameObject *modelGo = newModel->CreateGameObjectFromModel();
+        AABox modelAABox = modelGo->GetAABBoxWorld();
+        float modelSize = modelAABox.GetSize().x;
+        modelGo->GetTransform()->SetScale(Vector3(1.0f / modelSize));
+        modelGo->GetTransform()->SetPosition(-modelAABox.GetCenter());
+        modelGo->SetParent(p_modelContainer);
+
+        ResetCamera();
     }
 }
 
-Camera *EditScene::GetCamera() const
+Camera *View3DScene::GetCamera() const
 {
     return p_cam;
 }
 
-GameObject *EditScene::GetModelGameObject() const
+GameObject *View3DScene::GetModelGameObject() const
 {
     GameObject *modelGo = p_modelContainer->GetChildren().Size() >= 1
                               ? p_modelContainer->GetChild(0)
@@ -197,7 +179,12 @@ GameObject *EditScene::GetModelGameObject() const
     return modelGo;
 }
 
-void EditScene::ResetCamera()
+Model *View3DScene::GetCurrentModel() const
+{
+    return MainScene::GetInstance()->GetCurrentModel();
+}
+
+void View3DScene::ResetCamera()
 {
     m_currentCameraZoom = 1.4f;
     m_currentCameraRotAngles = Vector2(45.0f, -45.0f);

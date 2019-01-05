@@ -3,8 +3,12 @@
 #include "Bang/Bang.h"
 #include "Bang/GameObject.h"
 #include "Bang/UIButton.h"
+#include "Bang/UIComboBox.h"
+#include "Bang/UIToolButton.h"
 
-class EditScene;
+#include "MainScene.h"
+
+class View3DScene;
 
 class ControlPanel : public GameObject
 {
@@ -18,14 +22,14 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
-    void SetEditScene(EditScene *editScene);
+    void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
     UIButton *p_openModelButton = nullptr;
     UIButton *p_exportModelButton = nullptr;
+    UIComboBox *p_sceneModeComboBox = nullptr;
 
     Path m_openModelPath = Path::Empty();
-    EditScene *p_editScene = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;
