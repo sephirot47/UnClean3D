@@ -50,11 +50,6 @@ void View3DScene::Update()
 {
     GameObject::Update();
 
-    if (Input::GetKeyDown(Key::A))
-    {
-        AddDirt();
-    }
-
     if (Input::IsMouseInsideContext() &&
         Input::GetMouseButtonDown(MouseButton::LEFT))
     {
@@ -96,54 +91,6 @@ void View3DScene::Update()
 
     p_cam->SetZNear(0.01f);
     p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
-}
-
-void View3DScene::AddDirt()
-{
-    if (GameObject *modelGo = GetModelGameObject())
-    {
-        auto mrs = modelGo->GetComponentsInDescendantsAndThis<MeshRenderer>();
-        for (MeshRenderer *mr : mrs)
-        {
-            if (Texture2D *originalAlbedoTex =
-                    mr->GetMaterial()->GetAlbedoTexture())
-            {
-                Image originalAlbedoImg = originalAlbedoTex->ToImage();
-                Image dirtImg = TextureFactory::GetSimplexNoiseTexture2D(
-                                    originalAlbedoImg.GetSize())
-                                    .Get()
-                                    ->ToImage();
-                Image finalAlbedoImg = originalAlbedoImg;
-
-                for (uint y = 0; y < originalAlbedoImg.GetHeight(); ++y)
-                {
-                    for (uint x = 0; x < originalAlbedoImg.GetWidth(); ++x)
-                    {
-                        Color originalColor = originalAlbedoImg.GetPixel(x, y);
-                        Color dirtColor = dirtImg.GetPixel(x, y);
-                        Vector4 originalColorV = originalColor.ToVector4();
-                        Vector4 dirtColorV = dirtColor.ToVector4();
-
-                        Color finalColor =
-                            Color::FromVector4(
-                                Math::Clamp(originalColorV - dirtColorV,
-                                            Vector4::Zero(),
-                                            Vector4::One()))
-                                .WithAlpha(originalColor.a);
-
-                        finalAlbedoImg.SetPixel(x, y, finalColor);
-                    }
-                }
-
-                AH<Texture2D> finalAlbedoTex = Assets::Create<Texture2D>();
-                finalAlbedoTex.Get()->Import(finalAlbedoImg);
-
-                mr->GetMaterial()->SetAlbedoTexture(finalAlbedoTex.Get());
-
-                // finalAlbedoImg.Export(Path("finalAlbedoImg.png"));
-            }
-        }
-    }
 }
 
 void View3DScene::OnModelChanged(Model *newModel)

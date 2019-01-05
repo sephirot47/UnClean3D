@@ -21,7 +21,6 @@ public:
     // Scene
     void Update() override;
 
-    void AddDirt();
     void OnModelChanged(Model *newModel);
 
     Camera *GetCamera() const;

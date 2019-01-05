@@ -37,6 +37,7 @@ public:
     void SetSceneMode(MainScene::SceneMode sceneMode);
 
     Model *GetCurrentModel() const;
+    GameObject *GetCurrentModelGameObject() const;
     View3DScene *GetView3DScene() const;
     UvScene *GetUvScene() const;
     TexturesScene *GetTexturesScene() const;

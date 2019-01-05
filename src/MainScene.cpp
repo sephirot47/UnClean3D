@@ -12,6 +12,7 @@
 #include "Bang/UIImageRenderer.h"
 
 #include "ControlPanel.h"
+#include "Dirter.h"
 #include "SceneImage.h"
 #include "TexturesScene.h"
 #include "UvScene.h"
@@ -52,6 +53,10 @@ void MainScene::Update()
     if (Input::GetKeyDown(Key::R))
     {
         ResetModel();
+    }
+    else if (Input::GetKeyDown(Key::A))
+    {
+        Dirter::AddDirt(GetCurrentModelGameObject());
     }
     else if (Input::GetKeyDown(Key::V))
     {
@@ -125,6 +130,11 @@ void MainScene::SetSceneMode(MainScene::SceneMode sceneMode)
 Model *MainScene::GetCurrentModel() const
 {
     return p_currentModel.Get();
+}
+
+GameObject *MainScene::GetCurrentModelGameObject() const
+{
+    return GetView3DScene()->GetModelGameObject();
 }
 
 View3DScene *MainScene::GetView3DScene() const
