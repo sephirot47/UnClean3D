@@ -4,6 +4,7 @@
 #include "Bang/AssetHandle.h"
 #include "Bang/Bang.h"
 #include "Bang/Camera.h"
+#include "Bang/FPSChrono.h"
 #include "Bang/Model.h"
 #include "Bang/Scene.h"
 #include "Bang/Vector2.h"
@@ -28,6 +29,8 @@ public:
     Model *GetCurrentModel() const;
 
 private:
+    FPSChrono m_fpsChrono;
+    Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
 
     Camera *p_cam = nullptr;

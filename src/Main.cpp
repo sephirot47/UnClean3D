@@ -48,6 +48,9 @@ int main(int, char **)
     mainWindow->SetTitle("UnClean3D");
     mainWindow->Maximize();
 
+    ProjectManager::GetInstance()->OpenProject(
+        Paths::GetExecutableDir().GetDirectory().Append("UnClean3D.bproject"));
+
     Path AssetsPath =
         Paths::GetExecutablePath().GetDirectory().GetDirectory().Append(
             "Assets");

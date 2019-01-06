@@ -29,6 +29,7 @@ public:
     virtual ~MainScene();
 
     // Scene
+    void Start() override;
     void Update() override;
     void Render(RenderPass renderPass, bool renderChildren) override;
 

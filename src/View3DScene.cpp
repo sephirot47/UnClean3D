@@ -22,6 +22,7 @@ View3DScene::View3DScene()
     GameObject *camGo = GameObjectFactory::CreateGameObject();
     p_cam = GameObjectFactory::CreateDefaultCameraInto(camGo);
     p_cam->SetZFar(100.0f);
+    p_cam->SetHDR(false);
     camGo->SetParent(this);
     SetCamera(p_cam);
 
@@ -40,6 +41,8 @@ View3DScene::View3DScene()
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
+
+    ResetCamera();
 }
 
 View3DScene::~View3DScene()
@@ -49,6 +52,10 @@ View3DScene::~View3DScene()
 void View3DScene::Update()
 {
     GameObject::Update();
+
+    m_fpsChrono.MarkEnd();
+    m_fpsChrono.MarkBegin();
+    // Debug_DPeek(m_fpsChrono.GetMeanFPS());
 
     if (Input::IsMouseInsideContext() &&
         Input::GetMouseButtonDown(MouseButton::LEFT))
@@ -74,27 +81,31 @@ void View3DScene::Update()
     m_currentCameraZoom +=
         (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
 
-    Sphere goSphere = p_modelContainer->GetBoundingSphere();
-    float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
-    float camDist = goSphere.GetRadius() / Math::Tan(halfFov) * 1.1f;
-    camDist *= m_currentCameraZoom;
-    Vector3 camDir =
-        (Quaternion::AngleAxis(Math::DegToRad(-m_currentCameraRotAngles.x),
-                               Vector3::Up()) *
-         Quaternion::AngleAxis(Math::DegToRad(m_currentCameraRotAngles.y),
-                               Vector3::Right()) *
-         Vector3(0, 0, 1))
-            .Normalized();
-    Vector3 orbitPoint = m_cameraOrbitPoint;
-    camTR->SetPosition(orbitPoint + camDir * camDist);
-    camTR->LookAt(orbitPoint);
+    Sphere goSphere = p_modelContainer->GetBoundingSphereWorld();
+    if (goSphere.GetRadius() > 0.0f)
+    {
+        float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
+        float camDist = goSphere.GetRadius() / Math::Tan(halfFov) * 1.1f;
+        camDist *= m_currentCameraZoom;
+        Vector3 camDir =
+            (Quaternion::AngleAxis(Math::DegToRad(-m_currentCameraRotAngles.x),
+                                   Vector3::Up()) *
+             Quaternion::AngleAxis(Math::DegToRad(m_currentCameraRotAngles.y),
+                                   Vector3::Right()) *
+             Vector3(0, 0, 1))
+                .Normalized();
+        Vector3 orbitPoint = m_cameraOrbitPoint;
+        camTR->SetPosition(orbitPoint + camDir * camDist);
+        camTR->LookAt(orbitPoint);
 
-    p_cam->SetZNear(0.01f);
-    p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
+        p_cam->SetZNear(0.01f);
+        p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
+    }
 }
 
 void View3DScene::OnModelChanged(Model *newModel)
 {
+    Model *previousModel = p_currentModel;
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
@@ -103,14 +114,24 @@ void View3DScene::OnModelChanged(Model *newModel)
     if (newModel)
     {
         GameObject *modelGo = newModel->CreateGameObjectFromModel();
-        AABox modelAABox = modelGo->GetAABBoxWorld();
-        float modelSize = modelAABox.GetSize().x;
-        modelGo->GetTransform()->SetScale(Vector3(1.0f / modelSize));
-        modelGo->GetTransform()->SetPosition(-modelAABox.GetCenter());
+        float modelSizeMax = modelGo->GetAABBoxWorld().GetSize().GetMax();
+        modelGo->GetTransform()->SetLocalScale(
+            modelGo->GetTransform()->GetLocalScale() *
+            Vector3(1.0f / modelSizeMax));
+        modelGo->GetTransform()->SetPosition(
+            -modelGo->GetAABBoxWorld().GetCenter());
         modelGo->SetParent(p_modelContainer);
 
-        ResetCamera();
+        Path prevModelPath =
+            (previousModel ? previousModel->GetAssetFilepath() : Path::Empty());
+        Path newModelPath = newModel->GetAssetFilepath();
+        if (prevModelPath != newModelPath)
+        {
+            ResetCamera();
+        }
     }
+
+    p_currentModel = newModel;
 }
 
 Camera *View3DScene::GetCamera() const
@@ -135,5 +156,5 @@ void View3DScene::ResetCamera()
 {
     m_currentCameraZoom = 1.4f;
     m_currentCameraRotAngles = Vector2(45.0f, -45.0f);
-    m_cameraOrbitPoint = p_modelContainer->GetBoundingSphere().GetCenter();
+    m_cameraOrbitPoint = p_modelContainer->GetBoundingSphereWorld().GetCenter();
 }

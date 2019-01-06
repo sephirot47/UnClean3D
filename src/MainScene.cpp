@@ -6,6 +6,7 @@
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
+#include "Bang/Paths.h"
 #include "Bang/RectTransform.h"
 #include "Bang/UICanvas.h"
 #include "Bang/UIHorizontalLayout.h"
@@ -37,13 +38,24 @@ MainScene::MainScene()
 
     p_controlPanel = new ControlPanel();
     GetControlPanel()->SetParent(this);
-
-    GetControlPanel()->OpenModel(
-        Path("/home/sephirot47/Downloads/MyTable/MyTable.dae"));
 }
 
 MainScene::~MainScene()
 {
+}
+
+void MainScene::Start()
+{
+    if (!IsStarted())
+    {
+        Path modelPath;
+        modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
+        // modelPath =
+        // Paths::GetProjectAssetsDir().Append("Character/Character.dae");
+        GetControlPanel()->OpenModel(modelPath);
+    }
+
+    Scene::Start();
 }
 
 void MainScene::Update()
@@ -76,6 +88,7 @@ void MainScene::Render(RenderPass renderPass, bool renderChildren)
 {
     if (renderPass == RenderPass::CANVAS)
     {
+        GL::Push(GL::Pushable::VIEWPORT);
         Input::Context prevContext = Input::GetContext();
 
         AARecti renderRect(
@@ -90,13 +103,14 @@ void MainScene::Render(RenderPass renderPass, bool renderChildren)
         scene->GetCamera()->SetRenderSize(renderSize);
         GL::SetViewport(renderRect);
 
-        GetCurrentRenderScene()->Update();
+        scene->Update();
         GEngine::GetInstance()->Render(scene, scene->GetCamera());
 
         GetSceneImage()->SetImageTexture(
             scene->GetCamera()->GetGBuffer()->GetDrawColorTexture());
 
         Input::SetContext(prevContext);
+        GL::Pop(GL::Pushable::VIEWPORT);
     }
 
     Scene::Render(renderPass, renderChildren);
