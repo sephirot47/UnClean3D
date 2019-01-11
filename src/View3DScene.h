@@ -3,25 +3,35 @@
 
 #include "Bang/AssetHandle.h"
 #include "Bang/Bang.h"
-#include "Bang/Camera.h"
 #include "Bang/FPSChrono.h"
-#include "Bang/Model.h"
+#include "Bang/Map.h"
 #include "Bang/Scene.h"
+#include "Bang/ShaderProgram.h"
 #include "Bang/Vector2.h"
 #include "Bang/Vector3.h"
 #include "BangEditor/BangEditor.h"
 
+namespace Bang
+{
+class Camera;
+class Model;
+class MeshRenderer;
+};
 using namespace Bang;
 
+class Dirter;
+class ControlPanel;
 class View3DScene : public Scene
 {
 public:
     View3DScene();
-    virtual ~View3DScene();
+    virtual ~View3DScene() override;
 
     // Scene
     void Update() override;
+    void Render(RenderPass rp, bool renderChildren) override;
 
+    void AddDirt();
     void OnModelChanged(Model *newModel);
 
     Camera *GetCamera() const;
@@ -32,6 +42,9 @@ private:
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
+    Map<MeshRenderer *, Dirter *> m_meshRendererToDirter;
+
+    AH<ShaderProgram> m_viewShaderProgram;
 
     Camera *p_cam = nullptr;
     bool m_orbiting = false;
@@ -40,6 +53,7 @@ private:
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
 
     void ResetCamera();
+    ControlPanel *GetControlPanel() const;
 };
 
 #endif  // VIEW3DSCENE_H

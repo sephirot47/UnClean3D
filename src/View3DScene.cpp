@@ -1,16 +1,24 @@
 #include "View3DScene.h"
 
 #include "Bang/Assets.h"
+#include "Bang/Camera.h"
 #include "Bang/DirectionalLight.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
 #include "Bang/Material.h"
 #include "Bang/MeshRenderer.h"
+#include "Bang/Model.h"
+#include "Bang/Paths.h"
 #include "Bang/PointLight.h"
+#include "Bang/Shader.h"
+#include "Bang/ShaderProgram.h"
+#include "Bang/ShaderProgramFactory.h"
 #include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
 
+#include "ControlPanel.h"
+#include "Dirter.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -22,7 +30,7 @@ View3DScene::View3DScene()
     GameObject *camGo = GameObjectFactory::CreateGameObject();
     p_cam = GameObjectFactory::CreateDefaultCameraInto(camGo);
     p_cam->SetZFar(100.0f);
-    p_cam->SetHDR(false);
+    p_cam->SetHDR(true);
     camGo->SetParent(this);
     SetCamera(p_cam);
 
@@ -38,6 +46,9 @@ View3DScene::View3DScene()
     dlGo->GetTransform()->SetPosition(Vector3(5, 10, 10));
     dlGo->GetTransform()->LookAt(Vector3::Zero());
     dlGo->SetParent(this);
+
+    m_viewShaderProgram.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("ViewShader.bushader")));
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
@@ -66,6 +77,16 @@ void View3DScene::Update()
     if (!Input::GetMouseButton(MouseButton::LEFT))
     {
         m_orbiting = false;
+    }
+
+    if (Input::GetKeyDown(Key::A))
+    {
+        AddDirt();
+    }
+
+    if (Input::GetKeyDown(Key::S))
+    {
+        m_viewShaderProgram.Get()->ReImport();
     }
 
     Transform *camTR = p_cam->GetGameObject()->GetTransform();
@@ -103,12 +124,49 @@ void View3DScene::Update()
     }
 }
 
+void View3DScene::Render(RenderPass rp, bool renderChildren)
+{
+    Scene::Render(rp, renderChildren);
+
+    if (rp == RenderPass::SCENE_OPAQUE)
+    {
+        // Uniforms
+        for (auto it : m_meshRendererToDirter)
+        {
+            MeshRenderer *mr = it.first;
+            Dirter *dirter = it.second;
+
+            if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
+            {
+                sp->SetTexture2D("DirtTexture", dirter->GetDirtTexture());
+                sp->SetFloat("DirtFactor", GetControlPanel()->GetDirtFactor());
+            }
+        }
+    }
+}
+
+void View3DScene::AddDirt()
+{
+    for (auto it : m_meshRendererToDirter)
+    {
+        MeshRenderer *mr = it.first;
+        Dirter *dirter = it.second;
+        dirter->CreateDirtTexture();
+    }
+}
+
 void View3DScene::OnModelChanged(Model *newModel)
 {
     Model *previousModel = p_currentModel;
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
+        for (auto &it : m_meshRendererToDirter)
+        {
+            Dirter *dirter = it.second;
+            delete dirter;
+        }
+        m_meshRendererToDirter.Clear();
     }
 
     if (newModel)
@@ -121,6 +179,16 @@ void View3DScene::OnModelChanged(Model *newModel)
         modelGo->GetTransform()->SetPosition(
             -modelGo->GetAABBoxWorld().GetCenter());
         modelGo->SetParent(p_modelContainer);
+
+        Array<MeshRenderer *> mrs =
+            p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
+        for (MeshRenderer *mr : mrs)
+        {
+            Dirter *mrDirter = new Dirter(mr);
+            m_meshRendererToDirter.Add(mr, mrDirter);
+
+            mr->GetMaterial()->SetShaderProgram(m_viewShaderProgram.Get());
+        }
 
         Path prevModelPath =
             (previousModel ? previousModel->GetAssetFilepath() : Path::Empty());
@@ -157,4 +225,9 @@ void View3DScene::ResetCamera()
     m_currentCameraZoom = 1.4f;
     m_currentCameraRotAngles = Vector2(45.0f, -45.0f);
     m_cameraOrbitPoint = p_modelContainer->GetBoundingSphereWorld().GetCenter();
+}
+
+ControlPanel *View3DScene::GetControlPanel() const
+{
+    return MainScene::GetInstance()->GetControlPanel();
 }

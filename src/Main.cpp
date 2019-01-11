@@ -46,6 +46,7 @@ int main(int, char **)
     Window *mainWindow = WindowManager::CreateWindow<Window>();
     Window::SetActive(mainWindow);
     mainWindow->SetTitle("UnClean3D");
+    mainWindow->SetSleepTimeOnBackground(Time::Seconds(1.0));
     mainWindow->Maximize();
 
     ProjectManager::GetInstance()->OpenProject(

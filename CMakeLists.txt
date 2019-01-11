@@ -7,24 +7,21 @@ add_subdirectory("${BANG_EDITOR_DIR}")
 
 project(UnClean3D C CXX)
 
-macro(add_misc_files)
-endmacro()
-
-file(GLOB_RECURSE OTHER_FILES "Assets/[^.]*.frag"
-                              "Assets/[^.]*.geom"
-                              "Assets/[^.]*.vert"
-                              "Assets/[^.]*.bushader"
-                              "Assets/[^.]*.png"
-                              "Assets/*.meta"
-                              "Assets/[^.]*.svg"
-                              "Assets/[^.]*.bmat"
-                              "Assets/[^.]*.glsl"
-                              "Assets/[^.]*.txt"
-                              "src/[^.]*.h")
-add_misc_files(${OTHER_FILES})
+file(GLOB_RECURSE OTHER_FILES "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.frag"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.geom"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.vert"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/*.bushader"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.png"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/*.meta"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.svg"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.bmat"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.glsl"
+                              "${CMAKE_CURRENT_LIST_DIR}/Assets/[^.]*.txt"
+                              "${CMAKE_CURRENT_LIST_DIR}/src/[^.]*.h")
+add_misc_files("${OTHER_FILES}")
 
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
-add_executable(UnClean3D ${SRC_FILES})
+add_executable(UnClean3D ${SRC_FILES} ${OTHER_FILES})
 add_dependencies(UnClean3D BangLib BangEditorLib)
 target_link_libraries(UnClean3D BangLib BangEditorLib)

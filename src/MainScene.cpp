@@ -49,9 +49,9 @@ void MainScene::Start()
     if (!IsStarted())
     {
         Path modelPath;
-        modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
-        // modelPath =
-        // Paths::GetProjectAssetsDir().Append("Character/Character.dae");
+        // modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
+        modelPath =
+            Paths::GetProjectAssetsDir().Append("Character/Character.dae");
         GetControlPanel()->OpenModel(modelPath);
     }
 
@@ -65,10 +65,6 @@ void MainScene::Update()
     if (Input::GetKeyDown(Key::R))
     {
         ResetModel();
-    }
-    else if (Input::GetKeyDown(Key::A))
-    {
-        Dirter::AddDirt(GetCurrentModelGameObject());
     }
     else if (Input::GetKeyDown(Key::V))
     {

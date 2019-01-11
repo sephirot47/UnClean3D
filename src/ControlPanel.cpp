@@ -5,10 +5,13 @@
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
 #include "Bang/UIButton.h"
+#include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
+#include "Bang/UIInputNumber.h"
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "Bang/UISlider.h"
 #include "Bang/UITextRenderer.h"
 #include "Bang/UIToolButton.h"
 #include "Bang/UIVerticalLayout.h"
@@ -26,7 +29,7 @@ ControlPanel::ControlPanel()
     GameObjectFactory::CreateUIGameObjectInto(this);
 
     UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
-    vl->SetPaddings(4);
+    vl->SetPaddings(10);
 
     GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
 
@@ -87,6 +90,35 @@ ControlPanel::ControlPanel()
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
             ->SetParent(sceneModeRow);
     }
+
+    auto CreateRow = [](const String &labelStr, GameObject *go) {
+        GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
+        UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
+        rowHL->SetSpacing(10);
+
+        if (!labelStr.IsEmpty())
+        {
+            UILabel *uiLabel = GameObjectFactory::CreateUILabel();
+            uiLabel->GetText()->SetContent(labelStr);
+            uiLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+            uiLabel->GetGameObject()->SetParent(rowGo);
+        }
+
+        UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
+        goLE->SetFlexibleWidth(9999.9f);
+        go->SetParent(rowGo);
+        return rowGo;
+    };
+
+    // Dirt showgroup
+    {
+        p_dirtFactorInput = GameObjectFactory::CreateUISlider();
+        p_dirtFactorInput->SetMinMaxValues(0.0f, 1.0f);
+        p_dirtFactorInput->SetValue(0.75f);
+
+        CreateRow("Dirt factor", p_dirtFactorInput->GetGameObject())
+            ->SetParent(this);
+    }
 }
 
 ControlPanel::~ControlPanel()
@@ -140,6 +172,11 @@ void ControlPanel::ExportModel()
     ModelIO::ExportModel(
         MainScene::GetInstance()->GetView3DScene()->GetModelGameObject(),
         exportedModelPath);
+}
+
+float ControlPanel::GetDirtFactor() const
+{
+    return p_dirtFactorInput->GetValue();
 }
 
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)

@@ -49,7 +49,6 @@
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/IBO.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/ImageIO.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/VolumeRenderer.h
-/home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/ICloneable.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/UIRendererCacher.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/UIDirLayout.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/ReflectVariable.h
@@ -153,7 +152,6 @@
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/MeshFactory.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/UILayoutManager.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/AudioListener.h
-/home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/IGUIDable.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/Tree.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/FontStyle.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/Transform.h

@@ -11,11 +11,16 @@ using namespace Bang;
 class Dirter
 {
 public:
-    Dirter() = delete;
-    ~Dirter() = delete;
+    Dirter(MeshRenderer *mr);
+    virtual ~Dirter();
 
-    static void AddDirt(GameObject *modelGameObject);
-    static void AddDirtToTexture(MeshRenderer *mr, Texture2D *texture);
+    void CreateDirtTexture();
+
+    Texture2D *GetDirtTexture() const;
+
+private:
+    AH<Texture2D> m_dirtTexture;
+    MeshRenderer *p_meshRenderer = nullptr;
 };
 
 #endif  // DIRTER_H

@@ -2,12 +2,17 @@
 
 #include "Bang/Bang.h"
 #include "Bang/GameObject.h"
-#include "Bang/UIButton.h"
-#include "Bang/UIComboBox.h"
-#include "Bang/UIToolButton.h"
 
 #include "MainScene.h"
 
+namespace Bang
+{
+class UIButton;
+class UISlider;
+class UIComboBox;
+class UIToolButton;
+class UIInputNumber;
+}
 class View3DScene;
 
 class ControlPanel : public GameObject
@@ -22,6 +27,8 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
+    float GetDirtFactor() const;
+
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
@@ -29,6 +36,7 @@ private:
     UIButton *p_exportModelButton = nullptr;
     UIComboBox *p_sceneModeComboBox = nullptr;
 
+    UISlider *p_dirtFactorInput = nullptr;
     Path m_openModelPath = Path::Empty();
 
     Path GetInitialDir() const;
