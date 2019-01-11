@@ -112,11 +112,37 @@ ControlPanel::ControlPanel()
 
     // Dirt showgroup
     {
-        p_dirtFactorInput = GameObjectFactory::CreateUISlider();
-        p_dirtFactorInput->SetMinMaxValues(0.0f, 1.0f);
-        p_dirtFactorInput->SetValue(0.75f);
+        p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider();
+        p_dirtFrequencyMultiplyInput->SetMinMaxValues(0.0f, 4.0f);
+        p_dirtFrequencyMultiplyInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+        p_dirtFrequencyMultiplyInput->SetValue(2.5f);
 
-        CreateRow("Dirt factor", p_dirtFactorInput->GetGameObject())
+        p_dirtFrequencyInput = GameObjectFactory::CreateUISlider();
+        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 5.0f);
+        p_dirtFrequencyInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+        p_dirtFrequencyInput->SetValue(4.0f);
+
+        p_dirtAmplitudeInput = GameObjectFactory::CreateUISlider();
+        p_dirtAmplitudeInput->SetMinMaxValues(0.0f, 2.0f);
+        p_dirtAmplitudeInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+        p_dirtAmplitudeInput->SetValue(0.6f);
+
+        p_dirtAmplitudeMultiplyInput = GameObjectFactory::CreateUISlider();
+        p_dirtAmplitudeMultiplyInput->SetMinMaxValues(0.0f, 1.0f);
+        p_dirtAmplitudeMultiplyInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+        p_dirtAmplitudeMultiplyInput->SetValue(0.6f);
+
+        CreateRow("Intensity", p_dirtAmplitudeInput->GetGameObject())
+            ->SetParent(this);
+        CreateRow("Stains size", p_dirtFrequencyInput->GetGameObject())
+            ->SetParent(this);
+        CreateRow("Grain", p_dirtFrequencyMultiplyInput->GetGameObject())
+            ->SetParent(this);
+        CreateRow("Splash", p_dirtAmplitudeMultiplyInput->GetGameObject())
             ->SetParent(this);
     }
 }
@@ -174,9 +200,30 @@ void ControlPanel::ExportModel()
         exportedModelPath);
 }
 
-float ControlPanel::GetDirtFactor() const
+float ControlPanel::GetDirtOctaves() const
 {
-    return p_dirtFactorInput->GetValue();
+    return 4.0f;
+}
+
+float ControlPanel::GetDirtFrequency() const
+{
+    return (p_dirtFrequencyInput->GetInputNumber()->GetMaxValue() -
+            p_dirtFrequencyInput->GetValue());
+}
+
+float ControlPanel::GetDirtAmplitude() const
+{
+    return p_dirtAmplitudeInput->GetValue();
+}
+
+float ControlPanel::GetDirtFrequencyMultiply() const
+{
+    return p_dirtFrequencyMultiplyInput->GetValue();
+}
+
+float ControlPanel::GetDirtAmplitudeMultiply() const
+{
+    return p_dirtAmplitudeMultiplyInput->GetValue();
 }
 
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
@@ -192,4 +239,15 @@ Path ControlPanel::GetInitialDir() const
 Path ControlPanel::GetOpenModelPath() const
 {
     return m_openModelPath;
+}
+
+void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
+{
+    if (ee == p_dirtFactorInput || ee == p_dirtOctavesInput ||
+        ee == p_dirtFrequencyInput || ee == p_dirtAmplitudeInput ||
+        ee == p_dirtAmplitudeMultiplyInput ||
+        ee == p_dirtFrequencyMultiplyInput)
+    {
+        MainScene::GetInstance()->GetView3DScene()->InvalidateDirtTexture();
+    }
 }

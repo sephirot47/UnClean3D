@@ -79,14 +79,9 @@ void View3DScene::Update()
         m_orbiting = false;
     }
 
-    if (Input::GetKeyDown(Key::A))
-    {
-        AddDirt();
-    }
-
     if (Input::GetKeyDown(Key::S))
     {
-        m_viewShaderProgram.Get()->ReImport();
+        ReloadShaders();
     }
 
     Transform *camTR = p_cam->GetGameObject()->GetTransform();
@@ -126,32 +121,38 @@ void View3DScene::Update()
 
 void View3DScene::Render(RenderPass rp, bool renderChildren)
 {
-    Scene::Render(rp, renderChildren);
-
     if (rp == RenderPass::SCENE_OPAQUE)
     {
-        // Uniforms
         for (auto it : m_meshRendererToDirter)
         {
             MeshRenderer *mr = it.first;
             Dirter *dirter = it.second;
 
+            // Textures creations
+            if (m_dirtInvalid)
+            {
+                dirter->CreateDirtTexture();
+            }
+
+            // Uniforms
             if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
             {
                 sp->SetTexture2D("DirtTexture", dirter->GetDirtTexture());
-                sp->SetFloat("DirtFactor", GetControlPanel()->GetDirtFactor());
             }
         }
+        m_dirtInvalid = false;
     }
+
+    Scene::Render(rp, renderChildren);
 }
 
-void View3DScene::AddDirt()
+void View3DScene::ReloadShaders()
 {
-    for (auto it : m_meshRendererToDirter)
+    m_viewShaderProgram.Get()->ReImport();
+    for (auto &it : m_meshRendererToDirter)
     {
-        MeshRenderer *mr = it.first;
         Dirter *dirter = it.second;
-        dirter->CreateDirtTexture();
+        dirter->ReloadShaders();
     }
 }
 
@@ -197,9 +198,15 @@ void View3DScene::OnModelChanged(Model *newModel)
         {
             ResetCamera();
         }
+        InvalidateDirtTexture();
     }
 
     p_currentModel = newModel;
+}
+
+void View3DScene::InvalidateDirtTexture()
+{
+    m_dirtInvalid = true;
 }
 
 Camera *View3DScene::GetCamera() const

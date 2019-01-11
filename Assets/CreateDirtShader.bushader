@@ -1,0 +1,49 @@
+#vertex
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 finPosition;
+
+void main()
+{
+    finPosition = vinPosition;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "SimplexNoise3D.glsl"
+
+uniform sampler2D DirtTexture;
+uniform float DirtOctaves;
+uniform float DirtFrequency;
+uniform float DirtFrequencyMultiply;
+uniform float DirtAmplitude;
+uniform float DirtAmplitudeMultiply;
+
+in vec3 finPosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    float frequency = DirtFrequency;
+    float amplitude = DirtAmplitude;
+
+    float noise = 0.0f;
+    for (int i = 0; i < DirtOctaves; ++i)
+    {
+        float octaveNoise = snoise(finPosition * frequency) * amplitude;
+        noise += octaveNoise;
+
+        frequency *= DirtFrequencyMultiply;
+        amplitude *= DirtAmplitudeMultiply;
+    }
+
+    OutColor = vec4(vec3(noise), 1);
+}
+
+

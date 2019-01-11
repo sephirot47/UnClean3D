@@ -3,12 +3,17 @@
 #include "Bang/Array.h"
 #include "Bang/Assets.h"
 #include "Bang/Dialog.h"
+#include "Bang/Framebuffer.h"
 #include "Bang/GameObject.h"
 #include "Bang/Image.h"
 #include "Bang/Material.h"
 #include "Bang/Mesh.h"
 #include "Bang/MeshRenderer.h"
+#include "Bang/MeshRenderer.h"
+#include "Bang/Paths.h"
 #include "Bang/Random.h"
+#include "Bang/ShaderProgram.h"
+#include "Bang/ShaderProgramFactory.h"
 #include "Bang/SimplexNoise.h"
 #include "Bang/Texture2D.h"
 #include "Bang/TextureFactory.h"
@@ -16,6 +21,11 @@
 #include "Bang/Transform.h"
 #include "Bang/Triangle.h"
 #include "Bang/Triangle2D.h"
+#include "Bang/VAO.h"
+#include "Bang/VBO.h"
+
+#include "ControlPanel.h"
+#include "MainScene.h"
 
 using namespace Bang;
 
@@ -23,109 +33,130 @@ Dirter::Dirter(MeshRenderer *mr)
 {
     p_meshRenderer = mr;
 
+    m_framebuffer = new Framebuffer();
+
+    m_createDirtShaderProgram.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("CreateDirtShader.bushader")));
+
+    // Create textures
     m_dirtTexture = Assets::Create<Texture2D>();
-    GetDirtTexture()->Fill(Color::One(), 1, 1);
+    Texture2D *albedoTex = mr->GetMaterial()->GetAlbedoTexture();
+    if (albedoTex)
+    {
+        const uint albedoTexW = albedoTex->GetWidth();
+        const uint albedoTexH = albedoTex->GetHeight();
+        GetDirtTexture()->Fill(Color::Zero(), albedoTexW, albedoTexH);
+    }
+
+    // Create texture mesh
+    m_textureMesh = Assets::Create<Mesh>();
+    if (Mesh *originalMesh = mr->GetMesh())
+    {
+        m_positionsVBO = new VBO();
+
+        // Gather some data
+        Array<Vector3> texTriMeshPositions;
+        Array<Vector3> originalVertexPositions;
+        for (Mesh::VertexId triId = 0; triId < originalMesh->GetNumTriangles();
+             ++triId)
+        {
+            for (uint i = 0; i < 3; ++i)
+            {
+                Mesh::VertexId vId =
+                    originalMesh->GetTrianglesVertexIds()[triId * 3 + i];
+                if (vId >= originalMesh->GetUvsPool().Size())
+                {
+                    break;
+                }
+
+                const Vector2 &oriVertUv = originalMesh->GetUvsPool()[vId];
+                Vector3 texTriMeshPos = oriVertUv.xy0() * 2.0f - 1.0f;
+                texTriMeshPos.y *= -1;
+                texTriMeshPositions.PushBack(texTriMeshPos);
+
+                const Vector3 &oriVertPos =
+                    originalMesh->GetPositionsPool()[vId];
+                originalVertexPositions.PushBack(oriVertPos);
+            }
+        }
+
+        // Set original mesh uvs as texture mesh positions
+        GetTextureMesh()->SetPositionsPool(texTriMeshPositions);
+        GetTextureMesh()->SetTrianglesVertexIds({});
+
+        // Add actual original mesh 3D positions as another VBO
+        m_positionsVBO->CreateAndFill(
+            originalVertexPositions.Data(),
+            originalVertexPositions.Size() * sizeof(float) * 3);
+        GetTextureMesh()->GetVAO()->SetVBO(
+            m_positionsVBO, 1, 3, GL::VertexAttribDataType::FLOAT);
+
+        GetTextureMesh()->UpdateVAOs();
+    }
 }
 
 Dirter::~Dirter()
 {
+    delete m_framebuffer;
 }
 
 void Dirter::CreateDirtTexture()
 {
-    MeshRenderer *mr = p_meshRenderer;
-    Texture2D *albedoTex = mr->GetMaterial()->GetAlbedoTexture();
-    if (!albedoTex)
-    {
-        return;
-    }
-    GetDirtTexture()->CreateEmpty(albedoTex->GetSize());
+    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+    GL::Push(GL::Pushable::VIEWPORT);
+    GL::Push(GL::Pushable::SHADER_PROGRAM);
 
-    Image dirtImg = GetDirtTexture()->ToImage();
-    const Vector2i imgSizei(GetDirtTexture()->GetSize());
-    const Vector2 imgSize(imgSizei);
-    AABox boxWorld = mr->GetGameObject()->GetAABBoxWorld();
-    const float maxSize = boxWorld.GetSize().GetMax();
+    // Bind framebuffer and render to texture
+    m_framebuffer->Bind();
+    m_framebuffer->SetAttachmentTexture(GetDirtTexture(),
+                                        GL::Attachment::COLOR0);
+    m_framebuffer->SetAllDrawBuffers();
+    // GL::ClearColorBuffer(Color::Zero());
 
-    float freq = 10.0f * (1.0f / maxSize);
-    Vector3 randOffset = Random::GetInsideUnitSphere() * 1000.0f;
-    Array<Array<bool>> paintedTexels(imgSize.y, Array<bool>(imgSize.x, false));
-    SimplexNoise sxNoise = SimplexNoise(freq, 1.0f, 2.0f, 0.5f);
+    GL::SetViewport(
+        0, 0, GetDirtTexture()->GetWidth(), GetDirtTexture()->GetHeight());
 
-    Mesh *mesh = mr->GetMesh();
-    for (uint triId = 0; triId < mr->GetMesh()->GetNumTriangles(); ++triId)
-    {
-        const auto &triVIds = mesh->GetTrianglesVertexIds();
-        auto vId0 = triVIds[triId * 3 + 0];
-        auto vId1 = triVIds[triId * 3 + 1];
-        auto vId2 = triVIds[triId * 3 + 2];
+    ShaderProgram *sp = m_createDirtShaderProgram.Get();
+    sp->Bind();
+    sp->SetFloat("DirtOctaves", GetControlPanel()->GetDirtOctaves());
+    sp->SetFloat("DirtFrequency", GetControlPanel()->GetDirtFrequency());
+    sp->SetFloat("DirtFrequencyMultiply",
+                 GetControlPanel()->GetDirtFrequencyMultiply());
+    sp->SetFloat("DirtAmplitude", GetControlPanel()->GetDirtAmplitude());
+    sp->SetFloat("DirtAmplitudeMultiply",
+                 GetControlPanel()->GetDirtAmplitudeMultiply());
 
-        Vector2 p0Uv = mesh->GetUvsPool()[vId0];
-        Vector2 p1Uv = mesh->GetUvsPool()[vId1];
-        Vector2 p2Uv = mesh->GetUvsPool()[vId2];
-        p0Uv = Vector2::Clamp(p0Uv, Vector2(0), Vector2(1));
-        p1Uv = Vector2::Clamp(p1Uv, Vector2(0), Vector2(1));
-        p2Uv = Vector2::Clamp(p2Uv, Vector2(0), Vector2(1));
+    GL::Render(GetTextureMesh()->GetVAO(),
+               GL::Primitive::TRIANGLES,
+               GetTextureMesh()->GetNumVerticesIds());
 
-        Vector2 p0Texel = (p0Uv * imgSize);
-        Vector2 p1Texel = (p1Uv * imgSize);
-        Vector2 p2Texel = (p2Uv * imgSize);
-        p0Texel.y = (imgSize.y - p0Texel.y - 1);
-        p1Texel.y = (imgSize.y - p1Texel.y - 1);
-        p2Texel.y = (imgSize.y - p2Texel.y - 1);
+    sp->UnBind();
 
-        AARect triTexelsRect;
-        triTexelsRect.AddPoint(p0Texel);
-        triTexelsRect.AddPoint(p1Texel);
-        triTexelsRect.AddPoint(p2Texel);
+    m_framebuffer->UnBind();
 
-        Triangle tri3D = mesh->GetTriangle(triId);
-        tri3D = mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix() *
-                tri3D;
+    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+    GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::SHADER_PROGRAM);
 
-        Triangle2D texelsTri(p0Texel, p1Texel, p2Texel);
+    // GetDirtTexture()->ToImage().Export(Path("test.png"));
+}
 
-        Vector2 txRMin = triTexelsRect.GetMin();
-        Vector2 txRMax = triTexelsRect.GetMax();
-        txRMin = Vector2::Clamp(txRMin, Vector2(0), imgSize - 1.0f);
-        txRMax = Vector2::Clamp(txRMax, Vector2(0), imgSize - 1.0f);
-        for (int txy = txRMin.y; txy <= txRMax.y; ++txy)
-        {
-            for (int txx = txRMin.x; txx <= txRMax.x; ++txx)
-            {
-                if (paintedTexels[txy][txx])
-                {
-                    continue;
-                }
-
-                Vector2 texelPoint(txx, txy);
-
-                if (!texelsTri.Contains(texelPoint))
-                {
-                    continue;
-                }
-
-                Vector3 texelBaryCoords =
-                    texelsTri.GetBarycentricCoordinates(texelPoint);
-
-                Vector3 point3D = tri3D.GetPoint(texelBaryCoords);
-                point3D += randOffset;
-
-                float sxv = sxNoise.Fractal(8, point3D.x, point3D.y, point3D.z);
-                sxv = sxv * 0.5f + 0.5f;
-
-                Color dirt = Color(sxv, sxv, sxv, 1.0f);
-
-                dirtImg.SetPixel(txx, txy, dirt);
-                paintedTexels[txy][txx] = true;
-            }
-        }
-    }
-
-    GetDirtTexture()->Import(dirtImg);
+void Dirter::ReloadShaders()
+{
+    m_createDirtShaderProgram.Get()->ReImport();
 }
 
 Texture2D *Dirter::GetDirtTexture() const
 {
     return m_dirtTexture.Get();
+}
+
+Mesh *Dirter::GetTextureMesh() const
+{
+    return m_textureMesh.Get();
+}
+
+ControlPanel *Dirter::GetControlPanel() const
+{
+    return MainScene::GetInstance()->GetControlPanel();
 }

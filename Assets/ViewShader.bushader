@@ -16,7 +16,6 @@
 #include "MaterialPBRUniforms.glsl"
 
 uniform sampler2D DirtTexture;
-uniform float DirtFactor;
 
 in vec3 B_FIn_Position;
 in vec3 B_FIn_Normal;
@@ -44,10 +43,8 @@ void DefaultFragCommonMain(vec4 albedoColor)
     vec4 finalAlbedo = albedoColor * texColor;
 
     vec3 dirt = texture2D(DirtTexture, B_FIn_AlbedoUv).rgb;
-    dirt += (1 - (DirtFactor * 1.5));
-    dirt = clamp(dirt, vec3(0), vec3(1));
-    dirt = (vec3(1) - dirt);
-    finalAlbedo.rgb = (finalAlbedo.rgb * (vec3(1) - dirt));
+    vec3 dirtMult = (vec3(1) - dirt);
+    finalAlbedo.rgb = (finalAlbedo.rgb * dirtMult);
 
     vec3 finalNormal = (B_FIn_Normal.xyz);
     if (B_HasNormalMapTexture)

@@ -31,8 +31,10 @@ public:
     void Update() override;
     void Render(RenderPass rp, bool renderChildren) override;
 
-    void AddDirt();
+    void ReloadShaders();
     void OnModelChanged(Model *newModel);
+
+    void InvalidateDirtTexture();
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
@@ -44,6 +46,7 @@ private:
     GameObject *p_modelContainer = nullptr;
     Map<MeshRenderer *, Dirter *> m_meshRendererToDirter;
 
+    bool m_dirtInvalid = false;
     AH<ShaderProgram> m_viewShaderProgram;
 
     Camera *p_cam = nullptr;
