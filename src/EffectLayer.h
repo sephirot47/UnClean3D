@@ -17,29 +17,27 @@ class MeshRenderer;
 }
 
 class ControlPanel;
+class EffectLayerImplementation;
 
 class EffectLayer
 {
 public:
-    EffectLayer();
+    EffectLayer(MeshRenderer *mr);
     virtual ~EffectLayer();
 
-    void Init(MeshRenderer *mr);
     virtual void GenerateEffectTexture();
     void ReloadShaders();
 
-    virtual String GetUniformName() const = 0;
+    void SetEffectLayerImplementation(EffectLayerImplementation *impl);
+
     Texture2D *GetEffectTexture() const;
-
-protected:
-    virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
-    virtual void SetGenerateEffectUniforms(ShaderProgram *sp);
-
-    Mesh *GetTextureMesh() const;
     ControlPanel *GetControlPanel() const;
+    Mesh *GetTextureMesh() const;
+    EffectLayerImplementation *GetImplementation() const;
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
 private:
+    EffectLayerImplementation *p_implementation = nullptr;
     MeshRenderer *p_meshRenderer = nullptr;
 
     VBO *m_positionsVBO = nullptr;
@@ -48,6 +46,27 @@ private:
     AH<ShaderProgram> m_generateEffectTextureSP;
 
     AH<Texture2D> m_effectTexture;
+};
+
+// PIMPL
+class EffectLayerImplementation
+{
+public:
+    EffectLayerImplementation();
+    virtual ~EffectLayerImplementation();
+
+    virtual String GetUniformName() const = 0;
+    Texture2D *GetEffectTexture() const;
+    EffectLayer *GetEffectLayer() const;
+
+protected:
+    virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
+    virtual void SetGenerateEffectUniforms(ShaderProgram *sp);
+
+private:
+    EffectLayer *p_effectLayer = nullptr;
+
+    friend class EffectLayer;
 };
 
 #endif  // EFFECTLAYER_H

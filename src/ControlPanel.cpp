@@ -230,6 +230,13 @@ void ControlPanel::ExportModel()
         exportedModelPath);
 }
 
+void ControlPanel::CreateNewEffectLayer()
+{
+    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
+    view3DScene->CreateNewEffectLayer();
+    p_effectLayers->CreateNewEffectLayerRow();
+}
+
 uint ControlPanel::GetDirtSeed() const
 {
     return SCAST<uint>(p_dirtSeedInput->GetValue());

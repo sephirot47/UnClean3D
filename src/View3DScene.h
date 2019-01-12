@@ -35,6 +35,7 @@ public:
     void ReloadShaders();
     void OnModelChanged(Model *newModel);
 
+    void CreateNewEffectLayer();
     void InvalidateEffectLayersTextures();
 
     Camera *GetCamera() const;
@@ -45,9 +46,9 @@ private:
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
-    Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayer;
+    Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayers;
 
-    bool m_effectLayersInvalid = false;
+    bool m_effectLayersValid = false;
     AH<ShaderProgram> m_view3DShaderProgram;
 
     Camera *p_cam = nullptr;

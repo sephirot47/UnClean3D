@@ -50,12 +50,11 @@ String EffectLayerDirt::GetUniformName() const
 
 void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
-    sp->SetFloat("DirtOctaves", GetControlPanel()->GetDirtOctaves());
-    sp->SetFloat("DirtFrequency", GetControlPanel()->GetDirtFrequency());
-    sp->SetFloat("DirtFrequencyMultiply",
-                 GetControlPanel()->GetDirtFrequencyMultiply());
-    sp->SetFloat("DirtAmplitude", GetControlPanel()->GetDirtAmplitude());
-    sp->SetFloat("DirtAmplitudeMultiply",
-                 GetControlPanel()->GetDirtAmplitudeMultiply());
-    sp->SetFloat("DirtSeed", GetControlPanel()->GetDirtSeed());
+    ControlPanel *cp = GetEffectLayer()->GetControlPanel();
+    sp->SetFloat("DirtOctaves", cp->GetDirtOctaves());
+    sp->SetFloat("DirtFrequency", cp->GetDirtFrequency());
+    sp->SetFloat("DirtFrequencyMultiply", cp->GetDirtFrequencyMultiply());
+    sp->SetFloat("DirtAmplitude", cp->GetDirtAmplitude());
+    sp->SetFloat("DirtAmplitudeMultiply", cp->GetDirtAmplitudeMultiply());
+    sp->SetFloat("DirtSeed", cp->GetDirtSeed());
 }

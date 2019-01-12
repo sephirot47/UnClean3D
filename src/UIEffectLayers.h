@@ -20,7 +20,7 @@ public:
     UIEffectLayers();
     virtual ~UIEffectLayers();
 
-    UIEffectLayerRow *CreateRow();
+    UIEffectLayerRow *CreateNewEffectLayerRow();
 
 private:
     Array<UIEffectLayerRow *> p_effectLayerRows;

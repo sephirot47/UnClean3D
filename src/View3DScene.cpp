@@ -48,7 +48,8 @@ View3DScene::View3DScene()
     dlGo->SetParent(this);
 
     m_view3DShaderProgram.Set(ShaderProgramFactory::Get(
-        Paths::GetProjectAssetsDir().Append("View3DShader.bushader")));
+        Paths::GetProjectAssetsDir().Append("Shaders").Append(
+            "View3DShader.bushader")));
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
@@ -123,13 +124,13 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 {
     if (rp == RenderPass::SCENE_OPAQUE)
     {
-        for (auto it : m_meshRendererToEffectLayer)
+        for (auto it : m_meshRendererToEffectLayers)
         {
             MeshRenderer *mr = it.first;
             const Array<EffectLayer *> &effectLayers = it.second;
 
             // Textures creations
-            if (m_effectLayersInvalid)
+            if (!m_effectLayersValid)
             {
                 for (EffectLayer *effectLayer : effectLayers)
                 {
@@ -142,12 +143,16 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
             {
                 for (EffectLayer *effectLayer : effectLayers)
                 {
-                    sp->SetTexture2D(effectLayer->GetUniformName(),
-                                     effectLayer->GetEffectTexture());
+                    if (effectLayer->GetImplementation())
+                    {
+                        sp->SetTexture2D(
+                            effectLayer->GetImplementation()->GetUniformName(),
+                            effectLayer->GetEffectTexture());
+                    }
                 }
             }
         }
-        m_effectLayersInvalid = false;
+        m_effectLayersValid = true;
     }
 
     Scene::Render(rp, renderChildren);
@@ -156,12 +161,12 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 void View3DScene::ReloadShaders()
 {
     m_view3DShaderProgram.Get()->ReImport();
-    for (auto &it : m_meshRendererToEffectLayer)
+    for (auto &it : m_meshRendererToEffectLayers)
     {
         const Array<EffectLayer *> &effectLayers = it.second;
         for (EffectLayer *effectLayer : effectLayers)
         {
-            delete effectLayer;
+            effectLayer->ReloadShaders();
         }
     }
 }
@@ -172,7 +177,7 @@ void View3DScene::OnModelChanged(Model *newModel)
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
-        for (auto &it : m_meshRendererToEffectLayer)
+        for (auto &it : m_meshRendererToEffectLayers)
         {
             const Array<EffectLayer *> &effectLayers = it.second;
             for (EffectLayer *effectLayer : effectLayers)
@@ -180,7 +185,7 @@ void View3DScene::OnModelChanged(Model *newModel)
                 delete effectLayer;
             }
         }
-        m_meshRendererToEffectLayer.Clear();
+        m_meshRendererToEffectLayers.Clear();
     }
 
     if (newModel)
@@ -198,6 +203,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
+            m_meshRendererToEffectLayers.Add(mr, Array<EffectLayer *>::Empty());
             mr->GetMaterial()->SetShaderProgram(m_view3DShaderProgram.Get());
         }
 
@@ -214,9 +220,22 @@ void View3DScene::OnModelChanged(Model *newModel)
     p_currentModel = newModel;
 }
 
+void View3DScene::CreateNewEffectLayer()
+{
+    for (auto &it : m_meshRendererToEffectLayers)
+    {
+        MeshRenderer *mr = it.first;
+        Array<EffectLayer *> &effectLayers = it.second;
+
+        EffectLayer *newEffectLayer = new EffectLayer(mr);
+        newEffectLayer->SetEffectLayerImplementation(new EffectLayerDirt());
+        effectLayers.PushBack(newEffectLayer);
+    }
+}
+
 void View3DScene::InvalidateEffectLayersTextures()
 {
-    m_effectLayersInvalid = true;
+    m_effectLayersValid = false;
 }
 
 Camera *View3DScene::GetCamera() const

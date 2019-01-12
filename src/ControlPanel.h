@@ -32,6 +32,8 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
+    void CreateNewEffectLayer();
+
     uint GetDirtSeed() const;
     float GetDirtOctaves() const;
     float GetDirtFrequency() const;

@@ -12,7 +12,7 @@ class MeshRenderer;
 }
 using namespace Bang;
 
-class EffectLayerDirt : public EffectLayer
+class EffectLayerDirt : public EffectLayerImplementation
 {
 public:
     EffectLayerDirt();

@@ -29,23 +29,11 @@
 
 using namespace Bang;
 
-EffectLayer::EffectLayer()
-{
-}
-
-EffectLayer::~EffectLayer()
-{
-    delete m_framebuffer;
-}
-
-void EffectLayer::Init(MeshRenderer *mr)
+EffectLayer::EffectLayer(MeshRenderer *mr)
 {
     p_meshRenderer = mr;
 
     m_framebuffer = new Framebuffer();
-
-    Path spPath = GetGenerateEffectTextureShaderProgramPath();
-    m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
 
     // Create textures
     m_effectTexture = Assets::Create<Texture2D>();
@@ -104,8 +92,18 @@ void EffectLayer::Init(MeshRenderer *mr)
     }
 }
 
+EffectLayer::~EffectLayer()
+{
+    delete m_framebuffer;
+}
+
 void EffectLayer::GenerateEffectTexture()
 {
+    if (!GetImplementation())
+    {
+        return;
+    }
+
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::VIEWPORT);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
@@ -122,7 +120,7 @@ void EffectLayer::GenerateEffectTexture()
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
     sp->Bind();
-    SetGenerateEffectUniforms(sp);
+    GetImplementation()->SetGenerateEffectUniforms(sp);
 
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
@@ -142,8 +140,23 @@ void EffectLayer::ReloadShaders()
     m_generateEffectTextureSP.Get()->ReImport();
 }
 
-void EffectLayer::SetGenerateEffectUniforms(ShaderProgram *)
+void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
 {
+    if (GetImplementation())
+    {
+        delete p_implementation;
+    }
+
+    p_implementation = impl;
+
+    if (GetImplementation())
+    {
+        GetImplementation()->p_effectLayer = this;
+
+        Path spPath =
+            GetImplementation()->GetGenerateEffectTextureShaderProgramPath();
+        m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
+    }
 }
 
 Mesh *EffectLayer::GetTextureMesh() const
@@ -161,7 +174,29 @@ ControlPanel *EffectLayer::GetControlPanel() const
     return MainScene::GetInstance()->GetControlPanel();
 }
 
+EffectLayerImplementation *EffectLayer::GetImplementation() const
+{
+    return p_implementation;
+}
+
 ShaderProgram *EffectLayer::GetGenerateEffectTextureShaderProgram() const
 {
     return m_generateEffectTextureSP.Get();
+}
+
+EffectLayerImplementation::EffectLayerImplementation()
+{
+}
+
+EffectLayerImplementation::~EffectLayerImplementation()
+{
+}
+
+void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *)
+{
+}
+
+EffectLayer *EffectLayerImplementation::GetEffectLayer() const
+{
+    return p_effectLayer;
 }
