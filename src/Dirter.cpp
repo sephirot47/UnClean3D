@@ -125,6 +125,7 @@ void Dirter::CreateDirtTexture()
     sp->SetFloat("DirtAmplitude", GetControlPanel()->GetDirtAmplitude());
     sp->SetFloat("DirtAmplitudeMultiply",
                  GetControlPanel()->GetDirtAmplitudeMultiply());
+    sp->SetFloat("DirtSeed", GetControlPanel()->GetDirtSeed());
 
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,

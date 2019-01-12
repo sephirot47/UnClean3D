@@ -30,6 +30,7 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
+    uint GetDirtSeed() const;
     float GetDirtOctaves() const;
     float GetDirtFrequency() const;
     float GetDirtAmplitude() const;
@@ -49,8 +50,7 @@ private:
     UIComboBox *p_sceneModeComboBox = nullptr;
 
     // Dirt
-    UISlider *p_dirtFactorInput = nullptr;
-    UISlider *p_dirtOctavesInput = nullptr;
+    UIInputNumber *p_dirtSeedInput = nullptr;
     UISlider *p_dirtFrequencyInput = nullptr;
     UISlider *p_dirtAmplitudeInput = nullptr;
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;

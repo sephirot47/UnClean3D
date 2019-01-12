@@ -112,6 +112,13 @@ ControlPanel::ControlPanel()
 
     // Dirt showgroup
     {
+        p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
+        p_dirtSeedInput->SetMinValue(0);
+        p_dirtSeedInput->SetDecimalPlaces(0);
+        p_dirtSeedInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+            this);
+        p_dirtSeedInput->SetValue(0);
+
         p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider();
         p_dirtFrequencyMultiplyInput->SetMinMaxValues(0.0f, 4.0f);
         p_dirtFrequencyMultiplyInput
@@ -144,6 +151,7 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
         CreateRow("Splash", p_dirtAmplitudeMultiplyInput->GetGameObject())
             ->SetParent(this);
+        CreateRow("Seed", p_dirtSeedInput->GetGameObject())->SetParent(this);
     }
 }
 
@@ -200,6 +208,11 @@ void ControlPanel::ExportModel()
         exportedModelPath);
 }
 
+uint ControlPanel::GetDirtSeed() const
+{
+    return SCAST<uint>(p_dirtSeedInput->GetValue());
+}
+
 float ControlPanel::GetDirtOctaves() const
 {
     return 4.0f;
@@ -243,9 +256,8 @@ Path ControlPanel::GetOpenModelPath() const
 
 void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
-    if (ee == p_dirtFactorInput || ee == p_dirtOctavesInput ||
-        ee == p_dirtFrequencyInput || ee == p_dirtAmplitudeInput ||
-        ee == p_dirtAmplitudeMultiplyInput ||
+    if (ee == p_dirtSeedInput || ee == p_dirtFrequencyInput ||
+        ee == p_dirtAmplitudeInput || ee == p_dirtAmplitudeMultiplyInput ||
         ee == p_dirtFrequencyMultiplyInput)
     {
         MainScene::GetInstance()->GetView3DScene()->InvalidateDirtTexture();

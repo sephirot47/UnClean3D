@@ -18,6 +18,7 @@ void main()
 #include "SimplexNoise3D.glsl"
 
 uniform sampler2D DirtTexture;
+uniform float DirtSeed;
 uniform float DirtOctaves;
 uniform float DirtFrequency;
 uniform float DirtFrequencyMultiply;
@@ -36,7 +37,7 @@ void main()
     float noise = 0.0f;
     for (int i = 0; i < DirtOctaves; ++i)
     {
-        float octaveNoise = snoise(finPosition * frequency) * amplitude;
+        float octaveNoise = snoise(finPosition * frequency + DirtSeed) * amplitude;
         noise += octaveNoise;
 
         frequency *= DirtFrequencyMultiply;
