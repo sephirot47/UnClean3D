@@ -55,7 +55,9 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers)
     le->SetMinHeight(40);
 
     p_layerNameLabel = GameObjectFactory::CreateUILabel();
-    p_layerNameLabel->GetText()->SetContent("Layer");
+    static int xxx = 0;
+    xxx += 1;
+    p_layerNameLabel->GetText()->SetContent("Layer row " + String(xxx));
     p_layerNameLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
     p_layerNameLabel->GetGameObject()->SetParent(this);
 

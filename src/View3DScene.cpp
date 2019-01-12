@@ -142,7 +142,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
                     if (effectLayer->GetImplementation())
                     {
                         effectLayerTints.PushBack(
-                            GetControlPanel()->GetParameters().m_tint);
+                            effectLayer->GetParameters().m_tint);
                         effectLayerVisibles.PushBack(
                             GetControlPanel()->IsVisibleUIEffectLayer(i));
                         effectLayerTextures.PushBack(
@@ -239,7 +239,7 @@ void View3DScene::CreateNewEffectLayer()
 
         EffectLayer *newEffectLayer = new EffectLayer(mr);
         newEffectLayer->SetEffectLayerImplementation(new EffectLayerDirt());
-        effectLayers.PushBack(newEffectLayer);
+        effectLayers.PushFront(newEffectLayer);
     }
 }
 

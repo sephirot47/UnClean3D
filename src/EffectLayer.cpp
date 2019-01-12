@@ -142,11 +142,8 @@ void EffectLayer::ReloadShaders()
 
 void EffectLayer::UpdateParameters(const ControlPanel::Parameters &parameters)
 {
-    if (GetImplementation())
-    {
-        m_params = parameters;
-        GenerateEffectTexture();
-    }
+    m_params = parameters;
+    GenerateEffectTexture();
 }
 
 void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
