@@ -43,9 +43,9 @@ Path EffectLayerDirt::GetGenerateEffectTextureShaderProgramPath() const
         "GenerateEffectTextureDirt.bushader");
 }
 
-String EffectLayerDirt::GetUniformName() const
+EffectLayer::BlendMode EffectLayerDirt::GetBlendMode() const
 {
-    return "DirtTexture";
+    return EffectLayer::BlendMode::INV_MULT;
 }
 
 void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)

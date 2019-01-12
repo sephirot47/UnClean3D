@@ -235,6 +235,7 @@ void ControlPanel::CreateNewEffectLayer()
     View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
     view3DScene->CreateNewEffectLayer();
     p_effectLayers->CreateNewEffectLayerRow();
+    view3DScene->InvalidateEffectLayersTextures();
 }
 
 uint ControlPanel::GetDirtSeed() const

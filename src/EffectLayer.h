@@ -22,6 +22,14 @@ class EffectLayerImplementation;
 class EffectLayer
 {
 public:
+    enum BlendMode
+    {
+        ADD = 0,
+        INV_ADD = 1,
+        MULT = 2,
+        INV_MULT = 3
+    };
+
     EffectLayer(MeshRenderer *mr);
     virtual ~EffectLayer();
 
@@ -55,7 +63,7 @@ public:
     EffectLayerImplementation();
     virtual ~EffectLayerImplementation();
 
-    virtual String GetUniformName() const = 0;
+    virtual EffectLayer::BlendMode GetBlendMode() const = 0;
     Texture2D *GetEffectTexture() const;
     EffectLayer *GetEffectLayer() const;
 

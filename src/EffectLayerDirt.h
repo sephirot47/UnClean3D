@@ -19,7 +19,7 @@ public:
     virtual ~EffectLayerDirt() override;
 
     // EffectLayer
-    virtual String GetUniformName() const override;
+    virtual EffectLayer::BlendMode GetBlendMode() const override;
 
 protected:
     // EffectLayer

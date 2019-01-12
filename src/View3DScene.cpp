@@ -141,15 +141,27 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
             // Uniforms
             if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
             {
+                Array<int> effectLayerBlendModes;
+                Array<Texture2D *> effectLayerTextures;
                 for (EffectLayer *effectLayer : effectLayers)
                 {
                     if (effectLayer->GetImplementation())
                     {
-                        sp->SetTexture2D(
-                            effectLayer->GetImplementation()->GetUniformName(),
+                        effectLayerTextures.PushBack(
                             effectLayer->GetEffectTexture());
+                        effectLayerBlendModes.PushBack(
+                            effectLayer->GetImplementation()->GetBlendMode());
                     }
                 }
+
+                sp->Bind();
+                for (uint i = 0; i < effectLayerTextures.Size(); ++i)
+                {
+                    sp->SetTexture2D("EffectLayerTexture_" + String(i),
+                                     effectLayerTextures[i]);
+                }
+                sp->SetIntArray("EffectLayerBlendModes", effectLayerBlendModes);
+                sp->SetInt("NumEffectLayers", effectLayerTextures.Size());
             }
         }
         m_effectLayersValid = true;

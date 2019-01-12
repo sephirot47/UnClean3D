@@ -15,7 +15,23 @@
 #include "LightCommon.glsl"
 #include "MaterialPBRUniforms.glsl"
 
-uniform sampler2D DirtTexture;
+const int EFFECT_LAYER_BLEND_MODE_ADD      = 0;
+const int EFFECT_LAYER_BLEND_MODE_INV_ADD  = 1;
+const int EFFECT_LAYER_BLEND_MODE_MULT     = 2;
+const int EFFECT_LAYER_BLEND_MODE_INV_MULT = 3;
+
+uniform sampler2D EffectLayerTexture_0;
+uniform sampler2D EffectLayerTexture_1;
+uniform sampler2D EffectLayerTexture_2;
+uniform sampler2D EffectLayerTexture_3;
+uniform sampler2D EffectLayerTexture_4;
+uniform sampler2D EffectLayerTexture_5;
+uniform sampler2D EffectLayerTexture_6;
+uniform sampler2D EffectLayerTexture_7;
+uniform sampler2D EffectLayerTexture_8;
+uniform sampler2D EffectLayerTexture_9;
+uniform int EffectLayerBlendModes[10];
+uniform int NumEffectLayers;
 
 in vec3 B_FIn_Position;
 in vec3 B_FIn_Normal;
@@ -42,10 +58,6 @@ void DefaultFragCommonMain(vec4 albedoColor)
     }
     vec4 finalAlbedo = albedoColor * texColor;
 
-    vec3 dirt = texture2D(DirtTexture, B_FIn_AlbedoUv).rgb;
-    vec3 dirtMult = (vec3(1) - dirt);
-    finalAlbedo.rgb = (finalAlbedo.rgb * dirtMult);
-
     vec3 finalNormal = (B_FIn_Normal.xyz);
     if (B_HasNormalMapTexture)
     {
@@ -57,9 +69,48 @@ void DefaultFragCommonMain(vec4 albedoColor)
     finalNormal = normalize(finalNormal);
 
     float pixelRoughness = texture(B_RoughnessTexture, B_FIn_AlbedoUv).r * B_MaterialRoughness;
-    pixelRoughness = min(1, pixelRoughness + dirt.r);
     float pixelMetalness = texture(B_MetalnessTexture, B_FIn_AlbedoUv).r * B_MaterialMetalness;
     vec3 finalPosition = B_FIn_Position.xyz;
+
+    // Apply effect layers
+    for (int i = 0; i < NumEffectLayers; ++i)
+    {
+        #define SAMPLE_EFFECT_LAYER(k) texture2D(EffectLayerTexture_##k, B_FIn_AlbedoUv).rgb;
+        vec3 effectLayerColor;
+        switch (i)
+        {
+            case 0: effectLayerColor = SAMPLE_EFFECT_LAYER(0); break;
+            case 1: effectLayerColor = SAMPLE_EFFECT_LAYER(1); break;
+            case 2: effectLayerColor = SAMPLE_EFFECT_LAYER(2); break;
+            case 3: effectLayerColor = SAMPLE_EFFECT_LAYER(3); break;
+            case 4: effectLayerColor = SAMPLE_EFFECT_LAYER(4); break;
+            case 5: effectLayerColor = SAMPLE_EFFECT_LAYER(5); break;
+            case 6: effectLayerColor = SAMPLE_EFFECT_LAYER(6); break;
+            case 7: effectLayerColor = SAMPLE_EFFECT_LAYER(7); break;
+            case 8: effectLayerColor = SAMPLE_EFFECT_LAYER(8); break;
+            case 9: effectLayerColor = SAMPLE_EFFECT_LAYER(9); break;
+        }
+
+        int effectLayerBlendMode = EffectLayerBlendModes[i];
+        switch (effectLayerBlendMode)
+        {
+            case EFFECT_LAYER_BLEND_MODE_ADD:
+            finalAlbedo.rgb = (finalAlbedo.rgb + effectLayerColor);
+            break;
+            case EFFECT_LAYER_BLEND_MODE_INV_ADD:
+            finalAlbedo.rgb = (finalAlbedo.rgb + (vec3(1) - effectLayerColor));
+            break;
+            case EFFECT_LAYER_BLEND_MODE_MULT:
+            finalAlbedo.rgb = (finalAlbedo.rgb * effectLayerColor);
+            break;
+            case EFFECT_LAYER_BLEND_MODE_INV_MULT:
+            finalAlbedo.rgb = (finalAlbedo.rgb * (vec3(1) - effectLayerColor));
+            break;
+        }
+
+        // pixelRoughness = min(1, pixelRoughness + effectLayerColor.r);
+    }
+
     vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
                                          finalPosition,  finalNormal, finalAlbedo,
                                          pixelRoughness, pixelMetalness);
