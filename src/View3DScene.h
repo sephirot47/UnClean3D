@@ -19,8 +19,9 @@ class MeshRenderer;
 };
 using namespace Bang;
 
-class Dirter;
+class EffectLayer;
 class ControlPanel;
+
 class View3DScene : public Scene
 {
 public:
@@ -34,7 +35,7 @@ public:
     void ReloadShaders();
     void OnModelChanged(Model *newModel);
 
-    void InvalidateDirtTexture();
+    void InvalidateEffectLayersTextures();
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
@@ -44,10 +45,10 @@ private:
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
-    Map<MeshRenderer *, Dirter *> m_meshRendererToDirter;
+    Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayer;
 
-    bool m_dirtInvalid = false;
-    AH<ShaderProgram> m_viewShaderProgram;
+    bool m_effectLayersInvalid = false;
+    AH<ShaderProgram> m_view3DShaderProgram;
 
     Camera *p_cam = nullptr;
     bool m_orbiting = false;

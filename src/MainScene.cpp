@@ -13,7 +13,7 @@
 #include "Bang/UIImageRenderer.h"
 
 #include "ControlPanel.h"
-#include "Dirter.h"
+#include "EffectLayerDirt.h"
 #include "SceneImage.h"
 #include "TexturesScene.h"
 #include "UvScene.h"

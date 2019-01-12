@@ -1,4 +1,4 @@
-#include "Dirter.h"
+#include "EffectLayer.h"
 
 #include "Bang/Array.h"
 #include "Bang/Assets.h"
@@ -29,23 +29,32 @@
 
 using namespace Bang;
 
-Dirter::Dirter(MeshRenderer *mr)
+EffectLayer::EffectLayer()
+{
+}
+
+EffectLayer::~EffectLayer()
+{
+    delete m_framebuffer;
+}
+
+void EffectLayer::Init(MeshRenderer *mr)
 {
     p_meshRenderer = mr;
 
     m_framebuffer = new Framebuffer();
 
-    m_createDirtShaderProgram.Set(ShaderProgramFactory::Get(
-        Paths::GetProjectAssetsDir().Append("CreateDirtShader.bushader")));
+    Path spPath = GetGenerateEffectTextureShaderProgramPath();
+    m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
 
     // Create textures
-    m_dirtTexture = Assets::Create<Texture2D>();
+    m_effectTexture = Assets::Create<Texture2D>();
     Texture2D *albedoTex = mr->GetMaterial()->GetAlbedoTexture();
     if (albedoTex)
     {
         const uint albedoTexW = albedoTex->GetWidth();
         const uint albedoTexH = albedoTex->GetHeight();
-        GetDirtTexture()->Fill(Color::Zero(), albedoTexW, albedoTexH);
+        GetEffectTexture()->Fill(Color::Zero(), albedoTexW, albedoTexH);
     }
 
     // Create texture mesh
@@ -95,12 +104,7 @@ Dirter::Dirter(MeshRenderer *mr)
     }
 }
 
-Dirter::~Dirter()
-{
-    delete m_framebuffer;
-}
-
-void Dirter::CreateDirtTexture()
+void EffectLayer::GenerateEffectTexture()
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::VIEWPORT);
@@ -108,24 +112,17 @@ void Dirter::CreateDirtTexture()
 
     // Bind framebuffer and render to texture
     m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(GetDirtTexture(),
+    m_framebuffer->SetAttachmentTexture(GetEffectTexture(),
                                         GL::Attachment::COLOR0);
     m_framebuffer->SetAllDrawBuffers();
     // GL::ClearColorBuffer(Color::Zero());
 
     GL::SetViewport(
-        0, 0, GetDirtTexture()->GetWidth(), GetDirtTexture()->GetHeight());
+        0, 0, GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
 
-    ShaderProgram *sp = m_createDirtShaderProgram.Get();
+    ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
     sp->Bind();
-    sp->SetFloat("DirtOctaves", GetControlPanel()->GetDirtOctaves());
-    sp->SetFloat("DirtFrequency", GetControlPanel()->GetDirtFrequency());
-    sp->SetFloat("DirtFrequencyMultiply",
-                 GetControlPanel()->GetDirtFrequencyMultiply());
-    sp->SetFloat("DirtAmplitude", GetControlPanel()->GetDirtAmplitude());
-    sp->SetFloat("DirtAmplitudeMultiply",
-                 GetControlPanel()->GetDirtAmplitudeMultiply());
-    sp->SetFloat("DirtSeed", GetControlPanel()->GetDirtSeed());
+    SetGenerateEffectUniforms(sp);
 
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
@@ -138,26 +135,33 @@ void Dirter::CreateDirtTexture()
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
-
-    // GetDirtTexture()->ToImage().Export(Path("test.png"));
 }
 
-void Dirter::ReloadShaders()
+void EffectLayer::ReloadShaders()
 {
-    m_createDirtShaderProgram.Get()->ReImport();
+    m_generateEffectTextureSP.Get()->ReImport();
 }
 
-Texture2D *Dirter::GetDirtTexture() const
+void EffectLayer::SetGenerateEffectUniforms(ShaderProgram *)
 {
-    return m_dirtTexture.Get();
 }
 
-Mesh *Dirter::GetTextureMesh() const
+Mesh *EffectLayer::GetTextureMesh() const
 {
     return m_textureMesh.Get();
 }
 
-ControlPanel *Dirter::GetControlPanel() const
+Texture2D *EffectLayer::GetEffectTexture() const
+{
+    return m_effectTexture.Get();
+}
+
+ControlPanel *EffectLayer::GetControlPanel() const
 {
     return MainScene::GetInstance()->GetControlPanel();
+}
+
+ShaderProgram *EffectLayer::GetGenerateEffectTextureShaderProgram() const
+{
+    return m_generateEffectTextureSP.Get();
 }

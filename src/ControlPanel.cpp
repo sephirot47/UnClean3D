@@ -19,6 +19,8 @@
 #include "BangEditor/EditorPaths.h"
 
 #include "MainScene.h"
+#include "UIEffectLayerRow.h"
+#include "UIEffectLayers.h"
 #include "View3DScene.h"
 
 using namespace Bang;
@@ -38,6 +40,29 @@ ControlPanel::ControlPanel()
 
     UIImageRenderer *bg = AddComponent<UIImageRenderer>();
     bg->SetTint(Color::Gray());
+
+    auto CreateRow = [](const String &labelStr = "", GameObject *go = nullptr) {
+        GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
+        UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
+        rowHL->SetSpacing(10);
+
+        if (!labelStr.IsEmpty())
+        {
+            UILabel *uiLabel = GameObjectFactory::CreateUILabel();
+            uiLabel->GetText()->SetContent(labelStr);
+            uiLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+            uiLabel->GetGameObject()->SetParent(rowGo);
+        }
+
+        if (go)
+        {
+            UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
+            goLE->SetFlexibleWidth(9999.9f);
+            go->SetParent(rowGo);
+        }
+
+        return rowGo;
+    };
 
     // Open/Export buttons row
     {
@@ -91,27 +116,24 @@ ControlPanel::ControlPanel()
             ->SetParent(sceneModeRow);
     }
 
-    auto CreateRow = [](const String &labelStr, GameObject *go) {
-        GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
-        UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
-        rowHL->SetSpacing(10);
+    // Effect layers
+    {
+        CreateRow("Effect layers")->SetParent(this);
 
-        if (!labelStr.IsEmpty())
-        {
-            UILabel *uiLabel = GameObjectFactory::CreateUILabel();
-            uiLabel->GetText()->SetContent(labelStr);
-            uiLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-            uiLabel->GetGameObject()->SetParent(rowGo);
-        }
+        p_effectLayers = new UIEffectLayers();
+        UILayoutElement *le = p_effectLayers->AddComponent<UILayoutElement>();
+        le->SetMinHeight(60);
+        le->SetPreferredHeight(200);
+        le->SetFlexibleWidth(1.0f);
+        p_effectLayers->SetParent(this);
 
-        UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
-        goLE->SetFlexibleWidth(9999.9f);
-        go->SetParent(rowGo);
-        return rowGo;
-    };
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+            ->SetParent(this);
+    }
 
     // Dirt showgroup
     {
+        CreateRow("Dirt")->SetParent(this);
         p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
         p_dirtSeedInput->SetMinValue(0);
         p_dirtSeedInput->SetDecimalPlaces(0);
@@ -260,6 +282,8 @@ void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
         ee == p_dirtAmplitudeInput || ee == p_dirtAmplitudeMultiplyInput ||
         ee == p_dirtFrequencyMultiplyInput)
     {
-        MainScene::GetInstance()->GetView3DScene()->InvalidateDirtTexture();
+        MainScene::GetInstance()
+            ->GetView3DScene()
+            ->InvalidateEffectLayersTextures();
     }
 }

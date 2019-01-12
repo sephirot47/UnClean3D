@@ -15,6 +15,8 @@ class UIComboBox;
 class UIToolButton;
 class UIInputNumber;
 }
+
+class UIEffectLayers;
 class View3DScene;
 
 class ControlPanel : public GameObject,
@@ -55,6 +57,9 @@ private:
     UISlider *p_dirtAmplitudeInput = nullptr;
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;
     UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
+
+    // Effect layers
+    UIEffectLayers *p_effectLayers = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;

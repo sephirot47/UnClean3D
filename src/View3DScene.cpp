@@ -18,7 +18,7 @@
 #include "Bang/Transform.h"
 
 #include "ControlPanel.h"
-#include "Dirter.h"
+#include "EffectLayerDirt.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -47,8 +47,8 @@ View3DScene::View3DScene()
     dlGo->GetTransform()->LookAt(Vector3::Zero());
     dlGo->SetParent(this);
 
-    m_viewShaderProgram.Set(ShaderProgramFactory::Get(
-        Paths::GetProjectAssetsDir().Append("ViewShader.bushader")));
+    m_view3DShaderProgram.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("View3DShader.bushader")));
 
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
@@ -123,24 +123,31 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 {
     if (rp == RenderPass::SCENE_OPAQUE)
     {
-        for (auto it : m_meshRendererToDirter)
+        for (auto it : m_meshRendererToEffectLayer)
         {
             MeshRenderer *mr = it.first;
-            Dirter *dirter = it.second;
+            const Array<EffectLayer *> &effectLayers = it.second;
 
             // Textures creations
-            if (m_dirtInvalid)
+            if (m_effectLayersInvalid)
             {
-                dirter->CreateDirtTexture();
+                for (EffectLayer *effectLayer : effectLayers)
+                {
+                    effectLayer->GenerateEffectTexture();
+                }
             }
 
             // Uniforms
             if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
             {
-                sp->SetTexture2D("DirtTexture", dirter->GetDirtTexture());
+                for (EffectLayer *effectLayer : effectLayers)
+                {
+                    sp->SetTexture2D(effectLayer->GetUniformName(),
+                                     effectLayer->GetEffectTexture());
+                }
             }
         }
-        m_dirtInvalid = false;
+        m_effectLayersInvalid = false;
     }
 
     Scene::Render(rp, renderChildren);
@@ -148,11 +155,14 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 
 void View3DScene::ReloadShaders()
 {
-    m_viewShaderProgram.Get()->ReImport();
-    for (auto &it : m_meshRendererToDirter)
+    m_view3DShaderProgram.Get()->ReImport();
+    for (auto &it : m_meshRendererToEffectLayer)
     {
-        Dirter *dirter = it.second;
-        dirter->ReloadShaders();
+        const Array<EffectLayer *> &effectLayers = it.second;
+        for (EffectLayer *effectLayer : effectLayers)
+        {
+            delete effectLayer;
+        }
     }
 }
 
@@ -162,12 +172,15 @@ void View3DScene::OnModelChanged(Model *newModel)
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
-        for (auto &it : m_meshRendererToDirter)
+        for (auto &it : m_meshRendererToEffectLayer)
         {
-            Dirter *dirter = it.second;
-            delete dirter;
+            const Array<EffectLayer *> &effectLayers = it.second;
+            for (EffectLayer *effectLayer : effectLayers)
+            {
+                delete effectLayer;
+            }
         }
-        m_meshRendererToDirter.Clear();
+        m_meshRendererToEffectLayer.Clear();
     }
 
     if (newModel)
@@ -185,10 +198,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
-            Dirter *mrDirter = new Dirter(mr);
-            m_meshRendererToDirter.Add(mr, mrDirter);
-
-            mr->GetMaterial()->SetShaderProgram(m_viewShaderProgram.Get());
+            mr->GetMaterial()->SetShaderProgram(m_view3DShaderProgram.Get());
         }
 
         Path prevModelPath =
@@ -198,15 +208,15 @@ void View3DScene::OnModelChanged(Model *newModel)
         {
             ResetCamera();
         }
-        InvalidateDirtTexture();
+        InvalidateEffectLayersTextures();
     }
 
     p_currentModel = newModel;
 }
 
-void View3DScene::InvalidateDirtTexture()
+void View3DScene::InvalidateEffectLayersTextures()
 {
-    m_dirtInvalid = true;
+    m_effectLayersInvalid = true;
 }
 
 Camera *View3DScene::GetCamera() const
