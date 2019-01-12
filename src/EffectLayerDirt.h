@@ -21,12 +21,12 @@ public:
     // EffectLayer
     virtual EffectLayer::BlendMode GetBlendMode() const override;
 
+    const ControlPanel::Parameters &GetParameters() const;
+
 protected:
     // EffectLayer
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp) override;
-
-private:
 };
 
 #endif  // EFFECTLAYERDIRT_H

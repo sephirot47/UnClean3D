@@ -1,11 +1,14 @@
 #include "UIEffectLayers.h"
 
 #include "Bang/GameObjectFactory.h"
+#include "Bang/RectTransform.h"
 #include "Bang/UIButton.h"
+#include "Bang/UIContentSizeFitter.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "Bang/UIList.h"
 #include "Bang/UIScrollArea.h"
 #include "Bang/UIScrollBar.h"
 #include "Bang/UIScrollPanel.h"
@@ -37,6 +40,12 @@ UIEffectLayers::UIEffectLayers()
         topButtonsHL->SetSpacing(5);
         topButtonsHL->SetPaddings(5);
 
+        UILabel *title = GameObjectFactory::CreateUILabel();
+        title->GetText()->SetContent("Effect layers");
+        title->GetText()->SetTextSize(14);
+        title->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        title->GetGameObject()->SetParent(topButtonsHLGo);
+
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(topButtonsHLGo);
 
@@ -59,11 +68,13 @@ UIEffectLayers::UIEffectLayers()
         p_scrollPanel->SetHorizontalScrollEnabled(false);
         p_scrollPanel->SetVerticalScrollBarSide(HorizontalSide::RIGHT);
         p_scrollPanel->GetGameObject()->SetParent(this);
+    }
 
-        p_scrollPanelContainer = p_scrollPanel->GetScrollArea()->GetContainer();
-        UIVerticalLayout *scrollContVL =
-            p_scrollPanelContainer->AddComponent<UIVerticalLayout>();
-        scrollContVL->SetSpacing(0);
+    p_listContainer = GameObjectFactory::CreateUIGameObject();
+    {
+        UIVerticalLayout *vl =
+            p_listContainer->AddComponent<UIVerticalLayout>();
+        p_scrollPanel->GetScrollArea()->SetContainedGameObject(p_listContainer);
     }
 }
 
@@ -73,10 +84,59 @@ UIEffectLayers::~UIEffectLayers()
 
 UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow()
 {
-    UIEffectLayerRow *effectLayerRow = new UIEffectLayerRow();
+    UIEffectLayerRow *effectLayerRow = new UIEffectLayerRow(this);
 
-    effectLayerRow->SetParent(p_scrollPanelContainer);
+    effectLayerRow->SetParent(p_listContainer, 0);
+    p_effectLayerRows.PushFront(effectLayerRow);
 
-    p_effectLayerRows.PushBack(effectLayerRow);
+    SetSelection(effectLayerRow);
+
     return effectLayerRow;
+}
+
+void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
+{
+    UIEffectLayerRow *eflRow = p_effectLayerRows[effectLayerIdx];
+    GameObject::Destroy(eflRow);
+    p_effectLayerRows.RemoveByIndex(effectLayerIdx);
+}
+
+void UIEffectLayers::SetSelection(uint idx)
+{
+    if (idx != m_selectedEffectLayerRowIndex)
+    {
+        m_selectedEffectLayerRowIndex = idx;
+
+        ControlPanel *cpanel = MainScene::GetInstance()->GetControlPanel();
+        cpanel->UpdateInputsAndParametersFromSelectedEffectLayer();
+    }
+}
+
+void UIEffectLayers::SetSelection(UIEffectLayerRow *effectLayerRow)
+{
+    SetSelection(GetUIEffectLayerRows().IndexOf(effectLayerRow));
+}
+
+void UIEffectLayers::ClearLayersSelection()
+{
+    SetSelection(SCAST<uint>(-1));
+}
+
+uint UIEffectLayers::GetSelectedEffectLayerRowIndex() const
+{
+    return m_selectedEffectLayerRowIndex;
+}
+
+UIEffectLayerRow *UIEffectLayers::GetSelectedEffectLayerRow() const
+{
+    if (GetSelectedEffectLayerRowIndex() < GetUIEffectLayerRows().Size())
+    {
+        return GetUIEffectLayerRows()[GetSelectedEffectLayerRowIndex()];
+    }
+    return nullptr;
+}
+
+const Array<UIEffectLayerRow *> &UIEffectLayers::GetUIEffectLayerRows() const
+{
+    return p_effectLayerRows;
 }

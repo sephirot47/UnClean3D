@@ -16,13 +16,30 @@ class UIToolButton;
 class UIInputNumber;
 }
 
+namespace BangEditor
+{
+class UIInputColor;
+}
+
 class UIEffectLayers;
 class View3DScene;
+using namespace BangEditor;
 
 class ControlPanel : public GameObject,
                      public EventListener<IEventsValueChanged>
 {
 public:
+    struct Parameters
+    {
+        float m_dirtSeed = 0.0f;
+        float m_dirtFrequency = 4.0f;
+        float m_dirtFrequencyMultiply = 2.5f;
+        float m_dirtAmplitude = 1.0f;
+        float m_dirtAmplitudeMultiply = 0.6f;
+
+        Color m_tint = Color::Black();
+    };
+
     ControlPanel();
     virtual ~ControlPanel() override;
 
@@ -33,18 +50,19 @@ public:
     void ExportModel();
 
     void CreateNewEffectLayer();
+    void RemoveEffectLayer(uint effectLayerIdx);
+    void UpdateSelectedEffectLayerParameters();
+    void UpdateInputsAndParametersFromSelectedEffectLayer();
 
-    uint GetDirtSeed() const;
-    float GetDirtOctaves() const;
-    float GetDirtFrequency() const;
-    float GetDirtAmplitude() const;
-    float GetDirtFrequencyMultiply() const;
-    float GetDirtAmplitudeMultiply() const;
+    uint GetSelectedUIEffectLayerIndex() const;
+    bool IsVisibleUIEffectLayer(uint effectLayerIdx) const;
 
+    const Parameters &GetParameters() const;
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
     Path m_openModelPath = Path::Empty();
+    Parameters m_params;
 
     // File
     UIButton *p_openModelButton = nullptr;
@@ -54,17 +72,20 @@ private:
     UIComboBox *p_sceneModeComboBox = nullptr;
 
     // Dirt
+    GameObject *p_dirtParamsGo = nullptr;
     UIInputNumber *p_dirtSeedInput = nullptr;
+    UIInputColor *p_dirtTintInput = nullptr;
     UISlider *p_dirtFrequencyInput = nullptr;
     UISlider *p_dirtAmplitudeInput = nullptr;
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;
     UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
 
     // Effect layers
-    UIEffectLayers *p_effectLayers = nullptr;
+    UIEffectLayers *p_uiEffectLayers = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;
+    View3DScene *GetView3DScene() const;
 
     // IEventsValueChanged
     virtual void OnValueChanged(EventEmitter<IEventsValueChanged> *ee) override;

@@ -129,24 +129,22 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
             MeshRenderer *mr = it.first;
             const Array<EffectLayer *> &effectLayers = it.second;
 
-            // Textures creations
-            if (!m_effectLayersValid)
-            {
-                for (EffectLayer *effectLayer : effectLayers)
-                {
-                    effectLayer->GenerateEffectTexture();
-                }
-            }
-
             // Uniforms
             if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
             {
+                Array<bool> effectLayerVisibles;
+                Array<Color> effectLayerTints;
                 Array<int> effectLayerBlendModes;
                 Array<Texture2D *> effectLayerTextures;
-                for (EffectLayer *effectLayer : effectLayers)
+                for (uint i = 0; i < effectLayers.Size(); ++i)
                 {
+                    EffectLayer *effectLayer = effectLayers[i];
                     if (effectLayer->GetImplementation())
                     {
+                        effectLayerTints.PushBack(
+                            GetControlPanel()->GetParameters().m_tint);
+                        effectLayerVisibles.PushBack(
+                            GetControlPanel()->IsVisibleUIEffectLayer(i));
                         effectLayerTextures.PushBack(
                             effectLayer->GetEffectTexture());
                         effectLayerBlendModes.PushBack(
@@ -160,11 +158,12 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
                     sp->SetTexture2D("EffectLayerTexture_" + String(i),
                                      effectLayerTextures[i]);
                 }
+                sp->SetColorArray("EffectLayerTints", effectLayerTints);
+                sp->SetBoolArray("EffectLayerVisibles", effectLayerVisibles);
                 sp->SetIntArray("EffectLayerBlendModes", effectLayerBlendModes);
                 sp->SetInt("NumEffectLayers", effectLayerTextures.Size());
             }
         }
-        m_effectLayersValid = true;
     }
 
     Scene::Render(rp, renderChildren);
@@ -226,7 +225,6 @@ void View3DScene::OnModelChanged(Model *newModel)
         {
             ResetCamera();
         }
-        InvalidateEffectLayersTextures();
     }
 
     p_currentModel = newModel;
@@ -245,9 +243,23 @@ void View3DScene::CreateNewEffectLayer()
     }
 }
 
-void View3DScene::InvalidateEffectLayersTextures()
+void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
 {
-    m_effectLayersValid = false;
+    for (auto &it : m_meshRendererToEffectLayers)
+    {
+        MeshRenderer *mr = it.first;
+        Array<EffectLayer *> &effectLayers = it.second;
+        effectLayers.RemoveByIndex(effectLayerIdx);
+    }
+}
+
+void View3DScene::UpdateParameters(const ControlPanel::Parameters &params)
+{
+    Array<EffectLayer *> selectedEffectLayers = GetSelectedEffectLayers();
+    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    {
+        selectedEffectLayer->UpdateParameters(params);
+    }
 }
 
 Camera *View3DScene::GetCamera() const
@@ -261,6 +273,22 @@ GameObject *View3DScene::GetModelGameObject() const
                               ? p_modelContainer->GetChild(0)
                               : nullptr;
     return modelGo;
+}
+
+Array<EffectLayer *> View3DScene::GetSelectedEffectLayers() const
+{
+    Array<EffectLayer *> effectLayers;
+    for (auto &it : m_meshRendererToEffectLayers)
+    {
+        const Array<EffectLayer *> &mrEffectLayers = it.second;
+        uint selIdx = GetControlPanel()->GetSelectedUIEffectLayerIndex();
+        if (selIdx < mrEffectLayers.Size())
+        {
+            EffectLayer *efl = mrEffectLayers[selIdx];
+            effectLayers.PushBack(efl);
+        }
+    }
+    return effectLayers;
 }
 
 Model *View3DScene::GetCurrentModel() const

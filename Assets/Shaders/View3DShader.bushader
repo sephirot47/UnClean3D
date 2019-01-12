@@ -30,7 +30,9 @@ uniform sampler2D EffectLayerTexture_6;
 uniform sampler2D EffectLayerTexture_7;
 uniform sampler2D EffectLayerTexture_8;
 uniform sampler2D EffectLayerTexture_9;
+uniform bool EffectLayerVisibles[10];
 uniform int EffectLayerBlendModes[10];
+uniform vec4 EffectLayerTints[10];
 uniform int NumEffectLayers;
 
 in vec3 B_FIn_Position;
@@ -75,7 +77,13 @@ void DefaultFragCommonMain(vec4 albedoColor)
     // Apply effect layers
     for (int i = 0; i < NumEffectLayers; ++i)
     {
+        if (!EffectLayerVisibles[i])
+        {
+            continue;
+        }
+
         #define SAMPLE_EFFECT_LAYER(k) texture2D(EffectLayerTexture_##k, B_FIn_AlbedoUv).rgb;
+
         vec3 effectLayerColor;
         switch (i)
         {
@@ -91,20 +99,21 @@ void DefaultFragCommonMain(vec4 albedoColor)
             case 9: effectLayerColor = SAMPLE_EFFECT_LAYER(9); break;
         }
 
+        vec3 tint = EffectLayerTints[i].rgb;
         int effectLayerBlendMode = EffectLayerBlendModes[i];
         switch (effectLayerBlendMode)
         {
             case EFFECT_LAYER_BLEND_MODE_ADD:
-            finalAlbedo.rgb = (finalAlbedo.rgb + effectLayerColor);
+            finalAlbedo.rgb += (effectLayerColor * tint);
             break;
             case EFFECT_LAYER_BLEND_MODE_INV_ADD:
-            finalAlbedo.rgb = (finalAlbedo.rgb + (vec3(1) - effectLayerColor));
+            finalAlbedo.rgb += ((vec3(1) - effectLayerColor * (vec3(1)-tint)));
             break;
             case EFFECT_LAYER_BLEND_MODE_MULT:
-            finalAlbedo.rgb = (finalAlbedo.rgb * effectLayerColor);
+            finalAlbedo.rgb *= (effectLayerColor * tint);
             break;
             case EFFECT_LAYER_BLEND_MODE_INV_MULT:
-            finalAlbedo.rgb = (finalAlbedo.rgb * (vec3(1) - effectLayerColor));
+            finalAlbedo.rgb *= ((vec3(1) - effectLayerColor * (vec3(1)-tint)));
             break;
         }
 

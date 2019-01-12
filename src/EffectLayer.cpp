@@ -140,6 +140,15 @@ void EffectLayer::ReloadShaders()
     m_generateEffectTextureSP.Get()->ReImport();
 }
 
+void EffectLayer::UpdateParameters(const ControlPanel::Parameters &parameters)
+{
+    if (GetImplementation())
+    {
+        m_params = parameters;
+        GenerateEffectTexture();
+    }
+}
+
 void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
 {
     if (GetImplementation())
@@ -156,12 +165,19 @@ void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
         Path spPath =
             GetImplementation()->GetGenerateEffectTextureShaderProgramPath();
         m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
+
+        GenerateEffectTexture();
     }
 }
 
 Mesh *EffectLayer::GetTextureMesh() const
 {
     return m_textureMesh.Get();
+}
+
+const ControlPanel::Parameters &EffectLayer::GetParameters() const
+{
+    return m_params;
 }
 
 Texture2D *EffectLayer::GetEffectTexture() const

@@ -17,7 +17,10 @@
 #include "Bang/UIVerticalLayout.h"
 #include "BangEditor/EditorDialog.h"
 #include "BangEditor/EditorPaths.h"
+#include "BangEditor/UIInputColor.h"
 
+#include "EffectLayer.h"
+#include "EffectLayerDirt.h"
 #include "MainScene.h"
 #include "UIEffectLayerRow.h"
 #include "UIEffectLayers.h"
@@ -118,62 +121,72 @@ ControlPanel::ControlPanel()
 
     // Effect layers
     {
-        CreateRow("Effect layers")->SetParent(this);
-
-        p_effectLayers = new UIEffectLayers();
-        UILayoutElement *le = p_effectLayers->AddComponent<UILayoutElement>();
+        p_uiEffectLayers = new UIEffectLayers();
+        UILayoutElement *le = p_uiEffectLayers->AddComponent<UILayoutElement>();
         le->SetMinHeight(60);
         le->SetPreferredHeight(200);
         le->SetFlexibleWidth(1.0f);
-        p_effectLayers->SetParent(this);
+        p_uiEffectLayers->SetParent(this);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
             ->SetParent(this);
     }
 
     // Dirt showgroup
+    p_dirtParamsGo = GameObjectFactory::CreateUIGameObject();
     {
-        CreateRow("Dirt")->SetParent(this);
+        UIVerticalLayout *vl = p_dirtParamsGo->AddComponent<UIVerticalLayout>();
+        vl->SetSpacing(5);
+
+        UILabel *dirtLabel = GameObjectFactory::CreateUILabel();
+        dirtLabel->GetText()->SetContent("Dirt");
+        dirtLabel->GetText()->SetTextSize(14);
+        dirtLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        dirtLabel->GetGameObject()->SetParent(p_dirtParamsGo);
+
         p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
         p_dirtSeedInput->SetMinValue(0);
         p_dirtSeedInput->SetDecimalPlaces(0);
         p_dirtSeedInput->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
-        p_dirtSeedInput->SetValue(0);
+
+        p_dirtTintInput = new UIInputColor();
+        p_dirtTintInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+            this);
 
         p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider();
         p_dirtFrequencyMultiplyInput->SetMinMaxValues(0.0f, 4.0f);
         p_dirtFrequencyMultiplyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_dirtFrequencyMultiplyInput->SetValue(2.5f);
 
         p_dirtFrequencyInput = GameObjectFactory::CreateUISlider();
         p_dirtFrequencyInput->SetMinMaxValues(0.0f, 5.0f);
         p_dirtFrequencyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_dirtFrequencyInput->SetValue(4.0f);
 
         p_dirtAmplitudeInput = GameObjectFactory::CreateUISlider();
         p_dirtAmplitudeInput->SetMinMaxValues(0.0f, 2.0f);
         p_dirtAmplitudeInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_dirtAmplitudeInput->SetValue(0.6f);
 
         p_dirtAmplitudeMultiplyInput = GameObjectFactory::CreateUISlider();
         p_dirtAmplitudeMultiplyInput->SetMinMaxValues(0.0f, 1.0f);
         p_dirtAmplitudeMultiplyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_dirtAmplitudeMultiplyInput->SetValue(0.6f);
 
         CreateRow("Intensity", p_dirtAmplitudeInput->GetGameObject())
-            ->SetParent(this);
+            ->SetParent(p_dirtParamsGo);
         CreateRow("Stains size", p_dirtFrequencyInput->GetGameObject())
-            ->SetParent(this);
+            ->SetParent(p_dirtParamsGo);
         CreateRow("Grain", p_dirtFrequencyMultiplyInput->GetGameObject())
-            ->SetParent(this);
-        CreateRow("Splash", p_dirtAmplitudeMultiplyInput->GetGameObject())
-            ->SetParent(this);
-        CreateRow("Seed", p_dirtSeedInput->GetGameObject())->SetParent(this);
+            ->SetParent(p_dirtParamsGo);
+        CreateRow("Sharpness", p_dirtAmplitudeMultiplyInput->GetGameObject())
+            ->SetParent(p_dirtParamsGo);
+        CreateRow("Seed", p_dirtSeedInput->GetGameObject())
+            ->SetParent(p_dirtParamsGo);
+        CreateRow("Tint", p_dirtTintInput)->SetParent(p_dirtParamsGo);
+
+        p_dirtParamsGo->SetParent(this);
     }
 }
 
@@ -192,6 +205,21 @@ void ControlPanel::Update()
     else if (Input::GetKeyDown(Key::E))
     {
         ExportModel();
+    }
+
+    p_dirtParamsGo->SetEnabled(false);
+
+    Array<EffectLayer *> selectedEffectLayers =
+        GetView3DScene()->GetSelectedEffectLayers();
+    if (selectedEffectLayers.Size() >= 1)
+    {
+        EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
+        if (EffectLayerImplementation *impl =
+                selectedEffectLayer->GetImplementation())
+        {
+            p_dirtParamsGo->SetEnabled(DCAST<EffectLayerDirt *>(impl) !=
+                                       nullptr);
+        }
     }
 
     MainScene::GetInstance()->SetSceneMode(
@@ -225,48 +253,78 @@ void ControlPanel::ExportModel()
         GetInitialDir(),
         GetOpenModelPath().GetName() + String(".") + extension);
 
-    ModelIO::ExportModel(
-        MainScene::GetInstance()->GetView3DScene()->GetModelGameObject(),
-        exportedModelPath);
+    ModelIO::ExportModel(GetView3DScene()->GetModelGameObject(),
+                         exportedModelPath);
 }
 
 void ControlPanel::CreateNewEffectLayer()
 {
-    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
-    view3DScene->CreateNewEffectLayer();
-    p_effectLayers->CreateNewEffectLayerRow();
-    view3DScene->InvalidateEffectLayersTextures();
+    GetView3DScene()->CreateNewEffectLayer();
+    p_uiEffectLayers->CreateNewEffectLayerRow();
 }
 
-uint ControlPanel::GetDirtSeed() const
+void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
 {
-    return SCAST<uint>(p_dirtSeedInput->GetValue());
+    GetView3DScene()->RemoveEffectLayer(effectLayerIdx);
+    p_uiEffectLayers->RemoveEffectLayer(effectLayerIdx);
 }
 
-float ControlPanel::GetDirtOctaves() const
+void ControlPanel::UpdateSelectedEffectLayerParameters()
 {
-    return 4.0f;
+    m_params.m_dirtSeed = p_dirtSeedInput->GetValue();
+    m_params.m_dirtFrequency = p_dirtFrequencyInput->GetValue();
+    m_params.m_dirtAmplitude = p_dirtAmplitudeInput->GetValue();
+    m_params.m_dirtFrequencyMultiply = p_dirtFrequencyMultiplyInput->GetValue();
+    m_params.m_dirtAmplitudeMultiply = p_dirtAmplitudeMultiplyInput->GetValue();
+    m_params.m_tint = p_dirtTintInput->GetColor();
+
+    MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
+        GetParameters());
 }
 
-float ControlPanel::GetDirtFrequency() const
+void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
 {
-    return (p_dirtFrequencyInput->GetInputNumber()->GetMaxValue() -
-            p_dirtFrequencyInput->GetValue());
+    Array<EffectLayer *> selectedEffectLayers =
+        GetView3DScene()->GetSelectedEffectLayers();
+    if (selectedEffectLayers.Size() >= 1)
+    {
+        EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
+        m_params = selectedEffectLayer->GetParameters();
+    }
+
+    EventListener<IEventsValueChanged>::SetReceiveEvents(false);
+
+    p_dirtSeedInput->SetValue(GetParameters().m_dirtSeed);
+    p_dirtFrequencyInput->SetValue(GetParameters().m_dirtFrequency);
+    p_dirtFrequencyMultiplyInput->SetValue(
+        GetParameters().m_dirtFrequencyMultiply);
+    p_dirtAmplitudeInput->SetValue(GetParameters().m_dirtAmplitude);
+    p_dirtAmplitudeMultiplyInput->SetValue(
+        GetParameters().m_dirtAmplitudeMultiply);
+    p_dirtTintInput->SetColor(GetParameters().m_tint);
+
+    EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
 
-float ControlPanel::GetDirtAmplitude() const
+uint ControlPanel::GetSelectedUIEffectLayerIndex() const
 {
-    return p_dirtAmplitudeInput->GetValue();
+    return p_uiEffectLayers->GetSelectedEffectLayerRowIndex();
 }
 
-float ControlPanel::GetDirtFrequencyMultiply() const
+bool ControlPanel::IsVisibleUIEffectLayer(uint effectLayerIdx) const
 {
-    return p_dirtFrequencyMultiplyInput->GetValue();
+    if (effectLayerIdx < p_uiEffectLayers->GetUIEffectLayerRows().Size())
+    {
+        UIEffectLayerRow *uiEffectLayerRow =
+            p_uiEffectLayers->GetUIEffectLayerRows()[effectLayerIdx];
+        return uiEffectLayerRow->GetIsLayerVisible();
+    }
+    return false;
 }
 
-float ControlPanel::GetDirtAmplitudeMultiply() const
+const ControlPanel::Parameters &ControlPanel::GetParameters() const
 {
-    return p_dirtAmplitudeMultiplyInput->GetValue();
+    return m_params;
 }
 
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
@@ -284,14 +342,12 @@ Path ControlPanel::GetOpenModelPath() const
     return m_openModelPath;
 }
 
-void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
+View3DScene *ControlPanel::GetView3DScene() const
 {
-    if (ee == p_dirtSeedInput || ee == p_dirtFrequencyInput ||
-        ee == p_dirtAmplitudeInput || ee == p_dirtAmplitudeMultiplyInput ||
-        ee == p_dirtFrequencyMultiplyInput)
-    {
-        MainScene::GetInstance()
-            ->GetView3DScene()
-            ->InvalidateEffectLayersTextures();
-    }
+    return MainScene::GetInstance()->GetView3DScene();
+}
+
+void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *)
+{
+    UpdateSelectedEffectLayerParameters();
 }

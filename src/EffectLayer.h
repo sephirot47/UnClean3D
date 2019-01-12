@@ -7,6 +7,8 @@
 #include "Bang/Texture2D.h"
 #include "BangEditor/BangEditor.h"
 
+#include "ControlPanel.h"
+
 using namespace Bang;
 
 namespace Bang
@@ -16,7 +18,6 @@ class Framebuffer;
 class MeshRenderer;
 }
 
-class ControlPanel;
 class EffectLayerImplementation;
 
 class EffectLayer
@@ -36,15 +37,19 @@ public:
     virtual void GenerateEffectTexture();
     void ReloadShaders();
 
+    virtual void UpdateParameters(const ControlPanel::Parameters &parameters);
     void SetEffectLayerImplementation(EffectLayerImplementation *impl);
 
     Texture2D *GetEffectTexture() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
+    const ControlPanel::Parameters &GetParameters() const;
     EffectLayerImplementation *GetImplementation() const;
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
 private:
+    ControlPanel::Parameters m_params;
+
     EffectLayerImplementation *p_implementation = nullptr;
     MeshRenderer *p_meshRenderer = nullptr;
 

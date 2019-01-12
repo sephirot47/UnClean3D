@@ -11,6 +11,8 @@
 #include "Bang/Vector3.h"
 #include "BangEditor/BangEditor.h"
 
+#include "ControlPanel.h"
+
 namespace Bang
 {
 class Camera;
@@ -36,10 +38,12 @@ public:
     void OnModelChanged(Model *newModel);
 
     void CreateNewEffectLayer();
-    void InvalidateEffectLayersTextures();
+    void RemoveEffectLayer(uint effectLayerIdx);
+    void UpdateParameters(const ControlPanel::Parameters &params);
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
+    Array<EffectLayer *> GetSelectedEffectLayers() const;
     Model *GetCurrentModel() const;
 
 private:
@@ -48,7 +52,6 @@ private:
     GameObject *p_modelContainer = nullptr;
     Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayers;
 
-    bool m_effectLayersValid = false;
     AH<ShaderProgram> m_view3DShaderProgram;
 
     Camera *p_cam = nullptr;
