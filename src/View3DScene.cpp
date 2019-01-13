@@ -142,7 +142,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
                     if (effectLayer->GetImplementation())
                     {
                         effectLayerTints.PushBack(
-                            effectLayer->GetParameters().m_tint);
+                            effectLayer->GetParameters().tint);
                         effectLayerVisibles.PushBack(
                             GetControlPanel()->IsVisibleUIEffectLayer(i));
                         effectLayerTextures.PushBack(
@@ -253,7 +253,7 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
     }
 }
 
-void View3DScene::UpdateParameters(const ControlPanel::Parameters &params)
+void View3DScene::UpdateParameters(const EffectLayerParameters &params)
 {
     Array<EffectLayer *> selectedEffectLayers = GetSelectedEffectLayers();
     for (EffectLayer *selectedEffectLayer : selectedEffectLayers)

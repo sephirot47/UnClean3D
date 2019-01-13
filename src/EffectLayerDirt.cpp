@@ -48,7 +48,7 @@ EffectLayer::BlendMode EffectLayerDirt::GetBlendMode() const
     return EffectLayer::BlendMode::INV_MULT;
 }
 
-const ControlPanel::Parameters &EffectLayerDirt::GetParameters() const
+const EffectLayerParameters &EffectLayerDirt::GetParameters() const
 {
     return GetEffectLayer()->GetParameters();
 }
@@ -56,11 +56,11 @@ const ControlPanel::Parameters &EffectLayerDirt::GetParameters() const
 void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
     sp->SetFloat("DirtOctaves", 4.0f);
-    sp->SetFloat("DirtFrequency", 5.3f - GetParameters().m_dirtFrequency);
+    sp->SetFloat("DirtFrequency", 5.3f - GetParameters().dirtFrequency);
     sp->SetFloat("DirtFrequencyMultiply",
-                 GetParameters().m_dirtFrequencyMultiply);
-    sp->SetFloat("DirtAmplitude", GetParameters().m_dirtAmplitude);
+                 GetParameters().dirtFrequencyMultiply);
+    sp->SetFloat("DirtAmplitude", GetParameters().dirtAmplitude);
     sp->SetFloat("DirtAmplitudeMultiply",
-                 GetParameters().m_dirtAmplitudeMultiply);
-    sp->SetFloat("DirtSeed", GetParameters().m_dirtSeed);
+                 GetParameters().dirtAmplitudeMultiply);
+    sp->SetFloat("DirtSeed", GetParameters().dirtSeed);
 }

@@ -21,7 +21,7 @@ public:
     // EffectLayer
     virtual EffectLayer::BlendMode GetBlendMode() const override;
 
-    const ControlPanel::Parameters &GetParameters() const;
+    const EffectLayerParameters &GetParameters() const;
 
 protected:
     // EffectLayer

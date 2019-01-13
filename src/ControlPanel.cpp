@@ -271,12 +271,12 @@ void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
 
 void ControlPanel::UpdateSelectedEffectLayerParameters()
 {
-    m_params.m_dirtSeed = p_dirtSeedInput->GetValue();
-    m_params.m_dirtFrequency = p_dirtFrequencyInput->GetValue();
-    m_params.m_dirtAmplitude = p_dirtAmplitudeInput->GetValue();
-    m_params.m_dirtFrequencyMultiply = p_dirtFrequencyMultiplyInput->GetValue();
-    m_params.m_dirtAmplitudeMultiply = p_dirtAmplitudeMultiplyInput->GetValue();
-    m_params.m_tint = p_dirtTintInput->GetColor();
+    m_params.dirtSeed = p_dirtSeedInput->GetValue();
+    m_params.dirtFrequency = p_dirtFrequencyInput->GetValue();
+    m_params.dirtAmplitude = p_dirtAmplitudeInput->GetValue();
+    m_params.dirtFrequencyMultiply = p_dirtFrequencyMultiplyInput->GetValue();
+    m_params.dirtAmplitudeMultiply = p_dirtAmplitudeMultiplyInput->GetValue();
+    m_params.tint = p_dirtTintInput->GetColor();
 
     MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
         GetParameters());
@@ -294,14 +294,14 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(false);
 
-    p_dirtSeedInput->SetValue(GetParameters().m_dirtSeed);
-    p_dirtFrequencyInput->SetValue(GetParameters().m_dirtFrequency);
+    p_dirtSeedInput->SetValue(GetParameters().dirtSeed);
+    p_dirtFrequencyInput->SetValue(GetParameters().dirtFrequency);
     p_dirtFrequencyMultiplyInput->SetValue(
-        GetParameters().m_dirtFrequencyMultiply);
-    p_dirtAmplitudeInput->SetValue(GetParameters().m_dirtAmplitude);
+        GetParameters().dirtFrequencyMultiply);
+    p_dirtAmplitudeInput->SetValue(GetParameters().dirtAmplitude);
     p_dirtAmplitudeMultiplyInput->SetValue(
-        GetParameters().m_dirtAmplitudeMultiply);
-    p_dirtTintInput->SetColor(GetParameters().m_tint);
+        GetParameters().dirtAmplitudeMultiply);
+    p_dirtTintInput->SetColor(GetParameters().tint);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
@@ -322,7 +322,7 @@ bool ControlPanel::IsVisibleUIEffectLayer(uint effectLayerIdx) const
     return false;
 }
 
-const ControlPanel::Parameters &ControlPanel::GetParameters() const
+const EffectLayerParameters &ControlPanel::GetParameters() const
 {
     return m_params;
 }

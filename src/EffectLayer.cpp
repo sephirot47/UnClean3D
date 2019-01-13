@@ -140,7 +140,7 @@ void EffectLayer::ReloadShaders()
     m_generateEffectTextureSP.Get()->ReImport();
 }
 
-void EffectLayer::UpdateParameters(const ControlPanel::Parameters &parameters)
+void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
 {
     m_params = parameters;
     GenerateEffectTexture();
@@ -172,7 +172,7 @@ Mesh *EffectLayer::GetTextureMesh() const
     return m_textureMesh.Get();
 }
 
-const ControlPanel::Parameters &EffectLayer::GetParameters() const
+const EffectLayerParameters &EffectLayer::GetParameters() const
 {
     return m_params;
 }

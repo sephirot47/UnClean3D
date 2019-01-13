@@ -5,6 +5,7 @@
 #include "Bang/GameObject.h"
 #include "Bang/IEventsValueChanged.h"
 
+#include "EffectLayerParameters.h"
 #include "MainScene.h"
 
 namespace Bang
@@ -29,17 +30,6 @@ class ControlPanel : public GameObject,
                      public EventListener<IEventsValueChanged>
 {
 public:
-    struct Parameters
-    {
-        float m_dirtSeed = 0.0f;
-        float m_dirtFrequency = 4.0f;
-        float m_dirtFrequencyMultiply = 2.5f;
-        float m_dirtAmplitude = 1.0f;
-        float m_dirtAmplitudeMultiply = 0.6f;
-
-        Color m_tint = Color::Black();
-    };
-
     ControlPanel();
     virtual ~ControlPanel() override;
 
@@ -57,12 +47,12 @@ public:
     uint GetSelectedUIEffectLayerIndex() const;
     bool IsVisibleUIEffectLayer(uint effectLayerIdx) const;
 
-    const Parameters &GetParameters() const;
+    const EffectLayerParameters &GetParameters() const;
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
     Path m_openModelPath = Path::Empty();
-    Parameters m_params;
+    EffectLayerParameters m_params;
 
     // File
     UIButton *p_openModelButton = nullptr;

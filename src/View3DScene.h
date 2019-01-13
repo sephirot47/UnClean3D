@@ -39,7 +39,7 @@ public:
 
     void CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
-    void UpdateParameters(const ControlPanel::Parameters &params);
+    void UpdateParameters(const EffectLayerParameters &params);
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
