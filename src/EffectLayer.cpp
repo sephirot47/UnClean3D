@@ -113,10 +113,10 @@ void EffectLayer::GenerateEffectTexture()
     m_framebuffer->SetAttachmentTexture(GetEffectTexture(),
                                         GL::Attachment::COLOR0);
     m_framebuffer->SetAllDrawBuffers();
-    // GL::ClearColorBuffer(Color::Zero());
 
-    GL::SetViewport(
-        0, 0, GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
+    Vector2i texSize = GetControlPanel()->GetTextureSize();
+    GetEffectTexture()->Resize(texSize);
+    GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
     sp->Bind();

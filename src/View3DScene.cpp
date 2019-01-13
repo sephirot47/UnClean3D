@@ -356,8 +356,8 @@ void View3DScene::ApplyControlPanelSettingsToModel()
     for (const auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
-        mr->GetMaterial()->SetRoughness(cpanel->GetBaseRoughness());
-        mr->GetMaterial()->SetMetalness(cpanel->GetBaseMetalness());
+        mr->GetMaterial()->SetRoughness(1.0f);
+        mr->GetMaterial()->SetMetalness(1.0f);
     }
 }
 

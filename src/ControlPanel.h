@@ -46,6 +46,7 @@ public:
 
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
+    Vector2i GetTextureSize() const;
     uint GetSelectedUIEffectLayerIndex() const;
     bool IsVisibleUIEffectLayer(uint effectLayerIdx) const;
 
@@ -64,6 +65,7 @@ private:
     UIComboBox *p_sceneModeComboBox = nullptr;
     UISlider *p_baseRoughnessInput = nullptr;
     UISlider *p_baseMetalnessInput = nullptr;
+    UISlider *p_texturesSizeInput = nullptr;
 
     // Dirt
     GameObject *p_dirtParamsGo = nullptr;

@@ -135,6 +135,12 @@ ControlPanel::ControlPanel()
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
             ->SetParent(this);
 
+        p_texturesSizeInput = GameObjectFactory::CreateUISlider();
+        p_texturesSizeInput->SetMinMaxValues(1.0f, 8192.0f);
+        p_texturesSizeInput->SetValue(2048.0f);
+        CreateRow("Textures size", p_texturesSizeInput->GetGameObject())
+            ->SetParent(this);
+
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
             ->SetParent(this);
     }
@@ -344,6 +350,12 @@ float ControlPanel::GetBaseMetalness() const
     return p_baseMetalnessInput->GetValue();
 }
 
+Vector2i ControlPanel::GetTextureSize() const
+{
+    return Vector2i(p_texturesSizeInput->GetValue(),
+                    p_texturesSizeInput->GetValue());
+}
+
 uint ControlPanel::GetSelectedUIEffectLayerIndex() const
 {
     return p_uiEffectLayers->GetSelectedEffectLayerRowIndex();
@@ -385,7 +397,7 @@ View3DScene *ControlPanel::GetView3DScene() const
     return MainScene::GetInstance()->GetView3DScene();
 }
 
-void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *)
+void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
     UpdateSelectedEffectLayerParameters();
 }

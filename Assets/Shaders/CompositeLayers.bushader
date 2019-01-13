@@ -47,8 +47,8 @@ void main()
             OutAlbedo.a   = originalAlbedo.a;
 
             OutNormal    = originalNormal;
-            OutRoughness = clamp(originalRoughness + (alpha), vec4(0), vec4(1));
-            OutMetalness = clamp(originalMetalness - (alpha), vec4(0), vec4(1));
+            OutRoughness = clamp(originalRoughness + alpha, vec4(0), vec4(1));
+            OutMetalness = clamp(originalMetalness - alpha, vec4(0), vec4(1));
         }
         break;
     }
