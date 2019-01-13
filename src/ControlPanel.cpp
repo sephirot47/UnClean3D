@@ -76,9 +76,6 @@ ControlPanel::ControlPanel()
         rowLE->SetMinHeight(20);
         buttonsRow->SetParent(this);
 
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
-            ->SetParent(this);
-
         p_openModelButton = GameObjectFactory::CreateUIButton("Open");
         p_openModelButton->AddClickedCallback([this]() { OpenModel(); });
         p_openModelButton->GetGameObject()->SetParent(buttonsRow);
@@ -86,6 +83,9 @@ ControlPanel::ControlPanel()
         p_exportModelButton = GameObjectFactory::CreateUIButton("Export");
         p_exportModelButton->AddClickedCallback([this]() { ExportModel(); });
         p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
+            ->SetParent(this);
     }
 
     // View buttons row
@@ -117,6 +117,26 @@ ControlPanel::ControlPanel()
 
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
             ->SetParent(sceneModeRow);
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+            ->SetParent(this);
+    }
+
+    // General settings showgroup
+    {
+        p_baseRoughnessInput = GameObjectFactory::CreateUISlider();
+        p_baseRoughnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_baseRoughnessInput->SetValue(1.0f);
+        CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
+            ->SetParent(this);
+
+        p_baseMetalnessInput = GameObjectFactory::CreateUISlider();
+        p_baseMetalnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_baseMetalnessInput->SetValue(0.0f);
+        CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
+            ->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+            ->SetParent(this);
     }
 
     // Effect layers
@@ -312,6 +332,16 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
     p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
+}
+
+float ControlPanel::GetBaseRoughness() const
+{
+    return p_baseRoughnessInput->GetValue();
+}
+
+float ControlPanel::GetBaseMetalness() const
+{
+    return p_baseMetalnessInput->GetValue();
 }
 
 uint ControlPanel::GetSelectedUIEffectLayerIndex() const

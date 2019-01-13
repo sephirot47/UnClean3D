@@ -198,6 +198,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 {
     if (rp == RenderPass::SCENE_OPAQUE)
     {
+        ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
     }
 
@@ -287,7 +288,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             if (!mat->GetMetalnessTexture())
             {
                 AH<Texture2D> defaultMetalnessTex = Assets::Create<Texture2D>();
-                defaultMetalnessTex.Get()->Fill(Color(0.0f), ats.x, ats.y);
+                defaultMetalnessTex.Get()->Fill(Color(1.0f), ats.x, ats.y);
                 mat->SetMetalnessTexture(defaultMetalnessTex.Get());
             }
 
@@ -346,6 +347,17 @@ void View3DScene::UpdateParameters(const EffectLayerParameters &params)
     for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
     {
         selectedEffectLayer->UpdateParameters(params);
+    }
+}
+
+void View3DScene::ApplyControlPanelSettingsToModel()
+{
+    ControlPanel *cpanel = GetControlPanel();
+    for (const auto &it : m_meshRendererToInfo)
+    {
+        MeshRenderer *mr = it.first;
+        mr->GetMaterial()->SetRoughness(cpanel->GetBaseRoughness());
+        mr->GetMaterial()->SetMetalness(cpanel->GetBaseMetalness());
     }
 }
 

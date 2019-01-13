@@ -44,6 +44,8 @@ public:
     void UpdateSelectedEffectLayerParameters();
     void UpdateInputsAndParametersFromSelectedEffectLayer();
 
+    float GetBaseRoughness() const;
+    float GetBaseMetalness() const;
     uint GetSelectedUIEffectLayerIndex() const;
     bool IsVisibleUIEffectLayer(uint effectLayerIdx) const;
 
@@ -60,6 +62,8 @@ private:
 
     // General
     UIComboBox *p_sceneModeComboBox = nullptr;
+    UISlider *p_baseRoughnessInput = nullptr;
+    UISlider *p_baseMetalnessInput = nullptr;
 
     // Dirt
     GameObject *p_dirtParamsGo = nullptr;

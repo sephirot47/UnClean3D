@@ -37,7 +37,7 @@ void main()
             vec4 originalNormal    = texture(OriginalNormalTexture, uv);
             vec4 originalRoughness = texture(OriginalRoughnessTexture, uv);
             vec4 originalMetalness = texture(OriginalMetalnessTexture, uv);
-            vec3 previousAlbedo = texture(PreviousAlbedoTexture, uv).rgb;
+            vec3 previousAlbedo    = texture(PreviousAlbedoTexture, uv).rgb;
 
             float alpha = effectLayerColor.a;
             float dirtIntensity = effectLayerColor.a;

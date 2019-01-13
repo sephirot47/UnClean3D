@@ -41,6 +41,7 @@ public:
     void CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void UpdateParameters(const EffectLayerParameters &params);
+    void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
     void RestoreOriginalAlbedoTexturesToModel();
 
