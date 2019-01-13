@@ -89,6 +89,11 @@ void EffectLayerCompositer::CompositeLayers(
     ShaderProgram *sp = m_compositeLayersSP.Get();
     sp->Bind();
 
+    sp->SetTexture2D("OriginalAlbedoTexture", albedoOriginalTex);
+    sp->SetTexture2D("OriginalNormalTexture", normalOriginalTex);
+    sp->SetTexture2D("OriginalRoughnessTexture", roughnessOriginalTex);
+    sp->SetTexture2D("OriginalMetalnessTexture", metalnessOriginalTex);
+
     for (uint i = 0; i < effectLayers.Size(); ++i)
     {
         if (!controlPanel->IsVisibleUIEffectLayer(i))
@@ -109,18 +114,14 @@ void EffectLayerCompositer::CompositeLayers(
         // Set uniforms
         {
             EffectLayer *effectLayer = effectLayers[i];
-            sp->SetInt("EffectLayerBlendMode",
-                       effectLayer->GetImplementation()->GetBlendMode());
+            sp->SetInt("EffectLayerType",
+                       effectLayer->GetImplementation()->GetEffectLayerType());
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
 
-            sp->SetTexture2D("OriginalAlbedoTexture", albedoOriginalTex);
             sp->SetTexture2D("PreviousAlbedoTexture", albedoReadTex);
-            sp->SetTexture2D("OriginalNormalTexture", normalOriginalTex);
             sp->SetTexture2D("PreviousNormalTexture", normalReadTex);
-            sp->SetTexture2D("OriginalRoughnessTexture", roughnessOriginalTex);
             sp->SetTexture2D("PreviousRoughnessTexture", roughnessReadTex);
-            sp->SetTexture2D("OriginalMetalnessTexture", metalnessOriginalTex);
             sp->SetTexture2D("PreviousMetalnessTexture", metalnessReadTex);
         }
 
@@ -149,7 +150,7 @@ void EffectLayerCompositer::CompositeLayers(
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
 
     *outAlbedoTexture = albedoReadTex;
-    *outNormalTexture = normalOriginalTex;
-    *outRoughnessTexture = roughnessOriginalTex;
-    *outMetalnessTexture = metalnessOriginalTex;
+    *outNormalTexture = normalReadTex;
+    *outRoughnessTexture = roughnessReadTex;
+    *outMetalnessTexture = metalnessReadTex;
 }

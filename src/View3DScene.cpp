@@ -259,33 +259,35 @@ void View3DScene::OnModelChanged(Model *newModel)
             Material *mat = mr->GetMaterial();
 
             // Create default textures if they do not exist
-            constexpr int DefaultTexSize = 1024;
-            constexpr int DTS = DefaultTexSize;
             if (!mat->GetAlbedoTexture())
             {
+                constexpr int DTS = 1024;
                 AH<Texture2D> defaultAlbedoTex = Assets::Create<Texture2D>();
                 defaultAlbedoTex.Get()->Fill(Color::Red(), DTS, DTS);
                 mat->SetAlbedoTexture(defaultAlbedoTex.Get());
             }
 
+            const Vector2i albedoTexSize = mat->GetAlbedoTexture()->GetSize();
+            const Vector2i &ats = albedoTexSize;
             if (!mat->GetNormalMapTexture())
             {
                 AH<Texture2D> defaultNormalTex = Assets::Create<Texture2D>();
-                defaultNormalTex.Get()->Fill(Color::Blue(), DTS, DTS);
+                defaultNormalTex.Get()->Fill(
+                    Color(0.5f, 0.5f, 1.0f), ats.x, ats.y);
                 mat->SetNormalMapTexture(defaultNormalTex.Get());
             }
 
             if (!mat->GetRoughnessTexture())
             {
                 AH<Texture2D> defaultRoughnessTex = Assets::Create<Texture2D>();
-                defaultRoughnessTex.Get()->Fill(Color(0.5f), DTS, DTS);
+                defaultRoughnessTex.Get()->Fill(Color(1.0f), ats.x, ats.y);
                 mat->SetRoughnessTexture(defaultRoughnessTex.Get());
             }
 
             if (!mat->GetMetalnessTexture())
             {
                 AH<Texture2D> defaultMetalnessTex = Assets::Create<Texture2D>();
-                defaultMetalnessTex.Get()->Fill(Color(0.5f), DTS, DTS);
+                defaultMetalnessTex.Get()->Fill(Color(0.0f), ats.x, ats.y);
                 mat->SetMetalnessTexture(defaultMetalnessTex.Get());
             }
 
@@ -391,7 +393,7 @@ void View3DScene::RestoreOriginalAlbedoTexturesToModel()
         {
             const MeshRendererInfo &mrInfo = it.second;
             mat->SetAlbedoTexture(mrInfo.originalAlbedoTexture.Get());
-            mat->SetNormalMapTexture(mrInfo.originalAlbedoTexture.Get());
+            mat->SetNormalMapTexture(mrInfo.originalNormalTexture.Get());
             mat->SetRoughnessTexture(mrInfo.originalRoughnessTexture.Get());
             mat->SetMetalnessTexture(mrInfo.originalMetalnessTexture.Get());
         }

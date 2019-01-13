@@ -19,7 +19,7 @@ public:
     virtual ~EffectLayerDirt() override;
 
     // EffectLayer
-    virtual EffectLayer::BlendMode GetBlendMode() const override;
+    virtual EffectLayer::Type GetEffectLayerType() const override;
 
     const EffectLayerParameters &GetParameters() const;
 

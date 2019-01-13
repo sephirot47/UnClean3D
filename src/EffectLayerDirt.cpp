@@ -43,9 +43,9 @@ Path EffectLayerDirt::GetGenerateEffectTextureShaderProgramPath() const
         "GenerateEffectTextureDirt.bushader");
 }
 
-EffectLayer::BlendMode EffectLayerDirt::GetBlendMode() const
+EffectLayer::Type EffectLayerDirt::GetEffectLayerType() const
 {
-    return EffectLayer::BlendMode::ADD;
+    return EffectLayer::Type::DIRT;
 }
 
 const EffectLayerParameters &EffectLayerDirt::GetParameters() const

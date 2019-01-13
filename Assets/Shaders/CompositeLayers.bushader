@@ -2,14 +2,10 @@
 #include "ScreenPass.vert"
 
 #fragment
-const int EFFECT_LAYER_BLEND_MODE_ADD      = 0;
-const int EFFECT_LAYER_BLEND_MODE_INV_ADD  = 1;
-const int EFFECT_LAYER_BLEND_MODE_MULT     = 2;
-const int EFFECT_LAYER_BLEND_MODE_INV_MULT = 3;
+const int EFFECT_LAYER_TYPE_DIRT = 0;
 
 uniform sampler2D EffectLayerTexture;
-uniform int EffectLayerBlendMode;
-uniform vec4 EffectLayerTint;
+uniform int EffectLayerType;
 
 uniform sampler2D OriginalAlbedoTexture;
 uniform sampler2D PreviousAlbedoTexture;
@@ -29,37 +25,32 @@ layout(location = 3) out vec4 OutMetalness;
 
 void main()
 {
-    vec3 previousColor = texture(PreviousColorTexture, B_FIn_AlbedoUv).rgb;
-    vec3 OutAlbedo = previousColor;
+    vec2 uv = B_FIn_AlbedoUv;
 
     // Apply effect layer
-    vec4 effectLayerColor = texture2D(EffectLayerTexture, B_FIn_AlbedoUv);
-    int effectLayerBlendMode = EffectLayerBlendMode;
-    float alpha = effectLayerColor.a;
-    switch (effectLayerBlendMode)
+    vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
+    switch (EffectLayerType)
     {
-        case EFFECT_LAYER_BLEND_MODE_ADD:
-        OutAlbedo.rgb = (effectLayerColor.rgb * alpha +
-                        previousColor.rgb * (1-alpha));
-        break;
+        case EFFECT_LAYER_TYPE_DIRT:
+        {
+            vec4 originalAlbedo    = texture(OriginalAlbedoTexture, uv);
+            vec4 originalNormal    = texture(OriginalNormalTexture, uv);
+            vec4 originalRoughness = texture(OriginalRoughnessTexture, uv);
+            vec4 originalMetalness = texture(OriginalMetalnessTexture, uv);
+            vec3 previousAlbedo = texture(PreviousAlbedoTexture, uv).rgb;
 
-        case EFFECT_LAYER_BLEND_MODE_INV_ADD:
-        OutAlbedo.rgb += (vec3(1) - effectLayerColor.rgb);
-        break;
+            float alpha = effectLayerColor.a;
+            float dirtIntensity = effectLayerColor.a;
 
-        case EFFECT_LAYER_BLEND_MODE_MULT:
-        OutAlbedo.rgb *= (effectLayerColor.rgb);
-        break;
+            OutAlbedo.rgb = (effectLayerColor.rgb * alpha +
+                             previousAlbedo.rgb * (1-alpha));
+            OutAlbedo.a   = originalAlbedo.a;
 
-        case EFFECT_LAYER_BLEND_MODE_INV_MULT:
-        OutAlbedo.rgb *= ((vec3(1) - effectLayerColor.rgb));
+            OutNormal    = originalNormal;
+            OutRoughness = clamp(originalRoughness + (alpha), vec4(0), vec4(1));
+            OutMetalness = clamp(originalMetalness - (alpha), vec4(0), vec4(1));
+        }
         break;
     }
-
-    float originalAlpha = texture(OriginalAlbedoTexture, B_FIn_AlbedoUv).a;
-    OutAlbedo    = vec4(OutAlbedo, originalAlpha);
-    OutNormal    = vec4(0,0,1,1);
-    OutRoughness = vec4(1.0f);
-    OutMetalness = vec4(0.1f);
 }
 

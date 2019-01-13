@@ -46,8 +46,6 @@ void main()
         amplitude *= DirtAmplitudeMultiply;
     }
 
-    // noiseValue = noiseValue * 0.5 + 0.5;
-    // noiseValue -= 0.1;
     noiseValue = clamp(noiseValue, 0, 1);
     vec3 noise = vec3(noiseValue);
 
