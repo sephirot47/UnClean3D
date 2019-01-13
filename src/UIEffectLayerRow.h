@@ -26,6 +26,7 @@ public:
     // GameObject
     void Update() override;
 
+    String GetName() const;
     bool IsSelected() const;
     bool GetIsLayerVisible() const;
 

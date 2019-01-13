@@ -3,6 +3,7 @@
 #include "Bang/AARect.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
+#include "Bang/Paths.h"
 #include "Bang/Random.h"
 #include "Bang/RectTransform.h"
 #include "Bang/UIButton.h"
@@ -14,6 +15,8 @@
 #include "Bang/UITheme.h"
 #include "Bang/UIToolButton.h"
 #include "Bang/UIVerticalLayout.h"
+
+#include "BangEditor/EditorTextureFactory.h"
 
 #include "ControlPanel.h"
 #include "MainScene.h"
@@ -52,29 +55,39 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers)
 
     UILayoutElement *le = AddComponent<UILayoutElement>();
     le->SetFlexibleWidth(1.0f);
-    le->SetMinHeight(40);
+    le->SetMinHeight(32);
+
+    Array<String> existingLayerNames;
+    for (UIEffectLayerRow *effectLayerRow :
+         p_uiEffectLayers->GetUIEffectLayerRows())
+    {
+        existingLayerNames.PushBack(effectLayerRow->GetName());
+    }
+    String layerName = Path::GetDuplicateString("NewLayer", existingLayerNames);
 
     p_layerNameLabel = GameObjectFactory::CreateUILabel();
-    static int xxx = 0;
-    xxx += 1;
-    p_layerNameLabel->GetText()->SetContent("Layer row " + String(xxx));
+    p_layerNameLabel->GetText()->SetContent(layerName);
     p_layerNameLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
     p_layerNameLabel->GetGameObject()->SetParent(this);
 
     GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
         ->SetParent(this);
 
-    p_visibleButton = GameObjectFactory::CreateUIToolButton("V");
+    p_visibleButton = GameObjectFactory::CreateUIToolButton(
+        "", EditorTextureFactory::GetEyeIcon());
+    p_visibleButton->GetIcon()->SetTint(Color::Black());
     p_visibleButton->SetOn(true);
     p_visibleButton->GetGameObject()->SetParent(this);
 
-    UIButton *p_removeLayerButton = GameObjectFactory::CreateUIButton("-");
-    p_removeLayerButton->AddClickedCallback([this]() {
+    UIButton *removeLayerButton = GameObjectFactory::CreateUIButton(
+        "", EditorTextureFactory::GetLessIcon());
+    removeLayerButton->GetIcon()->SetTint(Color::Red());
+    removeLayerButton->AddClickedCallback([this]() {
         ControlPanel *cp = MainScene::GetInstance()->GetControlPanel();
         uint idx = p_uiEffectLayers->GetUIEffectLayerRows().IndexOf(this);
         cp->RemoveEffectLayer(idx);
     });
-    p_removeLayerButton->GetGameObject()->SetParent(this);
+    removeLayerButton->GetGameObject()->SetParent(this);
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()
@@ -92,8 +105,7 @@ void UIEffectLayerRow::Update()
     }
     else
     {
-        if (GetRectTransform()->GetViewportAARect().Contains(
-                Vector2(Input::GetMousePosition())))
+        if (p_focusable->IsMouseOver())
         {
             bgColor = UITheme::GetOverColor();
         }
@@ -103,6 +115,11 @@ void UIEffectLayerRow::Update()
         }
     }
     p_bg->SetTint(bgColor);
+}
+
+String UIEffectLayerRow::GetName() const
+{
+    return p_layerNameLabel->GetText()->GetContent();
 }
 
 bool UIEffectLayerRow::IsSelected() const

@@ -14,6 +14,7 @@
 #include "Bang/UIScrollPanel.h"
 #include "Bang/UITextRenderer.h"
 #include "Bang/UIVerticalLayout.h"
+#include "BangEditor/EditorTextureFactory.h"
 
 #include "ControlPanel.h"
 #include "MainScene.h"
@@ -49,7 +50,9 @@ UIEffectLayers::UIEffectLayers()
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(topButtonsHLGo);
 
-        UIButton *addEffectLayerButton = GameObjectFactory::CreateUIButton("+");
+        UIButton *addEffectLayerButton = GameObjectFactory::CreateUIButton(
+            "", EditorTextureFactory::GetAddIcon());
+        addEffectLayerButton->GetIcon()->SetTint(Color::Green());
         addEffectLayerButton->AddClickedCallback([this]() {
             ControlPanel *cp = MainScene::GetInstance()->GetControlPanel();
             cp->CreateNewEffectLayer();
