@@ -7,20 +7,30 @@ const int EFFECT_LAYER_BLEND_MODE_INV_ADD  = 1;
 const int EFFECT_LAYER_BLEND_MODE_MULT     = 2;
 const int EFFECT_LAYER_BLEND_MODE_INV_MULT = 3;
 
-uniform sampler2D OriginalColorTexture;
-uniform sampler2D PreviousColorTexture;
 uniform sampler2D EffectLayerTexture;
 uniform int EffectLayerBlendMode;
 uniform vec4 EffectLayerTint;
 
+uniform sampler2D OriginalAlbedoTexture;
+uniform sampler2D PreviousAlbedoTexture;
+uniform sampler2D OriginalNormalTexture;
+uniform sampler2D PreviousNormalTexture;
+uniform sampler2D OriginalRoughnessTexture;
+uniform sampler2D PreviousRoughnessTexture;
+uniform sampler2D OriginalMetalnessTexture;
+uniform sampler2D PreviousMetalnessTexture;
+
 in vec2 B_FIn_AlbedoUv;
 
-layout(location = 0) out vec4 OutColor;
+layout(location = 0) out vec4 OutAlbedo;
+layout(location = 1) out vec4 OutNormal;
+layout(location = 2) out vec4 OutRoughness;
+layout(location = 3) out vec4 OutMetalness;
 
 void main()
 {
     vec3 previousColor = texture(PreviousColorTexture, B_FIn_AlbedoUv).rgb;
-    vec3 outColor = previousColor;
+    vec3 OutAlbedo = previousColor;
 
     // Apply effect layer
     vec4 effectLayerColor = texture2D(EffectLayerTexture, B_FIn_AlbedoUv);
@@ -29,24 +39,27 @@ void main()
     switch (effectLayerBlendMode)
     {
         case EFFECT_LAYER_BLEND_MODE_ADD:
-        outColor.rgb = (effectLayerColor.rgb * alpha +
+        OutAlbedo.rgb = (effectLayerColor.rgb * alpha +
                         previousColor.rgb * (1-alpha));
         break;
 
         case EFFECT_LAYER_BLEND_MODE_INV_ADD:
-        outColor.rgb += (vec3(1) - effectLayerColor.rgb);
+        OutAlbedo.rgb += (vec3(1) - effectLayerColor.rgb);
         break;
 
         case EFFECT_LAYER_BLEND_MODE_MULT:
-        outColor.rgb *= (effectLayerColor.rgb);
+        OutAlbedo.rgb *= (effectLayerColor.rgb);
         break;
 
         case EFFECT_LAYER_BLEND_MODE_INV_MULT:
-        outColor.rgb *= ((vec3(1) - effectLayerColor.rgb));
+        OutAlbedo.rgb *= ((vec3(1) - effectLayerColor.rgb));
         break;
     }
 
-    float originalAlpha = texture(OriginalColorTexture, B_FIn_AlbedoUv).a;
-    OutColor = vec4(outColor, originalAlpha);
+    float originalAlpha = texture(OriginalAlbedoTexture, B_FIn_AlbedoUv).a;
+    OutAlbedo    = vec4(OutAlbedo, originalAlpha);
+    OutNormal    = vec4(0,0,1,1);
+    OutRoughness = vec4(1.0f);
+    OutMetalness = vec4(0.1f);
 }
 

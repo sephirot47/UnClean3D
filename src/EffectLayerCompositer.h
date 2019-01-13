@@ -23,15 +23,29 @@ public:
     virtual ~EffectLayerCompositer();
 
     void ReloadShaders();
-    Texture2D *CompositeLayers(Texture2D *albedoReadTexture,
-                               const Array<EffectLayer *> &effectLayers);
+    void CompositeLayers(const Array<EffectLayer *> &effectLayers,
+                         Texture2D *albedoOriginalTexture,
+                         Texture2D *normalOriginalTexture,
+                         Texture2D *roughnessOriginalTexture,
+                         Texture2D *metalnessOriginalTexture,
+                         Texture2D **outAlbedoTexture,
+                         Texture2D **outNormalTexture,
+                         Texture2D **outRoughnessTexture,
+                         Texture2D **outMetalnessTexture);
 
 private:
     Framebuffer *m_framebuffer = nullptr;
-    AH<Texture2D> m_auxiliarTexture;
-    AH<ShaderProgram> m_compositeLayersSP;
 
-    AH<Texture2D> m_compositeTexture;
+    AH<Texture2D> m_albedoPingPongTexture0;
+    AH<Texture2D> m_albedoPingPongTexture1;
+    AH<Texture2D> m_normalPingPongTexture0;
+    AH<Texture2D> m_normalPingPongTexture1;
+    AH<Texture2D> m_roughnessPingPongTexture0;
+    AH<Texture2D> m_roughnessPingPongTexture1;
+    AH<Texture2D> m_metalnessPingPongTexture0;
+    AH<Texture2D> m_metalnessPingPongTexture1;
+
+    AH<ShaderProgram> m_compositeLayersSP;
 };
 
 #endif  // EFFECTLAYERCOMPOSITER_H

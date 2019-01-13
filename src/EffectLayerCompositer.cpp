@@ -17,8 +17,14 @@ EffectLayerCompositer::EffectLayerCompositer()
 {
     m_framebuffer = new Framebuffer();
 
-    m_auxiliarTexture = Assets::Create<Texture2D>();
-    m_compositeTexture = Assets::Create<Texture2D>();
+    m_albedoPingPongTexture0 = Assets::Create<Texture2D>();
+    m_albedoPingPongTexture1 = Assets::Create<Texture2D>();
+    m_normalPingPongTexture0 = Assets::Create<Texture2D>();
+    m_normalPingPongTexture1 = Assets::Create<Texture2D>();
+    m_roughnessPingPongTexture0 = Assets::Create<Texture2D>();
+    m_roughnessPingPongTexture1 = Assets::Create<Texture2D>();
+    m_metalnessPingPongTexture0 = Assets::Create<Texture2D>();
+    m_metalnessPingPongTexture1 = Assets::Create<Texture2D>();
 
     m_compositeLayersSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
@@ -35,9 +41,16 @@ void EffectLayerCompositer::ReloadShaders()
     m_compositeLayersSP.Get()->ReImport();
 }
 
-Texture2D *EffectLayerCompositer::CompositeLayers(
-    Texture2D *albedoReadTexture,
-    const Array<EffectLayer *> &effectLayers)
+void EffectLayerCompositer::CompositeLayers(
+    const Array<EffectLayer *> &effectLayers,
+    Texture2D *albedoOriginalTex,
+    Texture2D *normalOriginalTex,
+    Texture2D *roughnessOriginalTex,
+    Texture2D *metalnessOriginalTex,
+    Texture2D **outAlbedoTexture,
+    Texture2D **outNormalTexture,
+    Texture2D **outRoughnessTexture,
+    Texture2D **outMetalnessTexture)
 {
     ControlPanel *controlPanel = MainScene::GetInstance()->GetControlPanel();
 
@@ -48,20 +61,29 @@ Texture2D *EffectLayerCompositer::CompositeLayers(
 
     // Set viewport
     GL::SetViewport(
-        0, 0, albedoReadTexture->GetWidth(), albedoReadTexture->GetHeight());
+        0, 0, albedoOriginalTex->GetWidth(), albedoOriginalTex->GetHeight());
 
     GL::Disable(GL::Enablable::BLEND);
 
-    m_auxiliarTexture.Get()->Resize(albedoReadTexture->GetSize());
-    m_compositeTexture.Get()->Resize(albedoReadTexture->GetSize());
+    m_albedoPingPongTexture0.Get()->Resize(albedoOriginalTex->GetSize());
+    m_albedoPingPongTexture1.Get()->Resize(albedoOriginalTex->GetSize());
+    m_normalPingPongTexture0.Get()->Resize(normalOriginalTex->GetSize());
+    m_normalPingPongTexture1.Get()->Resize(normalOriginalTex->GetSize());
+    m_roughnessPingPongTexture0.Get()->Resize(roughnessOriginalTex->GetSize());
+    m_roughnessPingPongTexture1.Get()->Resize(roughnessOriginalTex->GetSize());
+    m_metalnessPingPongTexture0.Get()->Resize(metalnessOriginalTex->GetSize());
+    m_metalnessPingPongTexture1.Get()->Resize(metalnessOriginalTex->GetSize());
 
     // Bind framebuffer and render to texture
     m_framebuffer->Bind();
-    Texture2D *drawTexture = m_compositeTexture.Get();
-    Texture2D *readTexture = albedoReadTexture;
-
-    m_framebuffer->SetAttachmentTexture(drawTexture, GL::Attachment::COLOR0);
-    m_framebuffer->SetAllDrawBuffers();
+    Texture2D *albedoDrawTex = m_albedoPingPongTexture0.Get();
+    Texture2D *albedoReadTex = albedoOriginalTex;
+    Texture2D *normalDrawTex = m_normalPingPongTexture0.Get();
+    Texture2D *normalReadTex = normalOriginalTex;
+    Texture2D *roughnessDrawTex = m_roughnessPingPongTexture0.Get();
+    Texture2D *roughnessReadTex = roughnessOriginalTex;
+    Texture2D *metalnessDrawTex = m_metalnessPingPongTexture0.Get();
+    Texture2D *metalnessReadTex = metalnessOriginalTex;
 
     // Bind ShaderProgram and set uniforms
     ShaderProgram *sp = m_compositeLayersSP.Get();
@@ -74,26 +96,47 @@ Texture2D *EffectLayerCompositer::CompositeLayers(
             continue;
         }
 
-        m_framebuffer->SetAttachmentTexture(drawTexture,
+        m_framebuffer->SetAttachmentTexture(albedoDrawTex,
                                             GL::Attachment::COLOR0);
+        m_framebuffer->SetAttachmentTexture(normalDrawTex,
+                                            GL::Attachment::COLOR1);
+        m_framebuffer->SetAttachmentTexture(roughnessDrawTex,
+                                            GL::Attachment::COLOR2);
+        m_framebuffer->SetAttachmentTexture(metalnessDrawTex,
+                                            GL::Attachment::COLOR3);
+        m_framebuffer->SetAllDrawBuffers();
 
         // Set uniforms
         {
             EffectLayer *effectLayer = effectLayers[i];
             sp->SetInt("EffectLayerBlendMode",
                        effectLayer->GetImplementation()->GetBlendMode());
-            sp->SetTexture2D("OriginalColorTexture", albedoReadTexture);
-            sp->SetTexture2D("PreviousColorTexture", readTexture);
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
+
+            sp->SetTexture2D("OriginalAlbedoTexture", albedoOriginalTex);
+            sp->SetTexture2D("PreviousAlbedoTexture", albedoReadTex);
+            sp->SetTexture2D("OriginalNormalTexture", normalOriginalTex);
+            sp->SetTexture2D("PreviousNormalTexture", normalReadTex);
+            sp->SetTexture2D("OriginalRoughnessTexture", roughnessOriginalTex);
+            sp->SetTexture2D("PreviousRoughnessTexture", roughnessReadTex);
+            sp->SetTexture2D("OriginalMetalnessTexture", metalnessOriginalTex);
+            sp->SetTexture2D("PreviousMetalnessTexture", metalnessReadTex);
         }
 
         GEngine::GetInstance()->RenderViewportPlane();
 
-        std::swap(drawTexture, readTexture);
+        std::swap(albedoDrawTex, albedoReadTex);
+        std::swap(normalDrawTex, normalReadTex);
+        std::swap(roughnessDrawTex, roughnessReadTex);
+        std::swap(metalnessDrawTex, metalnessReadTex);
+
         if (i == 0)
         {
-            drawTexture = m_auxiliarTexture.Get();
+            albedoDrawTex = m_albedoPingPongTexture1.Get();
+            normalDrawTex = m_normalPingPongTexture1.Get();
+            roughnessDrawTex = m_roughnessPingPongTexture1.Get();
+            metalnessDrawTex = m_metalnessPingPongTexture1.Get();
         }
     }
 
@@ -105,5 +148,8 @@ Texture2D *EffectLayerCompositer::CompositeLayers(
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
 
-    return readTexture;
+    *outAlbedoTexture = albedoReadTex;
+    *outNormalTexture = normalOriginalTex;
+    *outRoughnessTexture = roughnessOriginalTex;
+    *outMetalnessTexture = metalnessOriginalTex;
 }

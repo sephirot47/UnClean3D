@@ -125,7 +125,7 @@ void View3DScene::Update()
         Vector3 minIntersectionPoint;
         Ray mouseCamRay = GetCamera()->FromViewportPointNDCToRay(
             Input::GetMousePositionNDC());
-        for (const auto &it : m_meshRendererToEffectLayers)
+        for (const auto &it : m_meshRendererToInfo)
         {
             MeshRenderer *mr = it.first;
             const Matrix4 localToWorldMatrix =
@@ -213,9 +213,9 @@ void View3DScene::ReloadShaders()
 {
     m_view3DShaderProgram.Get()->ReImport();
     m_effectLayerCompositer->ReloadShaders();
-    for (auto &it : m_meshRendererToEffectLayers)
+    for (auto &it : m_meshRendererToInfo)
     {
-        const Array<EffectLayer *> &effectLayers = it.second;
+        const Array<EffectLayer *> &effectLayers = it.second.effectLayers;
         for (EffectLayer *effectLayer : effectLayers)
         {
             effectLayer->ReloadShaders();
@@ -230,15 +230,15 @@ void View3DScene::OnModelChanged(Model *newModel)
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
-        for (auto &it : m_meshRendererToEffectLayers)
+        for (auto &it : m_meshRendererToInfo)
         {
-            const Array<EffectLayer *> &effectLayers = it.second;
+            const Array<EffectLayer *> &effectLayers = it.second.effectLayers;
             for (EffectLayer *effectLayer : effectLayers)
             {
                 delete effectLayer;
             }
         }
-        m_meshRendererToEffectLayers.Clear();
+        m_meshRendererToInfo.Clear();
     }
 
     if (newModel)
@@ -257,9 +257,49 @@ void View3DScene::OnModelChanged(Model *newModel)
         for (MeshRenderer *mr : mrs)
         {
             Material *mat = mr->GetMaterial();
-            m_meshRendererToEffectLayers.Add(mr, Array<EffectLayer *>::Empty());
-            m_meshRendererToOriginalAlbedoTexture.Add(
-                mr, AH<Texture2D>(mat->GetAlbedoTexture()));
+
+            // Create default textures if they do not exist
+            constexpr int DefaultTexSize = 1024;
+            constexpr int DTS = DefaultTexSize;
+            if (!mat->GetAlbedoTexture())
+            {
+                AH<Texture2D> defaultAlbedoTex = Assets::Create<Texture2D>();
+                defaultAlbedoTex.Get()->Fill(Color::Red(), DTS, DTS);
+                mat->SetAlbedoTexture(defaultAlbedoTex.Get());
+            }
+
+            if (!mat->GetNormalMapTexture())
+            {
+                AH<Texture2D> defaultNormalTex = Assets::Create<Texture2D>();
+                defaultNormalTex.Get()->Fill(Color::Blue(), DTS, DTS);
+                mat->SetNormalMapTexture(defaultNormalTex.Get());
+            }
+
+            if (!mat->GetRoughnessTexture())
+            {
+                AH<Texture2D> defaultRoughnessTex = Assets::Create<Texture2D>();
+                defaultRoughnessTex.Get()->Fill(Color(0.5f), DTS, DTS);
+                mat->SetRoughnessTexture(defaultRoughnessTex.Get());
+            }
+
+            if (!mat->GetMetalnessTexture())
+            {
+                AH<Texture2D> defaultMetalnessTex = Assets::Create<Texture2D>();
+                defaultMetalnessTex.Get()->Fill(Color(0.5f), DTS, DTS);
+                mat->SetMetalnessTexture(defaultMetalnessTex.Get());
+            }
+
+            MeshRendererInfo mrInfo;
+            mrInfo.originalAlbedoTexture =
+                AH<Texture2D>(mat->GetAlbedoTexture());
+            mrInfo.originalNormalTexture =
+                AH<Texture2D>(mat->GetNormalMapTexture());
+            mrInfo.originalRoughnessTexture =
+                AH<Texture2D>(mat->GetRoughnessTexture());
+            mrInfo.originalMetalnessTexture =
+                AH<Texture2D>(mat->GetMetalnessTexture());
+            m_meshRendererToInfo.Add(mr, mrInfo);
+
             mat->SetShaderProgram(m_view3DShaderProgram.Get());
         }
 
@@ -277,10 +317,10 @@ void View3DScene::OnModelChanged(Model *newModel)
 
 void View3DScene::CreateNewEffectLayer()
 {
-    for (auto &it : m_meshRendererToEffectLayers)
+    for (auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
-        Array<EffectLayer *> &effectLayers = it.second;
+        Array<EffectLayer *> &effectLayers = it.second.effectLayers;
 
         EffectLayer *newEffectLayer = new EffectLayer(mr);
         newEffectLayer->SetEffectLayerImplementation(new EffectLayerDirt());
@@ -290,10 +330,10 @@ void View3DScene::CreateNewEffectLayer()
 
 void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
 {
-    for (auto &it : m_meshRendererToEffectLayers)
+    for (auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
-        Array<EffectLayer *> &effectLayers = it.second;
+        Array<EffectLayer *> &effectLayers = it.second.effectLayers;
         effectLayers.RemoveByIndex(effectLayerIdx);
     }
 }
@@ -309,34 +349,51 @@ void View3DScene::UpdateParameters(const EffectLayerParameters &params)
 
 void View3DScene::ApplyCompositeTexturesToModel()
 {
-    for (const auto &it : m_meshRendererToEffectLayers)
+    for (const auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
-        const Array<EffectLayer *> &effectLayers = it.second;
+        const MeshRendererInfo &mrInfo = it.second;
         if (Material *mat = mr->GetMaterial())
         {
-            if (Texture2D *albedoTex = mat->GetAlbedoTexture())
-            {
-                Texture2D *compositeTexture =
-                    m_effectLayerCompositer->CompositeLayers(albedoTex,
-                                                             effectLayers);
-                mat->SetAlbedoTexture(compositeTexture);
-            }
+            Texture2D *albedoTexture = mat->GetAlbedoTexture();
+            Texture2D *normalTexture = mat->GetNormalMapTexture();
+            Texture2D *roughnessTexture = mat->GetRoughnessTexture();
+            Texture2D *metalnessTexture = mat->GetMetalnessTexture();
+
+            const Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
+            Texture2D *outAlbedoTexture = nullptr;
+            Texture2D *outNormalTexture = nullptr;
+            Texture2D *outRoughnessTexture = nullptr;
+            Texture2D *outMetalnessTexture = nullptr;
+            m_effectLayerCompositer->CompositeLayers(effectLayers,
+                                                     albedoTexture,
+                                                     normalTexture,
+                                                     roughnessTexture,
+                                                     metalnessTexture,
+                                                     &outAlbedoTexture,
+                                                     &outNormalTexture,
+                                                     &outRoughnessTexture,
+                                                     &outMetalnessTexture);
+            mat->SetAlbedoTexture(outAlbedoTexture);
+            mat->SetNormalMapTexture(outNormalTexture);
+            mat->SetRoughnessTexture(outRoughnessTexture);
+            mat->SetMetalnessTexture(outMetalnessTexture);
         }
     }
 }
 
 void View3DScene::RestoreOriginalAlbedoTexturesToModel()
 {
-    for (const auto &it : m_meshRendererToEffectLayers)
+    for (const auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
         if (Material *mat = mr->GetMaterial())
         {
-            ASSERT(m_meshRendererToOriginalAlbedoTexture.ContainsKey(mr));
-            Texture2D *originalAlbedoTexture =
-                m_meshRendererToOriginalAlbedoTexture.Get(mr).Get();
-            mat->SetAlbedoTexture(originalAlbedoTexture);
+            const MeshRendererInfo &mrInfo = it.second;
+            mat->SetAlbedoTexture(mrInfo.originalAlbedoTexture.Get());
+            mat->SetNormalMapTexture(mrInfo.originalAlbedoTexture.Get());
+            mat->SetRoughnessTexture(mrInfo.originalRoughnessTexture.Get());
+            mat->SetMetalnessTexture(mrInfo.originalMetalnessTexture.Get());
         }
     }
 }
@@ -357,9 +414,10 @@ GameObject *View3DScene::GetModelGameObject() const
 Array<EffectLayer *> View3DScene::GetSelectedEffectLayers() const
 {
     Array<EffectLayer *> effectLayers;
-    for (auto &it : m_meshRendererToEffectLayers)
+    for (auto &it : m_meshRendererToInfo)
     {
-        const Array<EffectLayer *> &mrEffectLayers = it.second;
+        const MeshRendererInfo &mrInfo = it.second;
+        const Array<EffectLayer *> &mrEffectLayers = mrInfo.effectLayers;
         uint selIdx = GetControlPanel()->GetSelectedUIEffectLayerIndex();
         if (selIdx < mrEffectLayers.Size())
         {

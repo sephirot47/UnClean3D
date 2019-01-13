@@ -50,11 +50,19 @@ public:
     Model *GetCurrentModel() const;
 
 private:
+    struct MeshRendererInfo
+    {
+        AH<Texture2D> originalAlbedoTexture;
+        AH<Texture2D> originalNormalTexture;
+        AH<Texture2D> originalRoughnessTexture;
+        AH<Texture2D> originalMetalnessTexture;
+        Array<EffectLayer *> effectLayers;
+    };
+
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
-    Map<MeshRenderer *, AH<Texture2D>> m_meshRendererToOriginalAlbedoTexture;
-    Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayers;
+    Map<MeshRenderer *, MeshRendererInfo> m_meshRendererToInfo;
 
     AH<ShaderProgram> m_view3DShaderProgram;
     EffectLayerCompositer *m_effectLayerCompositer = nullptr;
