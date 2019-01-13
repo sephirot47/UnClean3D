@@ -13,7 +13,6 @@
 
 #include "Common.glsl"
 #include "LightCommon.glsl"
-#include "CompositeLayers.glsl"
 #include "MaterialPBRUniforms.glsl"
 
 in vec3 B_FIn_Position;
@@ -54,11 +53,6 @@ void DefaultFragCommonMain(vec4 albedoColor)
     float pixelRoughness = texture(B_RoughnessTexture, B_FIn_AlbedoUv).r * B_MaterialRoughness;
     float pixelMetalness = texture(B_MetalnessTexture, B_FIn_AlbedoUv).r * B_MaterialMetalness;
     vec3 finalPosition = B_FIn_Position.xyz;
-
-    // Layer composition over textures
-    CompositeLayers(B_FIn_AlbedoUv,
-                    finalAlbedo.rgb,
-                    finalAlbedo.rgb);
 
     vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
                                          finalPosition,  finalNormal, finalAlbedo,

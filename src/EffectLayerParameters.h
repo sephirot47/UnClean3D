@@ -13,8 +13,8 @@ struct EffectLayerParameters
     float dirtFrequencyMultiply = 2.5f;
     float dirtAmplitude = 1.0f;
     float dirtAmplitudeMultiply = 0.6f;
-
-    Color tint = Color::Black();
+    Color dirtColor0 = Color::Red();
+    Color dirtColor1 = Color::Black();
 };
 
 #endif  // EFFECTLAYERPARAMETERS_H

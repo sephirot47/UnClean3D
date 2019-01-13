@@ -64,7 +64,8 @@ private:
     // Dirt
     GameObject *p_dirtParamsGo = nullptr;
     UIInputNumber *p_dirtSeedInput = nullptr;
-    UIInputColor *p_dirtTintInput = nullptr;
+    UIInputColor *p_dirtColor0Input = nullptr;
+    UIInputColor *p_dirtColor1Input = nullptr;
     UISlider *p_dirtFrequencyInput = nullptr;
     UISlider *p_dirtAmplitudeInput = nullptr;
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;

@@ -1,0 +1,52 @@
+#vertex
+#include "ScreenPass.vert"
+
+#fragment
+const int EFFECT_LAYER_BLEND_MODE_ADD      = 0;
+const int EFFECT_LAYER_BLEND_MODE_INV_ADD  = 1;
+const int EFFECT_LAYER_BLEND_MODE_MULT     = 2;
+const int EFFECT_LAYER_BLEND_MODE_INV_MULT = 3;
+
+uniform sampler2D OriginalColorTexture;
+uniform sampler2D PreviousColorTexture;
+uniform sampler2D EffectLayerTexture;
+uniform int EffectLayerBlendMode;
+uniform vec4 EffectLayerTint;
+
+in vec2 B_FIn_AlbedoUv;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec3 previousColor = texture(PreviousColorTexture, B_FIn_AlbedoUv).rgb;
+    vec3 outColor = previousColor;
+
+    // Apply effect layer
+    vec4 effectLayerColor = texture2D(EffectLayerTexture, B_FIn_AlbedoUv);
+    int effectLayerBlendMode = EffectLayerBlendMode;
+    float alpha = effectLayerColor.a;
+    switch (effectLayerBlendMode)
+    {
+        case EFFECT_LAYER_BLEND_MODE_ADD:
+        outColor.rgb = (effectLayerColor.rgb * alpha +
+                        previousColor.rgb * (1-alpha));
+        break;
+
+        case EFFECT_LAYER_BLEND_MODE_INV_ADD:
+        outColor.rgb += (vec3(1) - effectLayerColor.rgb);
+        break;
+
+        case EFFECT_LAYER_BLEND_MODE_MULT:
+        outColor.rgb *= (effectLayerColor.rgb);
+        break;
+
+        case EFFECT_LAYER_BLEND_MODE_INV_MULT:
+        outColor.rgb *= ((vec3(1) - effectLayerColor.rgb));
+        break;
+    }
+
+    float originalAlpha = texture(OriginalColorTexture, B_FIn_AlbedoUv).a;
+    OutColor = vec4(outColor, originalAlpha);
+}
+

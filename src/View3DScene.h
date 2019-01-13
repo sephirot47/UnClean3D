@@ -22,6 +22,7 @@ class MeshRenderer;
 using namespace Bang;
 
 class EffectLayer;
+class EffectLayerCompositer;
 class ControlPanel;
 
 class View3DScene : public Scene
@@ -40,6 +41,8 @@ public:
     void CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void UpdateParameters(const EffectLayerParameters &params);
+    void ApplyCompositeTexturesToModel();
+    void RestoreOriginalAlbedoTexturesToModel();
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
@@ -50,13 +53,16 @@ private:
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
+    Map<MeshRenderer *, AH<Texture2D>> m_meshRendererToOriginalAlbedoTexture;
     Map<MeshRenderer *, Array<EffectLayer *>> m_meshRendererToEffectLayers;
 
     AH<ShaderProgram> m_view3DShaderProgram;
+    EffectLayerCompositer *m_effectLayerCompositer = nullptr;
 
     Camera *p_cam = nullptr;
     bool m_orbiting = false;
     float m_currentCameraZoom = 0.0f;
+    Vector3 m_cameraOffset = Vector3::Zero();
     Vector3 m_cameraOrbitPoint = Vector3::Zero();
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
 

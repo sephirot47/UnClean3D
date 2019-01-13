@@ -64,7 +64,7 @@ void MainScene::Update()
 
     if (Input::GetKeyDown(Key::R))
     {
-        ResetModel();
+        // ResetModel();
     }
     else if (Input::GetKeyDown(Key::V))
     {

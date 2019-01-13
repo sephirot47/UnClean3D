@@ -5,11 +5,13 @@
 #include "Bang/DirectionalLight.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
+#include "Bang/Geometry.h"
 #include "Bang/Input.h"
 #include "Bang/Material.h"
 #include "Bang/MeshRenderer.h"
 #include "Bang/Model.h"
 #include "Bang/Paths.h"
+#include "Bang/Plane.h"
 #include "Bang/PointLight.h"
 #include "Bang/Shader.h"
 #include "Bang/ShaderProgram.h"
@@ -18,6 +20,7 @@
 #include "Bang/Transform.h"
 
 #include "ControlPanel.h"
+#include "EffectLayerCompositer.h"
 #include "EffectLayerDirt.h"
 #include "MainScene.h"
 
@@ -51,6 +54,8 @@ View3DScene::View3DScene()
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "View3DShader.bushader")));
 
+    m_effectLayerCompositer = new EffectLayerCompositer();
+
     p_modelContainer = GameObjectFactory::CreateGameObject();
     p_modelContainer->SetParent(this);
 
@@ -59,12 +64,14 @@ View3DScene::View3DScene()
 
 View3DScene::~View3DScene()
 {
+    delete m_effectLayerCompositer;
 }
 
 void View3DScene::Update()
 {
     GameObject::Update();
 
+    Transform *camTR = p_cam->GetGameObject()->GetTransform();
     m_fpsChrono.MarkEnd();
     m_fpsChrono.MarkBegin();
     // Debug_DPeek(m_fpsChrono.GetMeanFPS());
@@ -80,12 +87,79 @@ void View3DScene::Update()
         m_orbiting = false;
     }
 
+    if (Input::GetMouseButton(MouseButton::MIDDLE))
+    {
+        Vector2 mouseDelta(Input::GetMouseDelta());
+        Vector2 currentMousePos(Input::GetMousePosition());
+        Vector2 prevMousePos = currentMousePos - mouseDelta;
+
+        Ray currentMouseCamRay =
+            GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
+                currentMousePos, Vector2(GL::GetViewportSize())));
+
+        Ray prevMouseCamRay =
+            GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
+                prevMousePos, Vector2(GL::GetViewportSize())));
+
+        Plane orbitPlane;
+        orbitPlane.SetPoint(m_cameraOrbitPoint);
+        orbitPlane.SetNormal(camTR->GetBack());
+
+        bool _;
+        Vector3 prevIntersectionPoint;
+        Vector3 currentIntersectionPoint;
+        Geometry::IntersectRayPlane(
+            currentMouseCamRay, orbitPlane, &_, &prevIntersectionPoint);
+        Geometry::IntersectRayPlane(
+            prevMouseCamRay, orbitPlane, &_, &currentIntersectionPoint);
+
+        Vector3 displacement =
+            (currentIntersectionPoint - prevIntersectionPoint);
+        m_cameraOrbitPoint += displacement;
+    }
+
+    if (Input::GetKeyDown(Key::F))
+    {
+        bool intersected = false;
+        float minDistance = Math::Infinity<float>();
+        Vector3 minIntersectionPoint;
+        Ray mouseCamRay = GetCamera()->FromViewportPointNDCToRay(
+            Input::GetMousePositionNDC());
+        for (const auto &it : m_meshRendererToEffectLayers)
+        {
+            MeshRenderer *mr = it.first;
+            const Matrix4 localToWorldMatrix =
+                mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
+            for (Mesh::TriangleId triId = 0;
+                 triId < mr->GetMesh()->GetNumTriangles();
+                 ++triId)
+            {
+                Triangle tri = mr->GetMesh()->GetTriangle(triId);
+                tri = localToWorldMatrix * tri;
+                bool intersectedLocal = false;
+                float distance = 0.0f;
+                Geometry::IntersectRayTriangle(
+                    mouseCamRay, tri, &intersectedLocal, &distance);
+                if (intersectedLocal && distance < minDistance)
+                {
+                    intersected = true;
+                    minDistance = distance;
+                    minIntersectionPoint = mouseCamRay.GetPoint(distance);
+                }
+            }
+        }
+
+        if (intersected)
+        {
+            m_cameraOrbitPoint = minIntersectionPoint;
+        }
+    }
+
     if (Input::GetKeyDown(Key::S))
     {
         ReloadShaders();
     }
 
-    Transform *camTR = p_cam->GetGameObject()->GetTransform();
     if (m_orbiting)
     {
         Vector2 mouseCurrentAxisMovement = Input::GetMouseAxis();
@@ -112,7 +186,7 @@ void View3DScene::Update()
              Vector3(0, 0, 1))
                 .Normalized();
         Vector3 orbitPoint = m_cameraOrbitPoint;
-        camTR->SetPosition(orbitPoint + camDir * camDist);
+        camTR->SetPosition(orbitPoint + camDir * camDist + m_cameraOffset);
         camTR->LookAt(orbitPoint);
 
         p_cam->SetZNear(0.01f);
@@ -124,60 +198,28 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 {
     if (rp == RenderPass::SCENE_OPAQUE)
     {
-        for (auto it : m_meshRendererToEffectLayers)
-        {
-            MeshRenderer *mr = it.first;
-            const Array<EffectLayer *> &effectLayers = it.second;
-
-            // Uniforms
-            if (ShaderProgram *sp = mr->GetMaterial()->GetShaderProgram())
-            {
-                Array<bool> effectLayerVisibles;
-                Array<Color> effectLayerTints;
-                Array<int> effectLayerBlendModes;
-                Array<Texture2D *> effectLayerTextures;
-                for (uint i = 0; i < effectLayers.Size(); ++i)
-                {
-                    EffectLayer *effectLayer = effectLayers[i];
-                    if (effectLayer->GetImplementation())
-                    {
-                        effectLayerTints.PushBack(
-                            effectLayer->GetParameters().tint);
-                        effectLayerVisibles.PushBack(
-                            GetControlPanel()->IsVisibleUIEffectLayer(i));
-                        effectLayerTextures.PushBack(
-                            effectLayer->GetEffectTexture());
-                        effectLayerBlendModes.PushBack(
-                            effectLayer->GetImplementation()->GetBlendMode());
-                    }
-                }
-
-                sp->Bind();
-                for (uint i = 0; i < effectLayerTextures.Size(); ++i)
-                {
-                    sp->SetTexture2D("EffectLayerTexture_" + String(i),
-                                     effectLayerTextures[i]);
-                }
-                sp->SetColorArray("EffectLayerTints", effectLayerTints);
-                sp->SetBoolArray("EffectLayerVisibles", effectLayerVisibles);
-                sp->SetIntArray("EffectLayerBlendModes", effectLayerBlendModes);
-                sp->SetInt("NumEffectLayers", effectLayerTextures.Size());
-            }
-        }
+        ApplyCompositeTexturesToModel();
     }
 
     Scene::Render(rp, renderChildren);
+
+    if (rp == RenderPass::SCENE_OPAQUE)
+    {
+        RestoreOriginalAlbedoTexturesToModel();
+    }
 }
 
 void View3DScene::ReloadShaders()
 {
     m_view3DShaderProgram.Get()->ReImport();
+    m_effectLayerCompositer->ReloadShaders();
     for (auto &it : m_meshRendererToEffectLayers)
     {
         const Array<EffectLayer *> &effectLayers = it.second;
         for (EffectLayer *effectLayer : effectLayers)
         {
             effectLayer->ReloadShaders();
+            UpdateParameters(effectLayer->GetParameters());
         }
     }
 }
@@ -214,8 +256,11 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
+            Material *mat = mr->GetMaterial();
             m_meshRendererToEffectLayers.Add(mr, Array<EffectLayer *>::Empty());
-            mr->GetMaterial()->SetShaderProgram(m_view3DShaderProgram.Get());
+            m_meshRendererToOriginalAlbedoTexture.Add(
+                mr, AH<Texture2D>(mat->GetAlbedoTexture()));
+            mat->SetShaderProgram(m_view3DShaderProgram.Get());
         }
 
         Path prevModelPath =
@@ -262,6 +307,40 @@ void View3DScene::UpdateParameters(const EffectLayerParameters &params)
     }
 }
 
+void View3DScene::ApplyCompositeTexturesToModel()
+{
+    for (const auto &it : m_meshRendererToEffectLayers)
+    {
+        MeshRenderer *mr = it.first;
+        const Array<EffectLayer *> &effectLayers = it.second;
+        if (Material *mat = mr->GetMaterial())
+        {
+            if (Texture2D *albedoTex = mat->GetAlbedoTexture())
+            {
+                Texture2D *compositeTexture =
+                    m_effectLayerCompositer->CompositeLayers(albedoTex,
+                                                             effectLayers);
+                mat->SetAlbedoTexture(compositeTexture);
+            }
+        }
+    }
+}
+
+void View3DScene::RestoreOriginalAlbedoTexturesToModel()
+{
+    for (const auto &it : m_meshRendererToEffectLayers)
+    {
+        MeshRenderer *mr = it.first;
+        if (Material *mat = mr->GetMaterial())
+        {
+            ASSERT(m_meshRendererToOriginalAlbedoTexture.ContainsKey(mr));
+            Texture2D *originalAlbedoTexture =
+                m_meshRendererToOriginalAlbedoTexture.Get(mr).Get();
+            mat->SetAlbedoTexture(originalAlbedoTexture);
+        }
+    }
+}
+
 Camera *View3DScene::GetCamera() const
 {
     return p_cam;
@@ -298,6 +377,7 @@ Model *View3DScene::GetCurrentModel() const
 
 void View3DScene::ResetCamera()
 {
+    m_cameraOffset = Vector3::Zero();
     m_currentCameraZoom = 1.4f;
     m_currentCameraRotAngles = Vector2(45.0f, -45.0f);
     m_cameraOrbitPoint = p_modelContainer->GetBoundingSphereWorld().GetCenter();

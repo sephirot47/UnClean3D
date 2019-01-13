@@ -45,7 +45,7 @@ Path EffectLayerDirt::GetGenerateEffectTextureShaderProgramPath() const
 
 EffectLayer::BlendMode EffectLayerDirt::GetBlendMode() const
 {
-    return EffectLayer::BlendMode::INV_MULT;
+    return EffectLayer::BlendMode::ADD;
 }
 
 const EffectLayerParameters &EffectLayerDirt::GetParameters() const
@@ -63,4 +63,6 @@ void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
     sp->SetFloat("DirtAmplitudeMultiply",
                  GetParameters().dirtAmplitudeMultiply);
     sp->SetFloat("DirtSeed", GetParameters().dirtSeed);
+    sp->SetColor("DirtColor0", GetParameters().dirtColor0);
+    sp->SetColor("DirtColor1", GetParameters().dirtColor1);
 }

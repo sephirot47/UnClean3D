@@ -150,8 +150,11 @@ ControlPanel::ControlPanel()
         p_dirtSeedInput->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
 
-        p_dirtTintInput = new UIInputColor();
-        p_dirtTintInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+        p_dirtColor0Input = new UIInputColor();
+        p_dirtColor0Input->EventEmitter<IEventsValueChanged>::RegisterListener(
+            this);
+        p_dirtColor1Input = new UIInputColor();
+        p_dirtColor1Input->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
 
         p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider();
@@ -184,7 +187,8 @@ ControlPanel::ControlPanel()
             ->SetParent(p_dirtParamsGo);
         CreateRow("Seed", p_dirtSeedInput->GetGameObject())
             ->SetParent(p_dirtParamsGo);
-        CreateRow("Tint", p_dirtTintInput)->SetParent(p_dirtParamsGo);
+        CreateRow("Color0", p_dirtColor0Input)->SetParent(p_dirtParamsGo);
+        CreateRow("Color1", p_dirtColor1Input)->SetParent(p_dirtParamsGo);
 
         p_dirtParamsGo->SetParent(this);
     }
@@ -253,8 +257,10 @@ void ControlPanel::ExportModel()
         GetInitialDir(),
         GetOpenModelPath().GetName() + String(".") + extension);
 
+    GetView3DScene()->ApplyCompositeTexturesToModel();
     ModelIO::ExportModel(GetView3DScene()->GetModelGameObject(),
                          exportedModelPath);
+    GetView3DScene()->RestoreOriginalAlbedoTexturesToModel();
 }
 
 void ControlPanel::CreateNewEffectLayer()
@@ -276,7 +282,8 @@ void ControlPanel::UpdateSelectedEffectLayerParameters()
     m_params.dirtAmplitude = p_dirtAmplitudeInput->GetValue();
     m_params.dirtFrequencyMultiply = p_dirtFrequencyMultiplyInput->GetValue();
     m_params.dirtAmplitudeMultiply = p_dirtAmplitudeMultiplyInput->GetValue();
-    m_params.tint = p_dirtTintInput->GetColor();
+    m_params.dirtColor0 = p_dirtColor0Input->GetColor();
+    m_params.dirtColor1 = p_dirtColor1Input->GetColor();
 
     MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
         GetParameters());
@@ -301,7 +308,8 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
     p_dirtAmplitudeInput->SetValue(GetParameters().dirtAmplitude);
     p_dirtAmplitudeMultiplyInput->SetValue(
         GetParameters().dirtAmplitudeMultiply);
-    p_dirtTintInput->SetColor(GetParameters().tint);
+    p_dirtColor0Input->SetColor(GetParameters().dirtColor0);
+    p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
