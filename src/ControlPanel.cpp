@@ -69,6 +69,13 @@ ControlPanel::ControlPanel()
 
     // Open/Export buttons row
     {
+        UILabel *fileSettingsLabel = GameObjectFactory::CreateUILabel();
+        fileSettingsLabel->GetText()->SetContent("File settings");
+        fileSettingsLabel->GetText()->SetTextSize(14);
+        fileSettingsLabel->GetText()->SetHorizontalAlign(
+            HorizontalAlignment::LEFT);
+        CreateRow("", fileSettingsLabel->GetGameObject())->SetParent(this);
+
         GameObject *buttonsRow = GameObjectFactory::CreateUIGameObject();
         UIHorizontalLayout *hl = buttonsRow->AddComponent<UIHorizontalLayout>();
         hl->SetSpacing(10);
@@ -90,6 +97,13 @@ ControlPanel::ControlPanel()
 
     // View buttons row
     {
+        UILabel *viewSettingsLabel = GameObjectFactory::CreateUILabel();
+        viewSettingsLabel->GetText()->SetContent("View settings");
+        viewSettingsLabel->GetText()->SetTextSize(14);
+        viewSettingsLabel->GetText()->SetHorizontalAlign(
+            HorizontalAlignment::LEFT);
+        CreateRow("", viewSettingsLabel->GetGameObject())->SetParent(this);
+
         GameObject *sceneModeRow = GameObjectFactory::CreateUIGameObject();
         UIHorizontalLayout *hl =
             sceneModeRow->AddComponent<UIHorizontalLayout>();
@@ -97,9 +111,6 @@ ControlPanel::ControlPanel()
         UILayoutElement *rowLE = sceneModeRow->AddComponent<UILayoutElement>();
         rowLE->SetMinHeight(20);
         sceneModeRow->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
-            ->SetParent(this);
 
         UILabel *label = GameObjectFactory::CreateUILabel();
         label->GetText()->SetContent("Scene mode:");
@@ -117,12 +128,19 @@ ControlPanel::ControlPanel()
 
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
             ->SetParent(sceneModeRow);
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
     }
 
     // General settings showgroup
     {
+        UILabel *generalSettingsLabel = GameObjectFactory::CreateUILabel();
+        generalSettingsLabel->GetText()->SetContent("General settings");
+        generalSettingsLabel->GetText()->SetTextSize(14);
+        generalSettingsLabel->GetText()->SetHorizontalAlign(
+            HorizontalAlignment::LEFT);
+        CreateRow("", generalSettingsLabel->GetGameObject())->SetParent(this);
+
         p_baseRoughnessInput = GameObjectFactory::CreateUISlider();
         p_baseRoughnessInput->SetMinMaxValues(0.0f, 1.0f);
         p_baseRoughnessInput->SetValue(1.0f);
@@ -141,7 +159,30 @@ ControlPanel::ControlPanel()
         CreateRow("Textures size", p_texturesSizeInput->GetGameObject())
             ->SetParent(this);
 
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+            ->SetParent(this);
+    }
+
+    // Mask showgroup
+    {
+        UILabel *maskLabel = GameObjectFactory::CreateUILabel();
+        maskLabel->GetText()->SetContent("Mask");
+        maskLabel->GetText()->SetTextSize(14);
+        maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        CreateRow("", maskLabel->GetGameObject())->SetParent(this);
+
+        p_maskBrushSize = GameObjectFactory::CreateUISlider();
+        p_maskBrushSize->SetMinMaxValues(1.0f, 500.0f);
+        p_maskBrushSize->SetValue(50.0f);
+        CreateRow("Brush size", p_maskBrushSize->GetGameObject())
+            ->SetParent(this);
+
+        p_drawMaskButton =
+            GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
+        p_drawMaskButton->SetOn(true);
+        p_drawMaskButton->GetGameObject()->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
     }
 
@@ -154,7 +195,7 @@ ControlPanel::ControlPanel()
         le->SetFlexibleWidth(1.0f);
         p_uiEffectLayers->SetParent(this);
 
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15.0f)
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
     }
 
@@ -168,7 +209,7 @@ ControlPanel::ControlPanel()
         dirtLabel->GetText()->SetContent("Dirt");
         dirtLabel->GetText()->SetTextSize(14);
         dirtLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        dirtLabel->GetGameObject()->SetParent(p_dirtParamsGo);
+        CreateRow("", dirtLabel->GetGameObject())->SetParent(p_dirtParamsGo);
 
         p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
         p_dirtSeedInput->SetMinValue(0);
@@ -235,6 +276,18 @@ void ControlPanel::Update()
     else if (Input::GetKeyDown(Key::E))
     {
         ExportModel();
+    }
+    else if (Input::GetKeyDown(Key::M))
+    {
+        p_drawMaskButton->SetOn(!p_drawMaskButton->GetOn());
+    }
+
+    if (Input::GetKey(Key::LSHIFT))
+    {
+        float maskBrushSizeIncrement = Input::GetMouseWheel().y;
+        maskBrushSizeIncrement *= (p_maskBrushSize->GetValue() / 10);
+        p_maskBrushSize->SetValue(p_maskBrushSize->GetValue() +
+                                  maskBrushSizeIncrement);
     }
 
     p_dirtParamsGo->SetEnabled(false);
@@ -338,6 +391,16 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
     p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
+}
+
+bool ControlPanel::GetDrawMaskMode() const
+{
+    return p_drawMaskButton->GetOn();
+}
+
+float ControlPanel::GetMaskBrushSize() const
+{
+    return p_maskBrushSize->GetValue();
 }
 
 float ControlPanel::GetBaseRoughness() const

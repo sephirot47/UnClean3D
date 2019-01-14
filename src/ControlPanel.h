@@ -44,6 +44,9 @@ public:
     void UpdateSelectedEffectLayerParameters();
     void UpdateInputsAndParametersFromSelectedEffectLayer();
 
+    bool GetDrawMaskMode() const;
+    float GetMaskBrushSize() const;
+
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
     Vector2i GetTextureSize() const;
@@ -67,6 +70,13 @@ private:
     UISlider *p_baseMetalnessInput = nullptr;
     UISlider *p_texturesSizeInput = nullptr;
 
+    // Mask
+    UIToolButton *p_drawMaskButton = nullptr;
+    UISlider *p_maskBrushSize = nullptr;
+
+    // Effect layers
+    UIEffectLayers *p_uiEffectLayers = nullptr;
+
     // Dirt
     GameObject *p_dirtParamsGo = nullptr;
     UIInputNumber *p_dirtSeedInput = nullptr;
@@ -76,9 +86,6 @@ private:
     UISlider *p_dirtAmplitudeInput = nullptr;
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;
     UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
-
-    // Effect layers
-    UIEffectLayers *p_uiEffectLayers = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;

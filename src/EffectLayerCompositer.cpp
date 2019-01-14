@@ -17,7 +17,6 @@ EffectLayerCompositer::EffectLayerCompositer()
 {
     m_framebuffer = new Framebuffer();
 
-    m_onePixelTexture = Assets::Create<Texture2D>();
     m_albedoPingPongTexture0 = Assets::Create<Texture2D>();
     m_albedoPingPongTexture1 = Assets::Create<Texture2D>();
     m_normalPingPongTexture0 = Assets::Create<Texture2D>();
@@ -141,6 +140,8 @@ void EffectLayerCompositer::CompositeLayers(
                        effectLayer->GetImplementation()->GetEffectLayerType());
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
+            sp->SetTexture2D("EffectLayerMaskTexture",
+                             effectLayer->GetMaskTexture());
 
             sp->SetTexture2D("PreviousAlbedoTexture", albedoReadTex);
             sp->SetTexture2D("PreviousNormalTexture", normalReadTex);

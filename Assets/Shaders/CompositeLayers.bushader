@@ -5,6 +5,7 @@
 const int EFFECT_LAYER_TYPE_DIRT = 0;
 
 uniform sampler2D EffectLayerTexture;
+uniform sampler2D EffectLayerMaskTexture;
 uniform int EffectLayerType;
 
 uniform sampler2D OriginalAlbedoTexture;
@@ -28,29 +29,35 @@ void main()
     vec2 uv = B_FIn_AlbedoUv;
 
     // Apply effect layer
-    vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
-    switch (EffectLayerType)
+    float mask = texture(EffectLayerMaskTexture, uv).r;
+    if (mask > 0)
     {
-        case EFFECT_LAYER_TYPE_DIRT:
+        vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
+        switch (EffectLayerType)
         {
-            vec4 originalAlbedo    = texture(OriginalAlbedoTexture, uv);
-            vec4 originalNormal    = texture(OriginalNormalTexture, uv);
-            vec4 originalRoughness = texture(OriginalRoughnessTexture, uv);
-            vec4 originalMetalness = texture(OriginalMetalnessTexture, uv);
-            vec3 previousAlbedo    = texture(PreviousAlbedoTexture, uv).rgb;
+            case EFFECT_LAYER_TYPE_DIRT:
+            {
+                vec4 originalAlbedo    = texture(OriginalAlbedoTexture, uv);
+                vec4 originalNormal    = texture(OriginalNormalTexture, uv);
+                vec4 originalRoughness = texture(OriginalRoughnessTexture, uv);
+                vec4 originalMetalness = texture(OriginalMetalnessTexture, uv);
+                vec3 previousAlbedo    = texture(PreviousAlbedoTexture, uv).rgb;
 
-            float alpha = effectLayerColor.a;
-            float dirtIntensity = effectLayerColor.a;
+                float alpha = effectLayerColor.a;
+                float dirtIntensity = effectLayerColor.a;
 
-            OutAlbedo.rgb = (effectLayerColor.rgb * alpha +
-                             previousAlbedo.rgb * (1-alpha));
-            OutAlbedo.a   = originalAlbedo.a;
+                effectLayerColor *= mask;
 
-            OutNormal    = originalNormal;
-            OutRoughness = clamp(originalRoughness + alpha, vec4(0), vec4(1));
-            OutMetalness = clamp(originalMetalness - alpha, vec4(0), vec4(1));
+                OutAlbedo.rgb = (effectLayerColor.rgb * alpha +
+                                 previousAlbedo.rgb * (1-alpha));
+                OutAlbedo.a   = originalAlbedo.a;
+
+                OutNormal    = originalNormal;
+                OutRoughness = clamp(originalRoughness + alpha, vec4(0), vec4(1));
+                OutMetalness = clamp(originalMetalness - alpha, vec4(0), vec4(1));
+            }
+            break;
         }
-        break;
     }
 }
 

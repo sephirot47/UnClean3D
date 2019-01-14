@@ -18,6 +18,7 @@ namespace Bang
 class Camera;
 class Model;
 class MeshRenderer;
+class LineRenderer;
 };
 using namespace Bang;
 
@@ -59,6 +60,8 @@ private:
         AH<Texture2D> originalMetalnessTexture;
         Array<EffectLayer *> effectLayers;
     };
+
+    LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;

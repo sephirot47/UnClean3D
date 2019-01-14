@@ -7,7 +7,9 @@
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Geometry.h"
 #include "Bang/Input.h"
+#include "Bang/LineRenderer.h"
 #include "Bang/Material.h"
+#include "Bang/MeshFactory.h"
 #include "Bang/MeshRenderer.h"
 #include "Bang/Model.h"
 #include "Bang/Paths.h"
@@ -30,6 +32,7 @@ View3DScene::View3DScene()
 {
     AddComponent<Transform>();
 
+    // Camera
     GameObject *camGo = GameObjectFactory::CreateGameObject();
     p_cam = GameObjectFactory::CreateDefaultCameraInto(camGo);
     p_cam->SetZFar(100.0f);
@@ -37,6 +40,41 @@ View3DScene::View3DScene()
     camGo->SetParent(this);
     SetCamera(p_cam);
 
+    // Init mask brush
+    GameObject *maskBrushRendGo = GameObjectFactory::CreateGameObject();
+    {
+        p_maskBrushRend = maskBrushRendGo->AddComponent<LineRenderer>();
+        Array<Vector3> circlePoints;
+        constexpr int CircleSegments = 100;
+        constexpr float step = (1.0f / CircleSegments);
+        for (uint i = 0; i < CircleSegments; ++i)
+        {
+            float angle = (2.0f * Math::Pi) * i * step;
+            Vector3 point(Math::Cos(angle), Math::Sin(angle), 0);
+            circlePoints.PushBack(point);
+        }
+
+        for (uint i = 0; i < CircleSegments + 1; ++i)
+        {
+            p_maskBrushRend->SetPoint(i * 2, circlePoints[i % CircleSegments]);
+            p_maskBrushRend->SetPoint(i * 2 + 1,
+                                      circlePoints[(i + 1) % CircleSegments]);
+        }
+
+        p_maskBrushRend->GetMaterial()
+            ->GetShaderProgramProperties()
+            .SetLineWidth(1.0f);
+        p_maskBrushRend->GetMaterial()
+            ->GetShaderProgramProperties()
+            .SetRenderPass(RenderPass::CANVAS);
+        p_maskBrushRend->SetViewProjMode(GL::ViewProjMode::CANVAS);
+        p_maskBrushRend->GetMaterial()->SetAlbedoColor(Color::Red());
+        p_maskBrushRend->GetMaterial()->SetReceivesLighting(false);
+
+        maskBrushRendGo->SetParent(this);
+    }
+
+    // Light
     GameObject *dlGo = GameObjectFactory::CreateGameObject();
     DirectionalLight *dl = dlGo->AddComponent<DirectionalLight>();
     dl->SetShadowStrength(1.0f);
@@ -76,121 +114,141 @@ void View3DScene::Update()
     m_fpsChrono.MarkBegin();
     // Debug_DPeek(m_fpsChrono.GetMeanFPS());
 
-    if (Input::IsMouseInsideContext() &&
-        Input::GetMouseButtonDown(MouseButton::LEFT))
+    // Stuff needed for later
+    ControlPanel *controlPanel = GetControlPanel();
+
+    bool _;
+    const Plane orbitPlane(m_cameraOrbitPoint, camTR->GetBack());
+    const Vector2 currentMousePos(Input::GetMousePosition());
+    const Ray currentMouseCamRay =
+        GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
+            currentMousePos, Vector2(GL::GetViewportSize())));
+    Vector3 mouseOrbitPlaneIntersection;
+    Geometry::IntersectRayPlane(
+        currentMouseCamRay, orbitPlane, &_, &mouseOrbitPlaneIntersection);
+
+    // Get intersection of mouse ray with mesh
+    bool intersectedMouseRayWithMesh = false;
+    float closestMouseRayMeshIntersectionDistance = Math::Infinity<float>();
+    Vector3 closestMouseRayMeshIntersectionPoint;
+    for (const auto &it : m_meshRendererToInfo)
     {
-        m_orbiting = true;
-    }
-
-    if (!Input::GetMouseButton(MouseButton::LEFT))
-    {
-        m_orbiting = false;
-    }
-
-    if (Input::GetMouseButton(MouseButton::MIDDLE))
-    {
-        Vector2 mouseDelta(Input::GetMouseDelta());
-        Vector2 currentMousePos(Input::GetMousePosition());
-        Vector2 prevMousePos = currentMousePos - mouseDelta;
-
-        Ray currentMouseCamRay =
-            GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
-                currentMousePos, Vector2(GL::GetViewportSize())));
-
-        Ray prevMouseCamRay =
-            GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
-                prevMousePos, Vector2(GL::GetViewportSize())));
-
-        Plane orbitPlane;
-        orbitPlane.SetPoint(m_cameraOrbitPoint);
-        orbitPlane.SetNormal(camTR->GetBack());
-
-        bool _;
-        Vector3 prevIntersectionPoint;
-        Vector3 currentIntersectionPoint;
-        Geometry::IntersectRayPlane(
-            currentMouseCamRay, orbitPlane, &_, &prevIntersectionPoint);
-        Geometry::IntersectRayPlane(
-            prevMouseCamRay, orbitPlane, &_, &currentIntersectionPoint);
-
-        Vector3 displacement =
-            (currentIntersectionPoint - prevIntersectionPoint);
-        m_cameraOrbitPoint += displacement;
-    }
-
-    if (Input::GetKeyDown(Key::F))
-    {
-        bool intersected = false;
-        float minDistance = Math::Infinity<float>();
-        Vector3 minIntersectionPoint;
-        Ray mouseCamRay = GetCamera()->FromViewportPointNDCToRay(
-            Input::GetMousePositionNDC());
-        for (const auto &it : m_meshRendererToInfo)
+        MeshRenderer *mr = it.first;
+        const Matrix4 localToWorldMatrix =
+            mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
+        for (Mesh::TriangleId triId = 0;
+             triId < mr->GetMesh()->GetNumTriangles();
+             ++triId)
         {
-            MeshRenderer *mr = it.first;
-            const Matrix4 localToWorldMatrix =
-                mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
-            for (Mesh::TriangleId triId = 0;
-                 triId < mr->GetMesh()->GetNumTriangles();
-                 ++triId)
+            Triangle tri = mr->GetMesh()->GetTriangle(triId);
+            tri = localToWorldMatrix * tri;
+            bool intersectedLocal = false;
+            float distance = 0.0f;
+            Geometry::IntersectRayTriangle(
+                currentMouseCamRay, tri, &intersectedLocal, &distance);
+            if (intersectedLocal &&
+                distance < closestMouseRayMeshIntersectionDistance)
             {
-                Triangle tri = mr->GetMesh()->GetTriangle(triId);
-                tri = localToWorldMatrix * tri;
-                bool intersectedLocal = false;
-                float distance = 0.0f;
-                Geometry::IntersectRayTriangle(
-                    mouseCamRay, tri, &intersectedLocal, &distance);
-                if (intersectedLocal && distance < minDistance)
-                {
-                    intersected = true;
-                    minDistance = distance;
-                    minIntersectionPoint = mouseCamRay.GetPoint(distance);
-                }
+                intersectedMouseRayWithMesh = true;
+                closestMouseRayMeshIntersectionDistance = distance;
+                closestMouseRayMeshIntersectionPoint =
+                    currentMouseCamRay.GetPoint(distance);
+            }
+        }
+    }
+
+    // Mask brush line rendering handling
+    {
+        GameObject *brushGo = p_maskBrushRend->GetGameObject();
+        Transform *brushTR = brushGo->GetTransform();
+        brushGo->SetEnabled(GetControlPanel()->GetDrawMaskMode());
+        brushTR->SetPosition(Vector3(Input::GetMousePosition(), 0));
+        brushTR->SetScale(controlPanel->GetMaskBrushSize());
+    }
+
+    // Camera movement
+    {
+        if (Input::IsMouseInsideContext() &&
+            Input::GetMouseButtonDown(MouseButton::RIGHT))
+        {
+            m_orbiting = true;
+        }
+
+        if (!Input::GetMouseButton(MouseButton::RIGHT))
+        {
+            m_orbiting = false;
+        }
+
+        if (Input::GetMouseButton(MouseButton::MIDDLE))
+        {
+            Vector2 mouseDelta(Input::GetMouseDelta());
+            Vector2 prevMousePos = currentMousePos - mouseDelta;
+
+            Ray prevMouseCamRay =
+                GetCamera()->FromViewportPointNDCToRay(GL::FromPointToPointNDC(
+                    prevMousePos, Vector2(GL::GetViewportSize())));
+
+            Vector3 prevIntersectionPoint;
+            Geometry::IntersectRayPlane(
+                prevMouseCamRay, orbitPlane, &_, &prevIntersectionPoint);
+
+            Vector3 displacement =
+                (mouseOrbitPlaneIntersection - prevIntersectionPoint);
+            m_cameraOrbitPoint -= displacement;
+        }
+
+        if (Input::GetKeyDown(Key::F))
+        {
+            if (intersectedMouseRayWithMesh)
+            {
+                m_cameraOrbitPoint = closestMouseRayMeshIntersectionPoint;
             }
         }
 
-        if (intersected)
+        if (m_orbiting)
         {
-            m_cameraOrbitPoint = minIntersectionPoint;
+            Vector2 mouseCurrentAxisMovement = Input::GetMouseAxis();
+            m_currentCameraRotAngles += mouseCurrentAxisMovement * 360.0f;
+
+            m_currentCameraRotAngles.y =
+                Math::Clamp(m_currentCameraRotAngles.y, -80.0f, 80.0f);
+        }
+
+        if (!Input::GetKey(Key::LSHIFT))
+        {
+            m_currentCameraZoom +=
+                (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
+        }
+
+        Sphere goSphere = p_modelContainer->GetBoundingSphereWorld();
+        if (goSphere.GetRadius() > 0.0f)
+        {
+            float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
+            float camDist = goSphere.GetRadius() / Math::Tan(halfFov) * 1.1f;
+            camDist *= m_currentCameraZoom;
+            Vector3 camDir = (Quaternion::AngleAxis(
+                                  Math::DegToRad(-m_currentCameraRotAngles.x),
+                                  Vector3::Up()) *
+                              Quaternion::AngleAxis(
+                                  Math::DegToRad(m_currentCameraRotAngles.y),
+                                  Vector3::Right()) *
+                              Vector3(0, 0, 1))
+                                 .Normalized();
+            Vector3 orbitPoint = m_cameraOrbitPoint;
+            camTR->SetPosition(orbitPoint + camDir * camDist + m_cameraOffset);
+            camTR->LookAt(orbitPoint);
+
+            p_cam->SetZNear(0.01f);
+            p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
         }
     }
 
-    if (Input::GetKeyDown(Key::S))
+    // Other shortcuts
     {
-        ReloadShaders();
-    }
-
-    if (m_orbiting)
-    {
-        Vector2 mouseCurrentAxisMovement = Input::GetMouseAxis();
-        m_currentCameraRotAngles += mouseCurrentAxisMovement * 360.0f;
-
-        m_currentCameraRotAngles.y =
-            Math::Clamp(m_currentCameraRotAngles.y, -80.0f, 80.0f);
-    }
-
-    m_currentCameraZoom +=
-        (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
-
-    Sphere goSphere = p_modelContainer->GetBoundingSphereWorld();
-    if (goSphere.GetRadius() > 0.0f)
-    {
-        float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
-        float camDist = goSphere.GetRadius() / Math::Tan(halfFov) * 1.1f;
-        camDist *= m_currentCameraZoom;
-        Vector3 camDir =
-            (Quaternion::AngleAxis(Math::DegToRad(-m_currentCameraRotAngles.x),
-                                   Vector3::Up()) *
-             Quaternion::AngleAxis(Math::DegToRad(m_currentCameraRotAngles.y),
-                                   Vector3::Right()) *
-             Vector3(0, 0, 1))
-                .Normalized();
-        Vector3 orbitPoint = m_cameraOrbitPoint;
-        camTR->SetPosition(orbitPoint + camDir * camDist + m_cameraOffset);
-        camTR->LookAt(orbitPoint);
-
-        p_cam->SetZNear(0.01f);
-        p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
+        if (Input::GetKeyDown(Key::S))
+        {
+            ReloadShaders();
+        }
     }
 }
 

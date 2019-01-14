@@ -38,6 +38,7 @@ public:
     void SetEffectLayerImplementation(EffectLayerImplementation *impl);
 
     Texture2D *GetEffectTexture() const;
+    Texture2D *GetMaskTexture() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
     const EffectLayerParameters &GetParameters() const;
@@ -56,6 +57,7 @@ private:
     AH<ShaderProgram> m_generateEffectTextureSP;
 
     AH<Texture2D> m_effectTexture;
+    AH<Texture2D> m_maskTexture;
 };
 
 // PIMPL

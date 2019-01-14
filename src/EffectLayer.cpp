@@ -35,15 +35,12 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 
     m_framebuffer = new Framebuffer();
 
-    // Create textures
+    // Create effect texture
     m_effectTexture = Assets::Create<Texture2D>();
-    Texture2D *albedoTex = mr->GetMaterial()->GetAlbedoTexture();
-    if (albedoTex)
-    {
-        const uint albedoTexW = albedoTex->GetWidth();
-        const uint albedoTexH = albedoTex->GetHeight();
-        GetEffectTexture()->Fill(Color::Zero(), albedoTexW, albedoTexH);
-    }
+
+    // Create mask texture
+    m_maskTexture = Assets::Create<Texture2D>();
+    GetMaskTexture()->Fill(Color::One(), 1, 1);
 
     // Create texture mesh
     m_textureMesh = Assets::Create<Mesh>();
@@ -116,6 +113,7 @@ void EffectLayer::GenerateEffectTexture()
 
     Vector2i texSize = GetControlPanel()->GetTextureSize();
     GetEffectTexture()->Resize(texSize);
+    GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
@@ -180,6 +178,11 @@ const EffectLayerParameters &EffectLayer::GetParameters() const
 Texture2D *EffectLayer::GetEffectTexture() const
 {
     return m_effectTexture.Get();
+}
+
+Texture2D *EffectLayer::GetMaskTexture() const
+{
+    return m_maskTexture.Get();
 }
 
 ControlPanel *EffectLayer::GetControlPanel() const
