@@ -17,6 +17,7 @@ namespace Bang
 {
 class Camera;
 class Model;
+class Framebuffer;
 class MeshRenderer;
 class LineRenderer;
 };
@@ -45,6 +46,7 @@ public:
     void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
     void SetViewUniforms();
+    void PaintMaskBrush();
     void RestoreOriginalAlbedoTexturesToModel();
 
     Camera *GetCamera() const;

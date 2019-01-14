@@ -37,6 +37,9 @@ public:
     virtual void UpdateParameters(const EffectLayerParameters &parameters);
     void SetEffectLayerImplementation(EffectLayerImplementation *impl);
 
+    void PaintMaskBrush();
+
+    void ClearMask();
     Texture2D *GetEffectTexture() const;
     Texture2D *GetMaskTexture() const;
     ControlPanel *GetControlPanel() const;
@@ -55,9 +58,12 @@ private:
     Framebuffer *m_framebuffer = nullptr;
     AH<Mesh> m_textureMesh;
     AH<ShaderProgram> m_generateEffectTextureSP;
+    AH<ShaderProgram> m_paintMaskBrushSP;
 
     AH<Texture2D> m_effectTexture;
-    AH<Texture2D> m_maskTexture;
+    AH<Texture2D> m_maskPingPongTexture0;
+    AH<Texture2D> m_maskPingPongTexture1;
+    Texture2D *p_lastDrawnMaskTexture = nullptr;
 };
 
 // PIMPL

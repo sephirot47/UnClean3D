@@ -3,6 +3,7 @@
 #include "Bang/Assets.h"
 #include "Bang/Camera.h"
 #include "Bang/DirectionalLight.h"
+#include "Bang/Framebuffer.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Geometry.h"
@@ -161,7 +162,7 @@ void View3DScene::Update()
     {
         GameObject *brushGo = p_maskBrushRend->GetGameObject();
         Transform *brushTR = brushGo->GetTransform();
-        brushGo->SetEnabled(GetControlPanel()->GetDrawMaskMode());
+        brushGo->SetEnabled(GetControlPanel()->GetMaskBrushEnabled());
         brushTR->SetPosition(Vector3(Input::GetMousePosition(), 0));
         brushTR->SetScale(controlPanel->GetMaskBrushSize());
     }
@@ -259,6 +260,12 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
         SetViewUniforms();
+
+        if (GetControlPanel()->GetMaskBrushEnabled() &&
+            Input::GetMouseButton(MouseButton::LEFT))
+        {
+            PaintMaskBrush();
+        }
     }
 
     Scene::Render(rp, renderChildren);
@@ -457,13 +464,21 @@ void View3DScene::ApplyCompositeTexturesToModel()
 
 void View3DScene::SetViewUniforms()
 {
-    ShaderProgram *sp = m_view3DShaderProgram.Get();
-    sp->Bind();
-    sp->SetBool("MaskBrushEnabled", GetControlPanel()->GetDrawMaskMode());
-    sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
-    sp->SetFloat("MaskBrushHardness",
-                 GetControlPanel()->GetMaskBrushHardness());
-    sp->SetFloat("MaskBrushSize", GetControlPanel()->GetMaskBrushSize());
+    GetControlPanel()->SetMaskUniforms(m_view3DShaderProgram.Get());
+}
+
+void View3DScene::PaintMaskBrush()
+{
+    Array<EffectLayer *> selectedEffectLayers = GetSelectedEffectLayers();
+    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    {
+        selectedEffectLayer->PaintMaskBrush();
+        if (Input::GetKeyDown(Key::X))
+        {
+            selectedEffectLayer->GetMaskTexture()->ToImage().Export(
+                Path("test.png"));
+        }
+    }
 }
 
 void View3DScene::RestoreOriginalAlbedoTexturesToModel()

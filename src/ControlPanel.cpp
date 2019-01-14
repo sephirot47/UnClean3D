@@ -132,7 +132,7 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
     }
 
-    // General settings showgroup
+    // General settings
     {
         UILabel *generalSettingsLabel = GameObjectFactory::CreateUILabel();
         generalSettingsLabel->GetText()->SetContent("General settings");
@@ -163,35 +163,6 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
     }
 
-    // Mask showgroup
-    {
-        UILabel *maskLabel = GameObjectFactory::CreateUILabel();
-        maskLabel->GetText()->SetContent("Mask");
-        maskLabel->GetText()->SetTextSize(14);
-        maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", maskLabel->GetGameObject())->SetParent(this);
-
-        p_maskBrushSize = GameObjectFactory::CreateUISlider();
-        p_maskBrushSize->SetMinMaxValues(1.0f, 500.0f);
-        p_maskBrushSize->SetValue(50.0f);
-        CreateRow("Brush size", p_maskBrushSize->GetGameObject())
-            ->SetParent(this);
-
-        p_maskBrushHardness = GameObjectFactory::CreateUISlider();
-        p_maskBrushHardness->SetMinMaxValues(0.0f, 1.0f);
-        p_maskBrushHardness->SetValue(0.9f);
-        CreateRow("Brush hardness", p_maskBrushHardness->GetGameObject())
-            ->SetParent(this);
-
-        p_drawMaskButton =
-            GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
-        p_drawMaskButton->SetOn(true);
-        p_drawMaskButton->GetGameObject()->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
-    }
-
     // Effect layers
     {
         p_uiEffectLayers = new UIEffectLayers();
@@ -205,7 +176,59 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
     }
 
-    // Dirt showgroup
+    // Mask
+    {
+        UILabel *maskLabel = GameObjectFactory::CreateUILabel();
+        maskLabel->GetText()->SetContent("Mask");
+        maskLabel->GetText()->SetTextSize(14);
+        maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        CreateRow("", maskLabel->GetGameObject())->SetParent(this);
+
+        p_maskBrushEnabledButton =
+            GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
+        p_maskBrushEnabledButton->SetOn(false);
+        p_maskBrushEnabledButton->GetGameObject()->SetParent(this);
+
+        p_maskBrushSizeInput = GameObjectFactory::CreateUISlider();
+        p_maskBrushSizeInput->SetMinMaxValues(1.0f, 500.0f);
+        p_maskBrushSizeInput->SetValue(50.0f);
+        p_maskBrushSizeInputRow =
+            CreateRow("Brush size", p_maskBrushSizeInput->GetGameObject());
+        p_maskBrushSizeInputRow->SetParent(this);
+
+        p_maskBrushHardnessInput = GameObjectFactory::CreateUISlider();
+        p_maskBrushHardnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_maskBrushHardnessInput->SetValue(0.1f);
+        p_maskBrushHardnessInputRow = CreateRow(
+            "Brush hardness", p_maskBrushHardnessInput->GetGameObject());
+        p_maskBrushHardnessInputRow->SetParent(this);
+
+        p_maskBrushStrengthInput = GameObjectFactory::CreateUISlider();
+        p_maskBrushStrengthInput->SetMinMaxValues(0.0f, 1.0f);
+        p_maskBrushStrengthInput->SetValue(0.5f);
+        p_maskBrushStrengthInputRow = CreateRow(
+            "Brush strength", p_maskBrushStrengthInput->GetGameObject());
+        p_maskBrushStrengthInputRow->SetParent(this);
+
+        p_seeMaskButton =
+            GameObjectFactory::CreateUIToolButton("See Mask (Shift + M)");
+        p_seeMaskButton->SetOn(false);
+        p_seeMaskButton->GetGameObject()->SetParent(this);
+
+        p_eraseMaskButton =
+            GameObjectFactory::CreateUIToolButton("Erase Mask (Ctrl)");
+        p_eraseMaskButton->SetOn(false);
+        p_eraseMaskButton->GetGameObject()->SetParent(this);
+
+        p_clearMaskButton = GameObjectFactory::CreateUIButton("Clear Mask (C)");
+        p_clearMaskButton->AddClickedCallback([this]() { ClearMask(); });
+        p_clearMaskButton->GetGameObject()->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+            ->SetParent(this);
+    }
+
+    // Dirt
     p_dirtParamsGo = GameObjectFactory::CreateUIGameObject();
     {
         UIVerticalLayout *vl = p_dirtParamsGo->AddComponent<UIVerticalLayout>();
@@ -283,18 +306,41 @@ void ControlPanel::Update()
     {
         ExportModel();
     }
-    else if (Input::GetKeyDown(Key::M))
+    else if (Input::GetKeyDown(Key::M) && !Input::GetKey(Key::LSHIFT))
     {
-        p_drawMaskButton->SetOn(!p_drawMaskButton->GetOn());
+        p_maskBrushEnabledButton->SetOn(!p_maskBrushEnabledButton->GetOn());
+    }
+    else if (Input::GetKeyDown(Key::C))
+    {
+        ClearMask();
     }
 
-    if (Input::GetKey(Key::LSHIFT))
+    if (GetMaskBrushEnabled())
     {
-        float maskBrushSizeIncrement = Input::GetMouseWheel().y;
-        maskBrushSizeIncrement *= (p_maskBrushSize->GetValue() / 10);
-        p_maskBrushSize->SetValue(p_maskBrushSize->GetValue() +
-                                  maskBrushSizeIncrement);
+        if (Input::GetKey(Key::LSHIFT))
+        {
+            float maskBrushSizeIncrement = Input::GetMouseWheel().y;
+            maskBrushSizeIncrement *= (p_maskBrushSizeInput->GetValue() / 10);
+            p_maskBrushSizeInput->SetValue(p_maskBrushSizeInput->GetValue() +
+                                           maskBrushSizeIncrement);
+
+            if (Input::GetKeyDown(Key::M))
+            {
+                p_seeMaskButton->SetOn(!p_seeMaskButton->GetOn());
+            }
+        }
     }
+    p_eraseMaskButton->SetOn(GetMaskBrushEnabled() &&
+                             Input::GetKey(Key::LCTRL));
+
+    p_maskBrushEnabledButton->SetBlocked(
+        GetView3DScene()->GetSelectedEffectLayers().Size() == 0);
+    p_eraseMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
+    p_seeMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
+    p_clearMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
+    p_maskBrushStrengthInputRow->SetEnabled(GetMaskBrushEnabled());
+    p_maskBrushSizeInputRow->SetEnabled(GetMaskBrushEnabled());
+    p_maskBrushHardnessInputRow->SetEnabled(GetMaskBrushEnabled());
 
     p_dirtParamsGo->SetEnabled(false);
 
@@ -399,19 +445,49 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
 
-bool ControlPanel::GetDrawMaskMode() const
+void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
 {
-    return p_drawMaskButton->GetOn();
+    sp->Bind();
+
+    sp->SetBool("SeeMask", p_seeMaskButton->GetOn());
+    sp->SetBool("MaskBrushEnabled", GetMaskBrushEnabled());
+    sp->SetBool("MaskBrushErasing", p_eraseMaskButton->GetOn());
+    sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
+    sp->SetFloat("MaskBrushHardness", GetMaskBrushHardness());
+    sp->SetFloat("MaskBrushSize", GetMaskBrushSize());
+    sp->SetFloat("MaskBrushStrength", p_maskBrushStrengthInput->GetValue());
+
+    Array<EffectLayer *> effectLayers =
+        GetView3DScene()->GetSelectedEffectLayers();
+    if (effectLayers.Size() >= 1)
+    {
+        sp->SetTexture2D("MaskTexture", effectLayers.Front()->GetMaskTexture());
+    }
+}
+
+void ControlPanel::ClearMask()
+{
+    Array<EffectLayer *> selectedEffectLayers =
+        GetView3DScene()->GetSelectedEffectLayers();
+    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    {
+        selectedEffectLayer->ClearMask();
+    }
+}
+
+bool ControlPanel::GetMaskBrushEnabled() const
+{
+    return p_maskBrushEnabledButton->GetOn();
 }
 
 float ControlPanel::GetMaskBrushSize() const
 {
-    return p_maskBrushSize->GetValue();
+    return p_maskBrushSizeInput->GetValue();
 }
 
 float ControlPanel::GetMaskBrushHardness() const
 {
-    return p_maskBrushHardness->GetValue();
+    return p_maskBrushHardnessInput->GetValue();
 }
 
 float ControlPanel::GetBaseRoughness() const

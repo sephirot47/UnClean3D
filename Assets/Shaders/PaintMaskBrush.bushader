@@ -1,0 +1,47 @@
+#vertex
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 finPosition;
+
+void main()
+{
+    finPosition = vinPosition;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "MaskBrush.glsl"
+
+uniform sampler2D PreviousMaskTexture;
+uniform mat4 SceneModelMatrix;
+uniform mat4 SceneProjectionViewMatrix;
+uniform vec2 ViewportSize;
+uniform bool MaskBrushErasing;
+
+in vec3 finPosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec2 uv = B_GetViewportUv();
+    vec4 worldPos = SceneModelMatrix * vec4(finPosition, 1);
+    vec4 previousMask = texture(PreviousMaskTexture, uv);
+
+    float maskApportation =
+        GetMaskBrushApportationFromCurrentMousePosition(worldPos.xyz,
+                                                        SceneProjectionViewMatrix,
+                                                        ViewportSize);
+    if (MaskBrushErasing)
+    {
+        maskApportation *= -1;
+    }
+    OutColor = previousMask + vec4(maskApportation, 0, 0, 1);
+}
+
+

@@ -43,8 +43,10 @@ public:
     void RemoveEffectLayer(uint effectLayerIdx);
     void UpdateSelectedEffectLayerParameters();
     void UpdateInputsAndParametersFromSelectedEffectLayer();
+    void SetMaskUniforms(ShaderProgram *sp);
 
-    bool GetDrawMaskMode() const;
+    void ClearMask();
+    bool GetMaskBrushEnabled() const;
     float GetMaskBrushSize() const;
     float GetMaskBrushHardness() const;
 
@@ -72,9 +74,16 @@ private:
     UISlider *p_texturesSizeInput = nullptr;
 
     // Mask
-    UIToolButton *p_drawMaskButton = nullptr;
-    UISlider *p_maskBrushSize = nullptr;
-    UISlider *p_maskBrushHardness = nullptr;
+    UIToolButton *p_maskBrushEnabledButton = nullptr;
+    UIToolButton *p_eraseMaskButton = nullptr;
+    UIToolButton *p_seeMaskButton = nullptr;
+    UIButton *p_clearMaskButton = nullptr;
+    UISlider *p_maskBrushStrengthInput = nullptr;
+    UISlider *p_maskBrushSizeInput = nullptr;
+    UISlider *p_maskBrushHardnessInput = nullptr;
+    GameObject *p_maskBrushStrengthInputRow = nullptr;
+    GameObject *p_maskBrushSizeInputRow = nullptr;
+    GameObject *p_maskBrushHardnessInputRow = nullptr;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;

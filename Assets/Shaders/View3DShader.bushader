@@ -13,13 +13,11 @@
 
 #include "Common.glsl"
 #include "LightCommon.glsl"
+#include "MaskBrush.glsl"
 #include "MaterialPBRUniforms.glsl"
 
-
-uniform bool  MaskBrushEnabled;
-uniform vec2  MaskBrushCenter;
-uniform float MaskBrushHardness;
-uniform float MaskBrushSize;
+uniform bool SeeMask;
+uniform sampler2D MaskTexture;
 
 in vec3 B_FIn_Position;
 in vec3 B_FIn_Normal;
@@ -66,20 +64,21 @@ void DefaultFragCommonMain(vec4 albedoColor)
         receivesLighting = 0.75;
     }
 
-    if (MaskBrushEnabled)
+    float maskBrushApportation =
+            GetMaskBrushApportationFromCurrentMousePosition(B_FIn_Position,
+                                                            B_ProjectionView,
+                                                            B_Viewport_Size);
+    if (SeeMask)
     {
-        vec2 fragPos = B_GetViewportPos();
-        float dist = distance(MaskBrushCenter, fragPos);
-        if (dist < MaskBrushSize)
-        {
-            float distNorm = (dist / MaskBrushSize);
-            float halfHardness = (MaskBrushHardness * 0.5f);
-            float hh = halfHardness;
-            float brushStrength = smoothstep(hh, 1 - hh, (1.0 - distNorm + hh));
+        float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
+        finalAlbedo.r  += maskTexValue;
+        finalAlbedo.gb = clamp(finalAlbedo.gb * (1-maskTexValue), 0, 1);
+    }
 
-            finalAlbedo.r  = clamp(finalAlbedo.r +  (brushStrength), 0, 1);
-            finalAlbedo.gb = clamp(finalAlbedo.gb * (1-brushStrength), 0, 1);
-        }
+    if (maskBrushApportation > 0)
+    {
+        finalAlbedo.r  += maskBrushApportation;
+        finalAlbedo.gb = clamp(finalAlbedo.gb * (1-maskBrushApportation), 0, 1);
     }
 
     vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,

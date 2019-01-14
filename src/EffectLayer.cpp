@@ -2,13 +2,14 @@
 
 #include "Bang/Array.h"
 #include "Bang/Assets.h"
+#include "Bang/Camera.h"
 #include "Bang/Dialog.h"
 #include "Bang/Framebuffer.h"
+#include "Bang/GEngine.h"
 #include "Bang/GameObject.h"
 #include "Bang/Image.h"
 #include "Bang/Material.h"
 #include "Bang/Mesh.h"
-#include "Bang/MeshRenderer.h"
 #include "Bang/MeshRenderer.h"
 #include "Bang/Paths.h"
 #include "Bang/Random.h"
@@ -26,6 +27,7 @@
 
 #include "ControlPanel.h"
 #include "MainScene.h"
+#include "View3DScene.h"
 
 using namespace Bang;
 
@@ -39,8 +41,16 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_effectTexture = Assets::Create<Texture2D>();
 
     // Create mask texture
-    m_maskTexture = Assets::Create<Texture2D>();
-    GetMaskTexture()->Fill(Color::One(), 1, 1);
+    m_maskPingPongTexture0 = Assets::Create<Texture2D>();
+    m_maskPingPongTexture1 = Assets::Create<Texture2D>();
+    m_maskPingPongTexture0.Get()->Fill(Color::Zero(), 1, 1);
+    m_maskPingPongTexture1.Get()->Fill(Color::Zero(), 1, 1);
+    p_lastDrawnMaskTexture = m_maskPingPongTexture0.Get();
+
+    // ShaderPrograms...
+    m_paintMaskBrushSP.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("Shaders").Append(
+            "PaintMaskBrush.bushader")));
 
     // Create texture mesh
     m_textureMesh = Assets::Create<Mesh>();
@@ -113,7 +123,6 @@ void EffectLayer::GenerateEffectTexture()
 
     Vector2i texSize = GetControlPanel()->GetTextureSize();
     GetEffectTexture()->Resize(texSize);
-    GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
@@ -124,10 +133,6 @@ void EffectLayer::GenerateEffectTexture()
                GL::Primitive::TRIANGLES,
                GetTextureMesh()->GetNumVerticesIds());
 
-    sp->UnBind();
-
-    m_framebuffer->UnBind();
-
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
@@ -136,6 +141,7 @@ void EffectLayer::GenerateEffectTexture()
 void EffectLayer::ReloadShaders()
 {
     m_generateEffectTextureSP.Get()->ReImport();
+    m_paintMaskBrushSP.Get()->ReImport();
 }
 
 void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
@@ -165,6 +171,66 @@ void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
     }
 }
 
+void EffectLayer::PaintMaskBrush()
+{
+    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+    GL::Push(GL::Pushable::SHADER_PROGRAM);
+    GL::Push(GL::Pushable::VIEWPORT);
+
+    m_maskPingPongTexture0.Get()->ResizeConservingData(
+        GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
+    m_maskPingPongTexture1.Get()->ResizeConservingData(
+        GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
+    GL::SetViewport(
+        0, 0, GetMaskTexture()->GetWidth(), GetMaskTexture()->GetHeight());
+
+    Texture2D *drawTexture =
+        p_lastDrawnMaskTexture == m_maskPingPongTexture0.Get()
+            ? m_maskPingPongTexture1.Get()
+            : m_maskPingPongTexture0.Get();
+    Texture2D *readTexture = drawTexture == m_maskPingPongTexture0.Get()
+                                 ? m_maskPingPongTexture1.Get()
+                                 : m_maskPingPongTexture0.Get();
+
+    ShaderProgram *sp = m_paintMaskBrushSP.Get();
+    sp->Bind();
+    {
+        View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
+        sp->SetTexture2D("PreviousMaskTexture", readTexture);
+        sp->SetMatrix4("SceneModelMatrix",
+                       view3DScene->GetModelGameObject()
+                           ->GetTransform()
+                           ->GetLocalToWorldMatrix());
+        sp->SetMatrix4("SceneProjectionViewMatrix",
+                       view3DScene->GetCamera()->GetProjectionMatrix() *
+                           view3DScene->GetCamera()->GetViewMatrix());
+        sp->SetVector2("ViewportSize",
+                       Vector2(view3DScene->GetCamera()->GetRenderSize()));
+        GetControlPanel()->SetMaskUniforms(m_paintMaskBrushSP.Get());
+    }
+
+    m_framebuffer->Bind();
+    m_framebuffer->SetAttachmentTexture(drawTexture, GL::Attachment::COLOR0);
+    m_framebuffer->SetAllDrawBuffers();
+
+    GL::Render(GetTextureMesh()->GetVAO(),
+               GL::Primitive::TRIANGLES,
+               GetTextureMesh()->GetNumVerticesIds());
+
+    p_lastDrawnMaskTexture = drawTexture;
+
+    GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::SHADER_PROGRAM);
+    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+}
+
+void EffectLayer::ClearMask()
+{
+    GEngine *ge = GEngine::GetInstance();
+    ge->FillTexture(m_maskPingPongTexture0.Get(), Color::Zero());
+    ge->FillTexture(m_maskPingPongTexture1.Get(), Color::Zero());
+}
+
 Mesh *EffectLayer::GetTextureMesh() const
 {
     return m_textureMesh.Get();
@@ -182,7 +248,7 @@ Texture2D *EffectLayer::GetEffectTexture() const
 
 Texture2D *EffectLayer::GetMaskTexture() const
 {
-    return m_maskTexture.Get();
+    return m_maskPingPongTexture0.Get();
 }
 
 ControlPanel *EffectLayer::GetControlPanel() const
