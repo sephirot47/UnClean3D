@@ -258,6 +258,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
     {
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
+        SetViewUniforms();
     }
 
     Scene::Render(rp, renderChildren);
@@ -452,6 +453,17 @@ void View3DScene::ApplyCompositeTexturesToModel()
             mat->SetMetalnessTexture(outMetalnessTexture);
         }
     }
+}
+
+void View3DScene::SetViewUniforms()
+{
+    ShaderProgram *sp = m_view3DShaderProgram.Get();
+    sp->Bind();
+    sp->SetBool("MaskBrushEnabled", GetControlPanel()->GetDrawMaskMode());
+    sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
+    sp->SetFloat("MaskBrushHardness",
+                 GetControlPanel()->GetMaskBrushHardness());
+    sp->SetFloat("MaskBrushSize", GetControlPanel()->GetMaskBrushSize());
 }
 
 void View3DScene::RestoreOriginalAlbedoTexturesToModel()

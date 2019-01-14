@@ -177,6 +177,12 @@ ControlPanel::ControlPanel()
         CreateRow("Brush size", p_maskBrushSize->GetGameObject())
             ->SetParent(this);
 
+        p_maskBrushHardness = GameObjectFactory::CreateUISlider();
+        p_maskBrushHardness->SetMinMaxValues(0.0f, 1.0f);
+        p_maskBrushHardness->SetValue(0.9f);
+        CreateRow("Brush hardness", p_maskBrushHardness->GetGameObject())
+            ->SetParent(this);
+
         p_drawMaskButton =
             GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
         p_drawMaskButton->SetOn(true);
@@ -401,6 +407,11 @@ bool ControlPanel::GetDrawMaskMode() const
 float ControlPanel::GetMaskBrushSize() const
 {
     return p_maskBrushSize->GetValue();
+}
+
+float ControlPanel::GetMaskBrushHardness() const
+{
+    return p_maskBrushHardness->GetValue();
 }
 
 float ControlPanel::GetBaseRoughness() const

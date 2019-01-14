@@ -15,6 +15,12 @@
 #include "LightCommon.glsl"
 #include "MaterialPBRUniforms.glsl"
 
+
+uniform bool  MaskBrushEnabled;
+uniform vec2  MaskBrushCenter;
+uniform float MaskBrushHardness;
+uniform float MaskBrushSize;
+
 in vec3 B_FIn_Position;
 in vec3 B_FIn_Normal;
 in vec2 B_FIn_AlbedoUv;
@@ -54,15 +60,31 @@ void DefaultFragCommonMain(vec4 albedoColor)
     float pixelMetalness = texture(B_MetalnessTexture, B_FIn_AlbedoUv).r * B_MaterialMetalness;
     vec3 finalPosition = B_FIn_Position.xyz;
 
-    vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
-                                         finalPosition,  finalNormal, finalAlbedo,
-                                         pixelRoughness, pixelMetalness);
-
     float receivesLighting = B_MaterialReceivesLighting ? 0.25 : 0;
     if (receivesLighting > 0 && B_ReceivesShadows)
     {
         receivesLighting = 0.75;
     }
+
+    if (MaskBrushEnabled)
+    {
+        vec2 fragPos = B_GetViewportPos();
+        float dist = distance(MaskBrushCenter, fragPos);
+        if (dist < MaskBrushSize)
+        {
+            float distNorm = (dist / MaskBrushSize);
+            float halfHardness = (MaskBrushHardness * 0.5f);
+            float hh = halfHardness;
+            float brushStrength = smoothstep(hh, 1 - hh, (1.0 - distNorm + hh));
+
+            finalAlbedo.r  = clamp(finalAlbedo.r +  (brushStrength), 0, 1);
+            finalAlbedo.gb = clamp(finalAlbedo.gb * (1-brushStrength), 0, 1);
+        }
+    }
+
+    vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
+                                         finalPosition,  finalNormal, finalAlbedo,
+                                         pixelRoughness, pixelMetalness);
 
     B_GIn_Albedo = vec4(finalAlbedo.rgb, 1);
     B_GIn_Light = vec4(0,0,0,0);

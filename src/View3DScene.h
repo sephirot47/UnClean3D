@@ -44,6 +44,7 @@ public:
     void UpdateParameters(const EffectLayerParameters &params);
     void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
+    void SetViewUniforms();
     void RestoreOriginalAlbedoTexturesToModel();
 
     Camera *GetCamera() const;

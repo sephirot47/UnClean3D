@@ -46,6 +46,7 @@ public:
 
     bool GetDrawMaskMode() const;
     float GetMaskBrushSize() const;
+    float GetMaskBrushHardness() const;
 
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
@@ -73,6 +74,7 @@ private:
     // Mask
     UIToolButton *p_drawMaskButton = nullptr;
     UISlider *p_maskBrushSize = nullptr;
+    UISlider *p_maskBrushHardness = nullptr;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;
