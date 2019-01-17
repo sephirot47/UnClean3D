@@ -77,6 +77,7 @@ private:
     UIToolButton *p_maskBrushEnabledButton = nullptr;
     UIToolButton *p_eraseMaskButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;
+    UIToolButton *p_maskBrushDepthAwareButton = nullptr;
     UIButton *p_clearMaskButton = nullptr;
     UISlider *p_maskBrushStrengthInput = nullptr;
     UISlider *p_maskBrushSizeInput = nullptr;

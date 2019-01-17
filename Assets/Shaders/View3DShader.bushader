@@ -71,8 +71,10 @@ void DefaultFragCommonMain(vec4 albedoColor)
     if (SeeMask)
     {
         float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
-        finalAlbedo.r  += maskTexValue;
-        finalAlbedo.gb = clamp(finalAlbedo.gb * (1-maskTexValue), 0, 1);
+        finalAlbedo.r  = maskTexValue;
+        finalAlbedo.gb = vec2(0);
+        pixelMetalness = 0;
+        pixelRoughness = 1;
     }
 
     if (maskBrushApportation > 0)

@@ -59,11 +59,15 @@ private:
     AH<Mesh> m_textureMesh;
     AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_paintMaskBrushSP;
+    AH<ShaderProgram> m_growTextureBordersSP;
 
     AH<Texture2D> m_effectTexture;
     AH<Texture2D> m_maskPingPongTexture0;
     AH<Texture2D> m_maskPingPongTexture1;
+    AH<Texture2D> m_growAuxiliarTexture;
     Texture2D *p_lastDrawnMaskTexture = nullptr;
+
+    void GrowTextureBorders(Texture2D *texture);
 };
 
 // PIMPL

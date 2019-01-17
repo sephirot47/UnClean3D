@@ -17,11 +17,13 @@ void main()
 #define BANG_FRAGMENT
 #include "MaskBrush.glsl"
 
+uniform sampler2D SceneDepth;
 uniform sampler2D PreviousMaskTexture;
 uniform mat4 SceneModelMatrix;
 uniform mat4 SceneProjectionViewMatrix;
 uniform vec2 ViewportSize;
 uniform bool MaskBrushErasing;
+uniform bool MaskBrushDepthAware;
 
 in vec3 finPosition;
 
@@ -37,6 +39,25 @@ void main()
         GetMaskBrushApportationFromCurrentMousePosition(worldPos.xyz,
                                                         SceneProjectionViewMatrix,
                                                         ViewportSize);
+    if (MaskBrushDepthAware)
+    {
+        vec4 projectedPos = SceneProjectionViewMatrix * worldPos;
+        projectedPos /= projectedPos.w;
+        projectedPos.xy = projectedPos.xy * 0.5 + 0.5;
+
+        float pixelDepthFromSceneCamera = projectedPos.z * 0.5 + 0.5;
+        float pixelClosestDepthFromSceneCamera =
+                    texture(SceneDepth, projectedPos.xy).r;
+        float depthDiff = abs(pixelDepthFromSceneCamera -
+                              pixelClosestDepthFromSceneCamera);
+        float depthThresh = 0.001;
+        if (depthDiff > depthThresh)
+        {
+            maskApportation = depthThresh - depthDiff;
+            maskApportation = 0;
+        }
+    }
+
     if (MaskBrushErasing)
     {
         maskApportation *= -1;

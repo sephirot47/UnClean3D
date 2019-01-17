@@ -46,7 +46,7 @@ void main()
         amplitude *= DirtAmplitudeMultiply;
     }
 
-    noiseValue = clamp(noiseValue, 0, 1);
+    noiseValue = clamp(noiseValue, 0.01, 1);
     vec3 noise = vec3(noiseValue);
 
     vec3 dirtColor0 = DirtColor0.rgb;

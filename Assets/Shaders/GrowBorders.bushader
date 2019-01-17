@@ -1,0 +1,57 @@
+#vertex
+#include "ScreenPass.vert"
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "Common.glsl"
+
+uniform sampler2D TextureToGrow;
+
+in vec2 B_FIn_AlbedoUv;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec2 uv = B_FIn_AlbedoUv;
+    vec2 step = B_GetViewportStep() * 1.0;
+    vec4 thisTextureColor = texture(TextureToGrow, uv);
+
+    // OutColor = thisTextureColor; return;
+
+    if (thisTextureColor.a == 0.0)
+    {
+        int numSamples = 0;
+        vec4 colorSum = vec4(0);
+        const int LookUpSize = 1;
+        for (int i = -LookUpSize; i <= LookUpSize; ++i)
+        {
+            for (int j = -LookUpSize; j <= LookUpSize; ++j)
+            {
+                vec4 textureColor = texture(TextureToGrow, uv + step * vec2(i,j));
+                if (textureColor.a > 0)
+                {
+                    ++numSamples;
+                    colorSum += textureColor;
+                }
+            }
+        }
+
+        if (numSamples > 0)
+        {
+            OutColor = (colorSum / numSamples);
+        }
+        else
+        {
+            OutColor = thisTextureColor;
+        }
+    }
+    else
+    {
+        OutColor = thisTextureColor;
+    }
+}
+
+

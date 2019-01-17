@@ -5,6 +5,7 @@
 #include "Bang/Camera.h"
 #include "Bang/Dialog.h"
 #include "Bang/Framebuffer.h"
+#include "Bang/GBuffer.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObject.h"
 #include "Bang/Image.h"
@@ -37,10 +38,16 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 
     m_framebuffer = new Framebuffer();
 
-    // Create effect texture
+    // Create some textures
     m_effectTexture = Assets::Create<Texture2D>();
+    m_effectTexture.Get()->Fill(Color::Zero(), 1, 1);
+    m_effectTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
-    // Create mask texture
+    m_growAuxiliarTexture = Assets::Create<Texture2D>();
+    m_growAuxiliarTexture.Get()->Fill(Color::Zero(), 1, 1);
+    m_effectTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+
+    // Create mask textures
     m_maskPingPongTexture0 = Assets::Create<Texture2D>();
     m_maskPingPongTexture1 = Assets::Create<Texture2D>();
     m_maskPingPongTexture0.Get()->Fill(Color::Zero(), 1, 1);
@@ -51,6 +58,9 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_paintMaskBrushSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "PaintMaskBrush.bushader")));
+    m_growTextureBordersSP.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("Shaders").Append(
+            "GrowBorders.bushader")));
 
     // Create texture mesh
     m_textureMesh = Assets::Create<Mesh>();
@@ -112,36 +122,45 @@ void EffectLayer::GenerateEffectTexture()
     }
 
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-    GL::Push(GL::Pushable::VIEWPORT);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
+    GL::Push(GL::Pushable::BLEND_STATES);
+    GL::Push(GL::Pushable::VIEWPORT);
+
+    GL::Disable(GL::Enablable::BLEND);
 
     // Bind framebuffer and render to texture
     m_framebuffer->Bind();
     m_framebuffer->SetAttachmentTexture(GetEffectTexture(),
                                         GL::Attachment::COLOR0);
-    m_framebuffer->SetAllDrawBuffers();
+    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
     Vector2i texSize = GetControlPanel()->GetTextureSize();
-    GetEffectTexture()->Resize(texSize);
+    GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
     sp->Bind();
     GetImplementation()->SetGenerateEffectUniforms(sp);
 
+    GL::ClearColorBuffer(Color::Zero());
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
                GetTextureMesh()->GetNumVerticesIds());
 
-    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
+    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+
+    GrowTextureBorders(GetEffectTexture());
 }
 
 void EffectLayer::ReloadShaders()
 {
     m_generateEffectTextureSP.Get()->ReImport();
     m_paintMaskBrushSP.Get()->ReImport();
+    m_growTextureBordersSP.Get()->ReImport();
+    GenerateEffectTexture();
 }
 
 void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
@@ -175,7 +194,10 @@ void EffectLayer::PaintMaskBrush()
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
+    GL::Push(GL::Pushable::BLEND_STATES);
     GL::Push(GL::Pushable::VIEWPORT);
+
+    GL::Disable(GL::Enablable::BLEND);
 
     m_maskPingPongTexture0.Get()->ResizeConservingData(
         GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
@@ -206,12 +228,16 @@ void EffectLayer::PaintMaskBrush()
                            view3DScene->GetCamera()->GetViewMatrix());
         sp->SetVector2("ViewportSize",
                        Vector2(view3DScene->GetCamera()->GetRenderSize()));
+        sp->SetTexture2D("SceneDepth",
+                         view3DScene->GetCamera()
+                             ->GetGBuffer()
+                             ->GetSceneDepthStencilTexture());
         GetControlPanel()->SetMaskUniforms(m_paintMaskBrushSP.Get());
     }
 
     m_framebuffer->Bind();
     m_framebuffer->SetAttachmentTexture(drawTexture, GL::Attachment::COLOR0);
-    m_framebuffer->SetAllDrawBuffers();
+    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
@@ -220,6 +246,7 @@ void EffectLayer::PaintMaskBrush()
     p_lastDrawnMaskTexture = drawTexture;
 
     GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }
@@ -264,6 +291,38 @@ EffectLayerImplementation *EffectLayer::GetImplementation() const
 ShaderProgram *EffectLayer::GetGenerateEffectTextureShaderProgram() const
 {
     return m_generateEffectTextureSP.Get();
+}
+
+void EffectLayer::GrowTextureBorders(Texture2D *texture)
+{
+    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+    GL::Push(GL::Pushable::SHADER_PROGRAM);
+    GL::Push(GL::Pushable::BLEND_STATES);
+    GL::Push(GL::Pushable::VIEWPORT);
+
+    GL::Disable(GL::Enablable::BLEND);
+    m_growAuxiliarTexture.Get()->ResizeConservingData(texture->GetWidth(),
+                                                      texture->GetHeight());
+    GEngine::GetInstance()->CopyTexture(texture, m_growAuxiliarTexture.Get());
+
+    ShaderProgram *sp = m_growTextureBordersSP.Get();
+    sp->Bind();
+    {
+        sp->SetTexture2D("TextureToGrow", m_growAuxiliarTexture.Get());
+    }
+    GL::SetViewport(0, 0, texture->GetWidth(), texture->GetHeight());
+
+    m_framebuffer->Bind();
+    m_framebuffer->SetAttachmentTexture(texture, GL::Attachment::COLOR0);
+    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+
+    GL::ClearColorBuffer(Color::Zero());
+    GEngine::GetInstance()->RenderViewportPlane();
+
+    GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::BLEND_STATES);
+    GL::Pop(GL::Pushable::SHADER_PROGRAM);
+    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }
 
 EffectLayerImplementation::EffectLayerImplementation()

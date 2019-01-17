@@ -215,6 +215,11 @@ ControlPanel::ControlPanel()
         p_seeMaskButton->SetOn(false);
         p_seeMaskButton->GetGameObject()->SetParent(this);
 
+        p_maskBrushDepthAwareButton =
+            GameObjectFactory::CreateUIToolButton("Depth aware mask brush");
+        p_maskBrushDepthAwareButton->SetOn(true);
+        p_maskBrushDepthAwareButton->GetGameObject()->SetParent(this);
+
         p_eraseMaskButton =
             GameObjectFactory::CreateUIToolButton("Erase Mask (Ctrl)");
         p_eraseMaskButton->SetOn(false);
@@ -335,6 +340,8 @@ void ControlPanel::Update()
 
     p_maskBrushEnabledButton->SetBlocked(
         GetView3DScene()->GetSelectedEffectLayers().Size() == 0);
+    p_maskBrushDepthAwareButton->GetGameObject()->SetEnabled(
+        GetMaskBrushEnabled());
     p_eraseMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
     p_seeMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
     p_clearMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
@@ -451,6 +458,7 @@ void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
 
     sp->SetBool("SeeMask", p_seeMaskButton->GetOn());
     sp->SetBool("MaskBrushEnabled", GetMaskBrushEnabled());
+    sp->SetBool("MaskBrushDepthAware", p_maskBrushDepthAwareButton->GetOn());
     sp->SetBool("MaskBrushErasing", p_eraseMaskButton->GetOn());
     sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
     sp->SetFloat("MaskBrushHardness", GetMaskBrushHardness());

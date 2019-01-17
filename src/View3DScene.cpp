@@ -260,15 +260,15 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
         SetViewUniforms();
-
-        if (GetControlPanel()->GetMaskBrushEnabled() &&
-            Input::GetMouseButton(MouseButton::LEFT))
-        {
-            PaintMaskBrush();
-        }
     }
 
     Scene::Render(rp, renderChildren);
+
+    if (GetControlPanel()->GetMaskBrushEnabled() &&
+        Input::GetMouseButton(MouseButton::LEFT))
+    {
+        PaintMaskBrush();
+    }
 
     if (rp == RenderPass::SCENE_OPAQUE)
     {
@@ -473,11 +473,6 @@ void View3DScene::PaintMaskBrush()
     for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
     {
         selectedEffectLayer->PaintMaskBrush();
-        if (Input::GetKeyDown(Key::X))
-        {
-            selectedEffectLayer->GetMaskTexture()->ToImage().Export(
-                Path("test.png"));
-        }
     }
 }
 
