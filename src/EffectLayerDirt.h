@@ -20,6 +20,7 @@ public:
 
     // EffectLayer
     virtual EffectLayer::Type GetEffectLayerType() const override;
+    virtual String GetTypeName() const override;
 
     const EffectLayerParameters &GetParameters() const;
 

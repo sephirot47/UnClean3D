@@ -2,12 +2,15 @@
 
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
+layout(location = 2) in vec3 vinNormal;
 
 out vec3 finPosition;
+out vec3 finNormal;
 
 void main()
 {
     finPosition = vinPosition;
+    finNormal = vinNormal;
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -20,12 +23,16 @@ void main()
 uniform sampler2D SceneDepth;
 uniform sampler2D PreviousMaskTexture;
 uniform mat4 SceneModelMatrix;
+uniform mat4 SceneNormalMatrix;
 uniform mat4 SceneProjectionViewMatrix;
+uniform vec3 CameraForward;
+uniform vec3 CameraWorldPos;
 uniform vec2 ViewportSize;
 uniform bool MaskBrushErasing;
 uniform bool MaskBrushDepthAware;
 
 in vec3 finPosition;
+in vec3 finNormal;
 
 layout(location = 0) out vec4 OutColor;
 
@@ -45,23 +52,34 @@ void main()
         projectedPos /= projectedPos.w;
         projectedPos.xy = projectedPos.xy * 0.5 + 0.5;
 
+        vec2 sceneTexturesUv = projectedPos.xy;
         float pixelDepthFromSceneCamera = projectedPos.z * 0.5 + 0.5;
         float pixelClosestDepthFromSceneCamera =
-                    texture(SceneDepth, projectedPos.xy).r;
+                    texture(SceneDepth, sceneTexturesUv).r;
+
         float depthDiff = abs(pixelDepthFromSceneCamera -
                               pixelClosestDepthFromSceneCamera);
-        float depthThresh = 0.001;
+        float depthThresh = (0.001);
         if (depthDiff > depthThresh)
         {
-            maskApportation = depthThresh - depthDiff;
             maskApportation = 0;
         }
+        else
+        {
+            vec3 normal = normalize((SceneNormalMatrix * vec4(finNormal, 0)).xyz);
+            vec3 pixelDir = -normalize(worldPos.xyz - CameraWorldPos);
+            float dotProd = dot(pixelDir, normal);
+            if (dotProd <= 0.0)
+            {
+                maskApportation = 0;
+            }
+        }
     }
-
     if (MaskBrushErasing)
     {
         maskApportation *= -1;
     }
+    OutColor = vec4(worldPos.xyz, 1);
     OutColor = previousMask + vec4(maskApportation, 0, 0, 1);
 }
 

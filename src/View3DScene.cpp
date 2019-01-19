@@ -4,6 +4,7 @@
 #include "Bang/Camera.h"
 #include "Bang/DirectionalLight.h"
 #include "Bang/Framebuffer.h"
+#include "Bang/GBuffer.h"
 #include "Bang/GEngine.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Geometry.h"
@@ -82,7 +83,7 @@ View3DScene::View3DScene()
     dl->SetShadowDistance(100.0f);
     dl->SetIntensity(3.0f);
     dl->SetShadowBias(0.003f);
-    dl->SetCastShadows(true);
+    dl->SetCastShadows(false);
     dl->SetShadowSoftness(2);
     dl->SetShadowMapSize(Vector2i(1024));
     dlGo->GetTransform()->SetPosition(Vector3(5, 10, 10));
@@ -115,8 +116,30 @@ void View3DScene::Update()
     m_fpsChrono.MarkBegin();
     // Debug_DPeek(m_fpsChrono.GetMeanFPS());
 
+    // Generate needed textures
+    if (!m_validTextures)
+    {
+        if (Time::GetNow()
+                .GetPassedTimeSince(m_lastTimeTexturesGenerated)
+                .GetSeconds() > 0.25)
+        {
+            Array<EffectLayer *> allEffectLayers = GetAllEffectLayers();
+            for (EffectLayer *effectLayer : allEffectLayers)
+            {
+                effectLayer->GenerateEffectTexture();
+            }
+            m_lastTimeTexturesGenerated = Time::GetNow();
+            m_validTextures = true;
+        }
+    }
+
     // Stuff needed for later
     ControlPanel *controlPanel = GetControlPanel();
+
+    if (!IsVisible())
+    {
+        return;
+    }
 
     bool _;
     const Plane orbitPlane(m_cameraOrbitPoint, camTR->GetBack());
@@ -311,6 +334,8 @@ void View3DScene::OnModelChanged(Model *newModel)
     if (newModel)
     {
         GameObject *modelGo = newModel->CreateGameObjectFromModel();
+        m_originalModelLocalScale = modelGo->GetTransform()->GetLocalScale();
+
         float modelSizeMax = modelGo->GetAABBoxWorld().GetSize().GetMax();
         modelGo->GetTransform()->SetLocalScale(
             modelGo->GetTransform()->GetLocalScale() *
@@ -340,7 +365,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             {
                 AH<Texture2D> defaultNormalTex = Assets::Create<Texture2D>();
                 defaultNormalTex.Get()->Fill(
-                    Color(0.5f, 0.5f, 1.0f), ats.x, ats.y);
+                    Color(0.5f, 0.5f, 1.0f, 1.0f), ats.x, ats.y);
                 mat->SetNormalMapTexture(defaultNormalTex.Get());
             }
 
@@ -413,6 +438,7 @@ void View3DScene::UpdateParameters(const EffectLayerParameters &params)
     for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
     {
         selectedEffectLayer->UpdateParameters(params);
+        m_validTextures = false;
     }
 }
 
@@ -503,6 +529,22 @@ GameObject *View3DScene::GetModelGameObject() const
                               ? p_modelContainer->GetChild(0)
                               : nullptr;
     return modelGo;
+}
+
+const Vector3 &View3DScene::GetModelOriginalLocalScale() const
+{
+    return m_originalModelLocalScale;
+}
+
+Array<EffectLayer *> View3DScene::GetAllEffectLayers() const
+{
+    Array<EffectLayer *> effectLayers;
+    for (auto &it : m_meshRendererToInfo)
+    {
+        const MeshRendererInfo &mrInfo = it.second;
+        effectLayers.PushBack(mrInfo.effectLayers);
+    }
+    return effectLayers;
 }
 
 Array<EffectLayer *> View3DScene::GetSelectedEffectLayers() const

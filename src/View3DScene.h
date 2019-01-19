@@ -51,6 +51,8 @@ public:
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
+    const Vector3 &GetModelOriginalLocalScale() const;
+    Array<EffectLayer *> GetAllEffectLayers() const;
     Array<EffectLayer *> GetSelectedEffectLayers() const;
     Model *GetCurrentModel() const;
 
@@ -64,11 +66,14 @@ private:
         Array<EffectLayer *> effectLayers;
     };
 
+    bool m_validTextures = false;
+    Time m_lastTimeTexturesGenerated = Time::Zero();
     LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;
     Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
+    Vector3 m_originalModelLocalScale = Vector3::One();
     Map<MeshRenderer *, MeshRendererInfo> m_meshRendererToInfo;
 
     AH<ShaderProgram> m_view3DShaderProgram;

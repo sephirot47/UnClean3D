@@ -4,6 +4,7 @@
 #include "Bang/Extensions.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
+#include "Bang/Transform.h"
 #include "Bang/UIButton.h"
 #include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
@@ -144,18 +145,24 @@ ControlPanel::ControlPanel()
         p_baseRoughnessInput = GameObjectFactory::CreateUISlider();
         p_baseRoughnessInput->SetMinMaxValues(0.0f, 1.0f);
         p_baseRoughnessInput->SetValue(1.0f);
+        p_baseRoughnessInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
             ->SetParent(this);
 
         p_baseMetalnessInput = GameObjectFactory::CreateUISlider();
         p_baseMetalnessInput->SetMinMaxValues(0.0f, 1.0f);
         p_baseMetalnessInput->SetValue(0.0f);
+        p_baseMetalnessInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
             ->SetParent(this);
 
         p_texturesSizeInput = GameObjectFactory::CreateUISlider();
         p_texturesSizeInput->SetMinMaxValues(1.0f, 8192.0f);
         p_texturesSizeInput->SetValue(2048.0f);
+        p_texturesSizeInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Textures size", p_texturesSizeInput->GetGameObject())
             ->SetParent(this);
 
@@ -264,7 +271,7 @@ ControlPanel::ControlPanel()
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
         p_dirtFrequencyInput = GameObjectFactory::CreateUISlider();
-        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 5.0f);
+        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 10.0f);
         p_dirtFrequencyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
@@ -396,8 +403,14 @@ void ControlPanel::ExportModel()
         GetOpenModelPath().GetName() + String(".") + extension);
 
     GetView3DScene()->ApplyCompositeTexturesToModel();
+    Vector3 prevScale =
+        GetView3DScene()->GetModelGameObject()->GetTransform()->GetLocalScale();
+    GetView3DScene()->GetModelGameObject()->GetTransform()->SetLocalScale(
+        GetView3DScene()->GetModelOriginalLocalScale());
     ModelIO::ExportModel(GetView3DScene()->GetModelGameObject(),
                          exportedModelPath);
+    GetView3DScene()->GetModelGameObject()->GetTransform()->SetLocalScale(
+        prevScale);
     GetView3DScene()->RestoreOriginalAlbedoTexturesToModel();
 }
 

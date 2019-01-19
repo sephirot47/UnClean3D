@@ -17,6 +17,7 @@ void main()
 #define BANG_FRAGMENT
 #include "SimplexNoise3D.glsl"
 
+uniform mat4 SceneModelMatrix;
 uniform sampler2D DirtTexture;
 uniform float DirtSeed;
 uniform float DirtOctaves;
@@ -39,7 +40,8 @@ void main()
     float noiseValue = 0.0f;
     for (int i = 0; i < DirtOctaves; ++i)
     {
-        float octaveNoiseValue = snoise(finPosition * frequency + DirtSeed) * amplitude;
+        vec3 worldPosition = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
+        float octaveNoiseValue = snoise(worldPosition * frequency + DirtSeed) * amplitude;
         noiseValue += octaveNoiseValue;
 
         frequency *= DirtFrequencyMultiply;

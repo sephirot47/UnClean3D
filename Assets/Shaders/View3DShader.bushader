@@ -68,14 +68,6 @@ void DefaultFragCommonMain(vec4 albedoColor)
             GetMaskBrushApportationFromCurrentMousePosition(B_FIn_Position,
                                                             B_ProjectionView,
                                                             B_Viewport_Size);
-    if (SeeMask)
-    {
-        float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
-        finalAlbedo.r  = maskTexValue;
-        finalAlbedo.gb = vec2(0);
-        pixelMetalness = 0;
-        pixelRoughness = 1;
-    }
 
     if (maskBrushApportation > 0)
     {
@@ -83,9 +75,21 @@ void DefaultFragCommonMain(vec4 albedoColor)
         finalAlbedo.gb = clamp(finalAlbedo.gb * (1-maskBrushApportation), 0, 1);
     }
 
-    vec4 finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
-                                         finalPosition,  finalNormal, finalAlbedo,
-                                         pixelRoughness, pixelMetalness);
+    vec4 finalColor = vec4(0,0,0,1);
+    if (SeeMask)
+    {
+        float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
+        finalAlbedo.rgb  = finalColor.rgb = texture(MaskTexture, B_FIn_AlbedoUv).rgb; // vec3(maskTexValue, 0, 0);
+        receivesLighting = 0;
+        pixelMetalness = 0;
+        pixelRoughness = 1;
+    }
+    else
+    {
+        finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
+                                        finalPosition,  finalNormal, finalAlbedo,
+                                        pixelRoughness, pixelMetalness);
+    }
 
     B_GIn_Albedo = vec4(finalAlbedo.rgb, 1);
     B_GIn_Light = vec4(0,0,0,0);

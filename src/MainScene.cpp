@@ -49,9 +49,9 @@ void MainScene::Start()
     if (!IsStarted())
     {
         Path modelPath;
-        // modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
-        modelPath =
-            Paths::GetProjectAssetsDir().Append("Character/Character.dae");
+        modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
+        // modelPath =
+        //     Paths::GetProjectAssetsDir().Append("Character/Character.dae");
         GetControlPanel()->OpenModel(modelPath);
     }
 
@@ -77,6 +77,12 @@ void MainScene::Update()
     else if (Input::GetKeyDown(Key::T))
     {
         SetSceneMode(MainScene::SceneMode::TEXTURES);
+    }
+
+    // Always update view3D scene
+    if (GetSceneMode() != MainScene::SceneMode::VIEW3D)
+    {
+        GetView3DScene()->Update();
     }
 }
 

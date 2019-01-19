@@ -7,6 +7,7 @@
 #include "Bang/Framebuffer.h"
 #include "Bang/GBuffer.h"
 #include "Bang/GEngine.h"
+#include "Bang/GLUniforms.h"
 #include "Bang/GameObject.h"
 #include "Bang/Image.h"
 #include "Bang/Material.h"
@@ -66,11 +67,10 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_textureMesh = Assets::Create<Mesh>();
     if (Mesh *originalMesh = mr->GetMesh())
     {
-        m_positionsVBO = new VBO();
-
         // Gather some data
         Array<Vector3> texTriMeshPositions;
         Array<Vector3> originalVertexPositions;
+        Array<Vector3> originalVertexNormals;
         for (Mesh::VertexId triId = 0; triId < originalMesh->GetNumTriangles();
              ++triId)
         {
@@ -90,7 +90,10 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 
                 const Vector3 &oriVertPos =
                     originalMesh->GetPositionsPool()[vId];
+                const Vector3 &oriVertNormal =
+                    originalMesh->GetNormalsPool()[vId];
                 originalVertexPositions.PushBack(oriVertPos);
+                originalVertexNormals.PushBack(oriVertNormal);
             }
         }
 
@@ -98,12 +101,20 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
         GetTextureMesh()->SetPositionsPool(texTriMeshPositions);
         GetTextureMesh()->SetTrianglesVertexIds({});
 
-        // Add actual original mesh 3D positions as another VBO
+        // Add actual original mesh attributes as other VBOs
+        m_positionsVBO = new VBO();
         m_positionsVBO->CreateAndFill(
             originalVertexPositions.Data(),
             originalVertexPositions.Size() * sizeof(float) * 3);
         GetTextureMesh()->GetVAO()->SetVBO(
             m_positionsVBO, 1, 3, GL::VertexAttribDataType::FLOAT);
+
+        m_normalsVBO = new VBO();
+        m_normalsVBO->CreateAndFill(
+            originalVertexNormals.Data(),
+            originalVertexNormals.Size() * sizeof(float) * 3);
+        GetTextureMesh()->GetVAO()->SetVBO(
+            m_normalsVBO, 2, 3, GL::VertexAttribDataType::FLOAT);
 
         GetTextureMesh()->UpdateVAOs();
     }
@@ -166,7 +177,6 @@ void EffectLayer::ReloadShaders()
 void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
 {
     m_params = parameters;
-    GenerateEffectTexture();
 }
 
 void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
@@ -218,20 +228,25 @@ void EffectLayer::PaintMaskBrush()
     sp->Bind();
     {
         View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
+        Transform *meshTR = p_meshRenderer->GetGameObject()->GetTransform();
         sp->SetTexture2D("PreviousMaskTexture", readTexture);
-        sp->SetMatrix4("SceneModelMatrix",
-                       view3DScene->GetModelGameObject()
-                           ->GetTransform()
-                           ->GetLocalToWorldMatrix());
+        sp->SetMatrix4("SceneModelMatrix", meshTR->GetLocalToWorldMatrix());
+        sp->SetMatrix4(
+            "SceneNormalMatrix",
+            GLUniforms::CalculateNormalMatrix(meshTR->GetLocalToWorldMatrix()));
+        Camera *cam = view3DScene->GetCamera();
         sp->SetMatrix4("SceneProjectionViewMatrix",
-                       view3DScene->GetCamera()->GetProjectionMatrix() *
-                           view3DScene->GetCamera()->GetViewMatrix());
-        sp->SetVector2("ViewportSize",
-                       Vector2(view3DScene->GetCamera()->GetRenderSize()));
+                       cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        sp->SetVector2("ViewportSize", Vector2(cam->GetRenderSize()));
         sp->SetTexture2D("SceneDepth",
-                         view3DScene->GetCamera()
-                             ->GetGBuffer()
-                             ->GetSceneDepthStencilTexture());
+                         cam->GetGBuffer()->GetSceneDepthStencilTexture());
+        sp->SetVector3("CameraForward",
+                       cam->GetGameObject()->GetTransform()->GetForward());
+        sp->SetVector3("CameraWorldPos",
+                       cam->GetGameObject()->GetTransform()->GetPosition());
+        sp->SetTexture2D(
+            "SceneNormalTexture",
+            cam->GetGBuffer()->GetAttachmentTex2D(GBuffer::AttNormal));
         GetControlPanel()->SetMaskUniforms(m_paintMaskBrushSP.Get());
     }
 
@@ -333,8 +348,13 @@ EffectLayerImplementation::~EffectLayerImplementation()
 {
 }
 
-void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *)
+void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
+    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
+    sp->SetMatrix4("SceneModelMatrix",
+                   view3DScene->GetModelGameObject()
+                       ->GetTransform()
+                       ->GetLocalToWorldMatrix());
 }
 
 EffectLayer *EffectLayerImplementation::GetEffectLayer() const

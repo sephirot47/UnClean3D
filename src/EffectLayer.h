@@ -55,6 +55,7 @@ private:
     MeshRenderer *p_meshRenderer = nullptr;
 
     VBO *m_positionsVBO = nullptr;
+    VBO *m_normalsVBO = nullptr;
     Framebuffer *m_framebuffer = nullptr;
     AH<Mesh> m_textureMesh;
     AH<ShaderProgram> m_generateEffectTextureSP;
@@ -80,6 +81,7 @@ public:
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
     Texture2D *GetEffectTexture() const;
     EffectLayer *GetEffectLayer() const;
+    virtual String GetTypeName() const = 0;
 
 protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
