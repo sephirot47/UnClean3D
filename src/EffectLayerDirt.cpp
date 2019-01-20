@@ -63,7 +63,7 @@ void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
     EffectLayerImplementation::SetGenerateEffectUniforms(sp);
 
     sp->SetFloat("DirtOctaves", 4.0f);
-    sp->SetFloat("DirtFrequency", 10.3f - GetParameters().dirtFrequency);
+    sp->SetFloat("DirtFrequency", 25.3f - GetParameters().dirtFrequency);
     sp->SetFloat("DirtFrequencyMultiply",
                  GetParameters().dirtFrequencyMultiply);
     sp->SetFloat("DirtAmplitude", GetParameters().dirtAmplitude);

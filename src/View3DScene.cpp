@@ -136,7 +136,8 @@ void View3DScene::Update()
     // Stuff needed for later
     ControlPanel *controlPanel = GetControlPanel();
 
-    if (!IsVisible())
+    if (MainScene::GetInstance()->GetSceneMode() !=
+        MainScene::SceneMode::VIEW3D)
     {
         return;
     }

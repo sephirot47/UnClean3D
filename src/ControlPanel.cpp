@@ -45,7 +45,9 @@ ControlPanel::ControlPanel()
     UIImageRenderer *bg = AddComponent<UIImageRenderer>();
     bg->SetTint(Color::Gray());
 
-    auto CreateRow = [](const String &labelStr = "", GameObject *go = nullptr) {
+    auto CreateRow = [](const String &labelStr = "",
+                        GameObject *go = nullptr,
+                        bool stretch = true) {
         GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
         UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
         rowHL->SetSpacing(10);
@@ -61,7 +63,10 @@ ControlPanel::ControlPanel()
         if (go)
         {
             UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
-            goLE->SetFlexibleWidth(9999.9f);
+            if (stretch)
+            {
+                goLE->SetFlexibleWidth(9999.9f);
+            }
             go->SetParent(rowGo);
         }
 
@@ -158,12 +163,18 @@ ControlPanel::ControlPanel()
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
             ->SetParent(this);
 
-        p_texturesSizeInput = GameObjectFactory::CreateUISlider();
-        p_texturesSizeInput->SetMinMaxValues(1.0f, 8192.0f);
-        p_texturesSizeInput->SetValue(2048.0f);
+        p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
+        p_texturesSizeInput->AddItem("64", 64);
+        p_texturesSizeInput->AddItem("128", 128);
+        p_texturesSizeInput->AddItem("256", 256);
+        p_texturesSizeInput->AddItem("512", 512);
+        p_texturesSizeInput->AddItem("1024", 1024);
+        p_texturesSizeInput->AddItem("2048", 2048);
+        p_texturesSizeInput->AddItem("4096", 4096);
+        p_texturesSizeInput->SetSelectionByIndex(4);
         p_texturesSizeInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        CreateRow("Textures size", p_texturesSizeInput->GetGameObject())
+        CreateRow("Textures size", p_texturesSizeInput->GetGameObject(), false)
             ->SetParent(this);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
@@ -271,7 +282,7 @@ ControlPanel::ControlPanel()
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
         p_dirtFrequencyInput = GameObjectFactory::CreateUISlider();
-        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 10.0f);
+        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 25.0f);
         p_dirtFrequencyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
@@ -469,7 +480,7 @@ void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
 {
     sp->Bind();
 
-    sp->SetBool("SeeMask", p_seeMaskButton->GetOn());
+    sp->SetBool("SeeMask", GetMaskBrushEnabled() && p_seeMaskButton->GetOn());
     sp->SetBool("MaskBrushEnabled", GetMaskBrushEnabled());
     sp->SetBool("MaskBrushDepthAware", p_maskBrushDepthAwareButton->GetOn());
     sp->SetBool("MaskBrushErasing", p_eraseMaskButton->GetOn());
@@ -523,8 +534,8 @@ float ControlPanel::GetBaseMetalness() const
 
 Vector2i ControlPanel::GetTextureSize() const
 {
-    return Vector2i(p_texturesSizeInput->GetValue(),
-                    p_texturesSizeInput->GetValue());
+    return Vector2i(p_texturesSizeInput->GetSelectedValue(),
+                    p_texturesSizeInput->GetSelectedValue());
 }
 
 uint ControlPanel::GetSelectedUIEffectLayerIndex() const

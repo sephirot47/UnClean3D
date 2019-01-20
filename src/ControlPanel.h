@@ -71,7 +71,7 @@ private:
     UIComboBox *p_sceneModeComboBox = nullptr;
     UISlider *p_baseRoughnessInput = nullptr;
     UISlider *p_baseMetalnessInput = nullptr;
-    UISlider *p_texturesSizeInput = nullptr;
+    UIComboBox *p_texturesSizeInput = nullptr;
 
     // Mask
     UIToolButton *p_maskBrushEnabledButton = nullptr;
