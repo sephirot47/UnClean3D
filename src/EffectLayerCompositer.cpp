@@ -19,6 +19,8 @@ EffectLayerCompositer::EffectLayerCompositer()
 
     m_albedoPingPongTexture0 = Assets::Create<Texture2D>();
     m_albedoPingPongTexture1 = Assets::Create<Texture2D>();
+    m_heightPingPongTexture0 = Assets::Create<Texture2D>();
+    m_heightPingPongTexture1 = Assets::Create<Texture2D>();
     m_normalPingPongTexture0 = Assets::Create<Texture2D>();
     m_normalPingPongTexture1 = Assets::Create<Texture2D>();
     m_roughnessPingPongTexture0 = Assets::Create<Texture2D>();
@@ -29,6 +31,10 @@ EffectLayerCompositer::EffectLayerCompositer()
     m_compositeLayersSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "CompositeLayers.bushader")));
+
+    m_heightfieldToNormalTextureSP.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("Shaders").Append(
+            "HeightfieldToNormalTexture.bushader")));
 }
 
 EffectLayerCompositer::~EffectLayerCompositer()
@@ -39,6 +45,7 @@ EffectLayerCompositer::~EffectLayerCompositer()
 void EffectLayerCompositer::ReloadShaders()
 {
     m_compositeLayersSP.Get()->ReImport();
+    m_heightfieldToNormalTextureSP.Get()->ReImport();
 }
 
 void EffectLayerCompositer::CompositeLayers(
@@ -68,6 +75,8 @@ void EffectLayerCompositer::CompositeLayers(
     m_albedoPingPongTexture1.Get()->Resize(texSize);
     m_normalPingPongTexture0.Get()->Resize(texSize);
     m_normalPingPongTexture1.Get()->Resize(texSize);
+    m_heightPingPongTexture0.Get()->Resize(texSize);
+    m_heightPingPongTexture1.Get()->Resize(texSize);
     m_roughnessPingPongTexture0.Get()->Resize(texSize);
     m_roughnessPingPongTexture1.Get()->Resize(texSize);
     m_metalnessPingPongTexture0.Get()->Resize(texSize);
@@ -77,10 +86,18 @@ void EffectLayerCompositer::CompositeLayers(
     Texture2D *albedoReadTex = albedoOriginalTex;
     Texture2D *normalDrawTex = m_normalPingPongTexture0.Get();
     Texture2D *normalReadTex = normalOriginalTex;
+    Texture2D *heightDrawTex = m_heightPingPongTexture0.Get();
+    Texture2D *heightReadTex = m_heightPingPongTexture1.Get();
     Texture2D *roughnessDrawTex = m_roughnessPingPongTexture0.Get();
     Texture2D *roughnessReadTex = roughnessOriginalTex;
     Texture2D *metalnessDrawTex = m_metalnessPingPongTexture0.Get();
     Texture2D *metalnessReadTex = metalnessOriginalTex;
+
+    // Set height read texture to 0
+    GL::Disable(GL::Enablable::BLEND);
+    m_framebuffer->SetAttachmentTexture(heightReadTex, GL::Attachment::COLOR0);
+    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+    GL::ClearColorBuffer(Color::Zero());
 
     // Add base roughness and metalness on top of original textures
     GL::Enable(GL::Enablable::BLEND);
@@ -110,12 +127,6 @@ void EffectLayerCompositer::CompositeLayers(
     // Bind ShaderProgram and set uniforms
     ShaderProgram *sp = m_compositeLayersSP.Get();
     sp->Bind();
-
-    sp->SetTexture2D("OriginalAlbedoTexture", albedoOriginalTex);
-    sp->SetTexture2D("OriginalNormalTexture", normalOriginalTex);
-    sp->SetTexture2D("OriginalRoughnessTexture", roughnessOriginalTex);
-    sp->SetTexture2D("OriginalMetalnessTexture", metalnessOriginalTex);
-
     for (uint i = 0; i < effectLayers.Size(); ++i)
     {
         if (!controlPanel->IsVisibleUIEffectLayer(i))
@@ -127,17 +138,22 @@ void EffectLayerCompositer::CompositeLayers(
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetAttachmentTexture(normalDrawTex,
                                             GL::Attachment::COLOR1);
-        m_framebuffer->SetAttachmentTexture(roughnessDrawTex,
+        m_framebuffer->SetAttachmentTexture(heightDrawTex,
                                             GL::Attachment::COLOR2);
-        m_framebuffer->SetAttachmentTexture(metalnessDrawTex,
+        m_framebuffer->SetAttachmentTexture(roughnessDrawTex,
                                             GL::Attachment::COLOR3);
+        m_framebuffer->SetAttachmentTexture(metalnessDrawTex,
+                                            GL::Attachment::COLOR4);
         m_framebuffer->SetAllDrawBuffers();
 
         // Set uniforms
         {
             EffectLayer *effectLayer = effectLayers[i];
-            sp->SetInt("EffectLayerType",
-                       effectLayer->GetImplementation()->GetEffectLayerType());
+            if (auto elImpl = effectLayer->GetImplementation())
+            {
+                sp->SetInt("EffectLayerType", elImpl->GetEffectLayerType());
+            }
+
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
             sp->SetTexture2D("EffectLayerMaskTexture",
@@ -145,6 +161,7 @@ void EffectLayerCompositer::CompositeLayers(
 
             sp->SetTexture2D("PreviousAlbedoTexture", albedoReadTex);
             sp->SetTexture2D("PreviousNormalTexture", normalReadTex);
+            sp->SetTexture2D("PreviousHeightTexture", heightReadTex);
             sp->SetTexture2D("PreviousRoughnessTexture", roughnessReadTex);
             sp->SetTexture2D("PreviousMetalnessTexture", metalnessReadTex);
         }
@@ -153,6 +170,7 @@ void EffectLayerCompositer::CompositeLayers(
 
         std::swap(albedoDrawTex, albedoReadTex);
         std::swap(normalDrawTex, normalReadTex);
+        std::swap(heightDrawTex, heightReadTex);
         std::swap(roughnessDrawTex, roughnessReadTex);
         std::swap(metalnessDrawTex, metalnessReadTex);
 
@@ -160,13 +178,21 @@ void EffectLayerCompositer::CompositeLayers(
         {
             albedoDrawTex = m_albedoPingPongTexture1.Get();
             normalDrawTex = m_normalPingPongTexture1.Get();
+            heightDrawTex = m_heightPingPongTexture1.Get();
             roughnessDrawTex = m_roughnessPingPongTexture1.Get();
             metalnessDrawTex = m_metalnessPingPongTexture1.Get();
         }
     }
 
-    sp->UnBind();
-    m_framebuffer->UnBind();
+    sp = m_heightfieldToNormalTextureSP.Get();
+    {
+        sp->Bind();
+        m_framebuffer->SetAttachmentTexture(normalReadTex,
+                                            GL::Attachment::COLOR0);
+        m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+        sp->SetTexture2D("HeightfieldTexture", heightReadTex);
+        GEngine::GetInstance()->RenderViewportPlane();
+    }
 
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);

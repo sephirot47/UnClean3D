@@ -3,26 +3,25 @@
 
 #fragment
 const int EFFECT_LAYER_TYPE_DIRT = 0;
+const int EFFECT_LAYER_TYPE_NORMAL_LINES = 1;
 
 uniform sampler2D EffectLayerTexture;
 uniform sampler2D EffectLayerMaskTexture;
 uniform int EffectLayerType;
 
-uniform sampler2D OriginalAlbedoTexture;
 uniform sampler2D PreviousAlbedoTexture;
-uniform sampler2D OriginalNormalTexture;
 uniform sampler2D PreviousNormalTexture;
-uniform sampler2D OriginalRoughnessTexture;
+uniform sampler2D PreviousHeightTexture;
 uniform sampler2D PreviousRoughnessTexture;
-uniform sampler2D OriginalMetalnessTexture;
 uniform sampler2D PreviousMetalnessTexture;
 
 in vec2 B_FIn_AlbedoUv;
 
 layout(location = 0) out vec4 OutAlbedo;
 layout(location = 1) out vec4 OutNormal;
-layout(location = 2) out vec4 OutRoughness;
-layout(location = 3) out vec4 OutMetalness;
+layout(location = 2) out vec4 OutHeight;
+layout(location = 3) out vec4 OutRoughness;
+layout(location = 4) out vec4 OutMetalness;
 
 void main()
 {
@@ -30,10 +29,18 @@ void main()
 
     // Apply effect layer
     float mask = texture(EffectLayerMaskTexture, uv).r;
-    vec4 originalAlbedo    = texture(OriginalAlbedoTexture, uv);
-    vec4 originalNormal    = texture(OriginalNormalTexture, uv);
-    vec4 originalRoughness = texture(OriginalRoughnessTexture, uv);
-    vec4 originalMetalness = texture(OriginalMetalnessTexture, uv);
+    vec4  previousAlbedo    = texture(PreviousAlbedoTexture, uv);
+    vec3  previousNormal    = texture(PreviousNormalTexture, uv).rgb;
+    float previousHeight    = texture(PreviousHeightTexture, uv).r;
+    float previousRoughness = texture(PreviousRoughnessTexture, uv).r;
+    float previousMetalness = texture(PreviousMetalnessTexture, uv).r;
+
+    vec4 outAlbedo = previousAlbedo;
+    vec3 outNormal = previousNormal;
+    float outHeight = previousHeight;
+    float outRoughness = previousRoughness;
+    float outMetalness = previousMetalness;
+
     if (mask < 1)
     {
         vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
@@ -42,30 +49,29 @@ void main()
         {
             case EFFECT_LAYER_TYPE_DIRT:
             {
-                vec3 previousAlbedo = texture(PreviousAlbedoTexture, uv).rgb;
                 float dirtIntensity = effectLayerColor.a;
 
-                OutAlbedo.rgb = (effectLayerColor.rgb * dirtIntensity +
+                outAlbedo.rgb = (effectLayerColor.rgb * dirtIntensity +
                                  previousAlbedo.rgb * (1-dirtIntensity));
-                OutAlbedo.a   = originalAlbedo.a;
 
-                OutNormal    = originalNormal;
-                OutRoughness = clamp(originalRoughness + dirtIntensity, vec4(0), vec4(1));
-                OutMetalness = clamp(originalMetalness - dirtIntensity, vec4(0), vec4(1));
+                outRoughness = clamp(previousRoughness + dirtIntensity, 0, 1);
+                outMetalness = clamp(previousMetalness - dirtIntensity, 0, 1);
+            }
+            break;
+
+            case EFFECT_LAYER_TYPE_NORMAL_LINES:
+            {
+                // outAlbedo = effectLayerColor;
+                outHeight = effectLayerColor.r;
             }
             break;
         }
     }
-    else
-    {
-        vec4 previousAlbedo    = texture(PreviousAlbedoTexture, uv);
-        vec4 previousNormal    = texture(PreviousNormalTexture, uv);
-        vec4 previousRoughness = texture(PreviousRoughnessTexture, uv);
-        vec4 previousMetalness = texture(PreviousMetalnessTexture, uv);
-        OutAlbedo    = previousAlbedo;
-        OutNormal    = previousNormal;
-        OutRoughness = previousRoughness;
-        OutMetalness = previousMetalness;
-    }
+
+    OutAlbedo    = vec4(outAlbedo);
+    OutNormal    = vec4(outNormal, 1);
+    OutHeight    = vec4(outHeight);
+    OutRoughness = vec4(outRoughness);
+    OutMetalness = vec4(outMetalness);
 }
 

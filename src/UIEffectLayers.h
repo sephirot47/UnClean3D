@@ -12,6 +12,7 @@ class UIScrollPanel;
 }
 using namespace Bang;
 
+class EffectLayer;
 class UIEffectLayerRow;
 
 class UIEffectLayers : public GameObject
@@ -20,7 +21,7 @@ public:
     UIEffectLayers();
     virtual ~UIEffectLayers();
 
-    UIEffectLayerRow *CreateNewEffectLayerRow();
+    UIEffectLayerRow *CreateNewEffectLayerRow(EffectLayer *newEffectLayer);
     void RemoveEffectLayer(uint effectLayerIdx);
 
     void SetSelection(uint idx);

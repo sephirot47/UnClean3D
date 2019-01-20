@@ -40,12 +40,15 @@ private:
     AH<Texture2D> m_albedoPingPongTexture1;
     AH<Texture2D> m_normalPingPongTexture0;
     AH<Texture2D> m_normalPingPongTexture1;
+    AH<Texture2D> m_heightPingPongTexture0;
+    AH<Texture2D> m_heightPingPongTexture1;
     AH<Texture2D> m_roughnessPingPongTexture0;
     AH<Texture2D> m_roughnessPingPongTexture1;
     AH<Texture2D> m_metalnessPingPongTexture0;
     AH<Texture2D> m_metalnessPingPongTexture1;
 
     AH<ShaderProgram> m_compositeLayersSP;
+    AH<ShaderProgram> m_heightfieldToNormalTextureSP;
 };
 
 #endif  // EFFECTLAYERCOMPOSITER_H

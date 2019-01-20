@@ -53,17 +53,12 @@ String EffectLayerDirt::GetTypeName() const
     return "Dirt";
 }
 
-const EffectLayerParameters &EffectLayerDirt::GetParameters() const
-{
-    return GetEffectLayer()->GetParameters();
-}
-
 void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
     EffectLayerImplementation::SetGenerateEffectUniforms(sp);
 
     sp->SetFloat("DirtOctaves", 4.0f);
-    sp->SetFloat("DirtFrequency", 25.3f - GetParameters().dirtFrequency);
+    sp->SetFloat("DirtFrequency", (1.0f / GetParameters().dirtFrequency));
     sp->SetFloat("DirtFrequencyMultiply",
                  GetParameters().dirtFrequencyMultiply);
     sp->SetFloat("DirtAmplitude", GetParameters().dirtAmplitude);

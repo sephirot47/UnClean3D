@@ -40,7 +40,7 @@ ControlPanel::ControlPanel()
     GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
 
     UILayoutElement *le = AddComponent<UILayoutElement>();
-    le->SetMinWidth(300);
+    le->SetMinWidth(600);
 
     UIImageRenderer *bg = AddComponent<UIImageRenderer>();
     bg->SetTint(Color::Gray());
@@ -401,6 +401,7 @@ void ControlPanel::OpenModel(const Path &modelPath)
     {
         m_openModelPath = modelPath;
         MainScene::GetInstance()->LoadModel(modelPath);
+        CreateNewEffectLayer();
     }
 }
 
@@ -427,8 +428,8 @@ void ControlPanel::ExportModel()
 
 void ControlPanel::CreateNewEffectLayer()
 {
-    GetView3DScene()->CreateNewEffectLayer();
-    p_uiEffectLayers->CreateNewEffectLayerRow();
+    EffectLayer *newEL = GetView3DScene()->CreateNewEffectLayer();
+    p_uiEffectLayers->CreateNewEffectLayerRow(newEL);
 }
 
 void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)

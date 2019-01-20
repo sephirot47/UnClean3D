@@ -25,7 +25,8 @@ class EffectLayer
 public:
     enum Type
     {
-        DIRT = 0
+        DIRT = 0,
+        NORMAL_LINES
     };
 
     EffectLayer(MeshRenderer *mr);
@@ -35,7 +36,8 @@ public:
     void ReloadShaders();
 
     virtual void UpdateParameters(const EffectLayerParameters &parameters);
-    void SetEffectLayerImplementation(EffectLayerImplementation *impl);
+    void SetImplementation(EffectLayerImplementation *impl);
+    void SetType(EffectLayer::Type type);
 
     void PaintMaskBrush();
 
@@ -78,8 +80,8 @@ public:
     EffectLayerImplementation();
     virtual ~EffectLayerImplementation();
 
+    const EffectLayerParameters &GetParameters() const;
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
-    Texture2D *GetEffectTexture() const;
     EffectLayer *GetEffectLayer() const;
     virtual String GetTypeName() const = 0;
 

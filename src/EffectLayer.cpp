@@ -7,6 +7,7 @@
 #include "Bang/Framebuffer.h"
 #include "Bang/GBuffer.h"
 #include "Bang/GEngine.h"
+#include "Bang/GEngine.h"
 #include "Bang/GLUniforms.h"
 #include "Bang/GameObject.h"
 #include "Bang/Image.h"
@@ -28,6 +29,8 @@
 #include "Bang/VBO.h"
 
 #include "ControlPanel.h"
+#include "EffectLayerDirt.h"
+#include "EffectLayerNormalLines.h"
 #include "MainScene.h"
 #include "View3DScene.h"
 
@@ -135,9 +138,11 @@ void EffectLayer::GenerateEffectTexture()
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
     GL::Push(GL::Pushable::BLEND_STATES);
+    GL::Push(GL::Pushable::CULL_FACE);
     GL::Push(GL::Pushable::VIEWPORT);
 
     GL::Disable(GL::Enablable::BLEND);
+    GL::Disable(GL::Enablable::CULL_FACE);
 
     // Bind framebuffer and render to texture
     m_framebuffer->Bind();
@@ -153,12 +158,12 @@ void EffectLayer::GenerateEffectTexture()
     sp->Bind();
     GetImplementation()->SetGenerateEffectUniforms(sp);
 
-    GL::ClearColorBuffer(Color::Zero());
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
                GetTextureMesh()->GetNumVerticesIds());
 
     GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::CULL_FACE);
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
@@ -179,7 +184,7 @@ void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
     m_params = parameters;
 }
 
-void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
+void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
 {
     if (GetImplementation())
     {
@@ -197,6 +202,28 @@ void EffectLayer::SetEffectLayerImplementation(EffectLayerImplementation *impl)
         m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
 
         GenerateEffectTexture();
+    }
+}
+
+void EffectLayer::SetType(EffectLayer::Type type)
+{
+    EffectLayerImplementation *effLayerImpl = GetImplementation();
+    if (!effLayerImpl || effLayerImpl->GetEffectLayerType() != type)
+    {
+        EffectLayerImplementation *newImpl = nullptr;
+        switch (type)
+        {
+            case EffectLayer::Type::DIRT:
+                newImpl = new EffectLayerDirt();
+                break;
+
+            case EffectLayer::Type::NORMAL_LINES:
+                newImpl = new EffectLayerNormalLines();
+                break;
+
+            default: ASSERT(false);
+        }
+        SetImplementation(newImpl);
     }
 }
 
@@ -346,6 +373,11 @@ EffectLayerImplementation::EffectLayerImplementation()
 
 EffectLayerImplementation::~EffectLayerImplementation()
 {
+}
+
+const EffectLayerParameters &EffectLayerImplementation::GetParameters() const
+{
+    return GetEffectLayer()->GetParameters();
 }
 
 void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)

@@ -25,7 +25,6 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerCompositer.h"
-#include "EffectLayerDirt.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -330,6 +329,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             }
         }
         m_meshRendererToInfo.Clear();
+        m_validTextures = false;
     }
 
     if (newModel)
@@ -410,17 +410,19 @@ void View3DScene::OnModelChanged(Model *newModel)
     p_currentModel = newModel;
 }
 
-void View3DScene::CreateNewEffectLayer()
+EffectLayer *View3DScene::CreateNewEffectLayer()
 {
-    for (auto &it : m_meshRendererToInfo)
+    EffectLayer *newEffectLayer = nullptr;
+    if (m_meshRendererToInfo.Size() >= 1)
     {
-        MeshRenderer *mr = it.first;
-        Array<EffectLayer *> &effectLayers = it.second.effectLayers;
+        MeshRenderer *mr = m_meshRendererToInfo.Begin()->first;
+        MeshRendererInfo &mrInfo = m_meshRendererToInfo.Begin()->second;
+        Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
 
-        EffectLayer *newEffectLayer = new EffectLayer(mr);
-        newEffectLayer->SetEffectLayerImplementation(new EffectLayerDirt());
+        newEffectLayer = new EffectLayer(mr);
         effectLayers.PushFront(newEffectLayer);
     }
+    return newEffectLayer;
 }
 
 void View3DScene::RemoveEffectLayer(uint effectLayerIdx)

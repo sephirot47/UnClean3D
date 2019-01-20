@@ -12,6 +12,7 @@
 #include "BangEditor/BangEditor.h"
 
 #include "ControlPanel.h"
+#include "EffectLayer.h"
 
 namespace Bang
 {
@@ -40,7 +41,7 @@ public:
     void ReloadShaders();
     void OnModelChanged(Model *newModel);
 
-    void CreateNewEffectLayer();
+    EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void UpdateParameters(const EffectLayerParameters &params);
     void ApplyControlPanelSettingsToModel();

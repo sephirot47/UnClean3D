@@ -85,9 +85,11 @@ UIEffectLayers::~UIEffectLayers()
 {
 }
 
-UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow()
+UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
+    EffectLayer *newEffectLayer)
 {
-    UIEffectLayerRow *effectLayerRow = new UIEffectLayerRow(this);
+    UIEffectLayerRow *effectLayerRow =
+        new UIEffectLayerRow(this, newEffectLayer);
 
     effectLayerRow->SetParent(p_listContainer, 0);
     p_effectLayerRows.PushFront(effectLayerRow);

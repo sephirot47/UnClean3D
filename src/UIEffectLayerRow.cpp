@@ -7,6 +7,7 @@
 #include "Bang/Random.h"
 #include "Bang/RectTransform.h"
 #include "Bang/UIButton.h"
+#include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILabel.h"
@@ -19,17 +20,20 @@
 #include "BangEditor/EditorTextureFactory.h"
 
 #include "ControlPanel.h"
+#include "EffectLayer.h"
 #include "MainScene.h"
 #include "UIEffectLayers.h"
 #include "View3DScene.h"
 
 using namespace Bang;
 
-UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers)
+UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
+                                   EffectLayer *effectLayer)
 {
     GameObjectFactory::CreateUIGameObjectInto(this);
 
     p_uiEffectLayers = uiEffectLayers;
+    p_effectLayer = effectLayer;
 
     p_focusable = AddComponent<UIFocusable>();
     p_focusable->AddEventCallback([this](UIFocusable *, const UIEvent &event) {
@@ -72,6 +76,15 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers)
 
     GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
         ->SetParent(this);
+
+    p_effectLayerTypeInput = GameObjectFactory::CreateUIComboBox();
+    p_effectLayerTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+        this);
+    p_effectLayerTypeInput->AddItem("Dirt", EffectLayer::Type::DIRT);
+    p_effectLayerTypeInput->AddItem("Normal Lines",
+                                    EffectLayer::Type::NORMAL_LINES);
+    p_effectLayerTypeInput->SetSelectionByIndex(0);
+    p_effectLayerTypeInput->GetGameObject()->SetParent(this);
 
     p_visibleButton = GameObjectFactory::CreateUIToolButton(
         "", EditorTextureFactory::GetEyeIcon());
@@ -130,4 +143,14 @@ bool UIEffectLayerRow::IsSelected() const
 bool UIEffectLayerRow::GetIsLayerVisible() const
 {
     return p_visibleButton->GetOn();
+}
+
+void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
+{
+    if (ee == p_effectLayerTypeInput)
+    {
+        EffectLayer::Type type = SCAST<EffectLayer::Type>(
+            p_effectLayerTypeInput->GetSelectedValue());
+        p_effectLayer->SetType(type);
+    }
 }

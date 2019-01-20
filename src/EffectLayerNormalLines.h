@@ -1,18 +1,17 @@
-#ifndef EFFECTLAYERDIRT_H
-#define EFFECTLAYERDIRT_H
+#ifndef EFFECTLAYERNORMALLINES_H
+#define EFFECTLAYERNORMALLINES_H
 
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
-#include "EffectLayer.h"
-
+#include "EffectLayer.h" +
 using namespace Bang;
 
-class EffectLayerDirt : public EffectLayerImplementation
+class EffectLayerNormalLines : public EffectLayerImplementation
 {
 public:
-    EffectLayerDirt();
-    virtual ~EffectLayerDirt() override;
+    EffectLayerNormalLines();
+    virtual ~EffectLayerNormalLines() override;
 
 protected:
     // EffectLayer
@@ -22,4 +21,4 @@ protected:
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp) override;
 };
 
-#endif  // EFFECTLAYERDIRT_H
+#endif  // EFFECTLAYERNORMALLINES_H
