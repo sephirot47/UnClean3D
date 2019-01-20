@@ -148,6 +148,11 @@ bool UIEffectLayerRow::GetIsLayerVisible() const
     return p_visibleButton->GetOn();
 }
 
+UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
+{
+    return p_visibleButton;
+}
+
 void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
     if (ee == p_effectLayerTypeInput)

@@ -13,12 +13,14 @@
 #include "Bang/UIScrollBar.h"
 #include "Bang/UIScrollPanel.h"
 #include "Bang/UITextRenderer.h"
+#include "Bang/UIToolButton.h"
 #include "Bang/UIVerticalLayout.h"
 #include "BangEditor/EditorTextureFactory.h"
 
 #include "ControlPanel.h"
 #include "MainScene.h"
 #include "UIEffectLayerRow.h"
+#include "View3DScene.h"
 
 using namespace Bang;
 
@@ -59,6 +61,19 @@ UIEffectLayers::UIEffectLayers()
         });
         addEffectLayerButton->GetGameObject()->SetParent(topButtonsHLGo);
 
+        p_allLayersVisibleButton = GameObjectFactory::CreateUIToolButton(
+            "", EditorTextureFactory::GetEyeIcon());
+        p_allLayersVisibleButton->GetIcon()->SetTint(Color::Black());
+        p_allLayersVisibleButton->AddClickedCallback([this]() {
+            for (UIEffectLayerRow *layerRow : p_effectLayerRows)
+            {
+                layerRow->GetIsLayerVisibleButton()->SetOn(
+                    p_allLayersVisibleButton->GetOn());
+            }
+            MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
+        });
+        p_allLayersVisibleButton->GetGameObject()->SetParent(topButtonsHLGo);
+
         topButtonsHLGo->SetParent(this);
     }
 
@@ -83,6 +98,18 @@ UIEffectLayers::UIEffectLayers()
 
 UIEffectLayers::~UIEffectLayers()
 {
+}
+
+void UIEffectLayers::Update()
+{
+    GameObject::Update();
+
+    bool allLayersVisibleButtonOn = true;
+    for (UIEffectLayerRow *layerRow : p_effectLayerRows)
+    {
+        allLayersVisibleButtonOn &= layerRow->GetIsLayerVisible();
+    }
+    p_allLayersVisibleButton->SetOn(allLayersVisibleButtonOn);
 }
 
 UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
@@ -122,6 +149,11 @@ void UIEffectLayers::SetSelection(UIEffectLayerRow *effectLayerRow)
 void UIEffectLayers::ClearLayersSelection()
 {
     SetSelection(SCAST<uint>(-1));
+}
+
+bool UIEffectLayers::IsAllLayersVisibleButtonOn() const
+{
+    return p_allLayersVisibleButton->GetOn();
 }
 
 uint UIEffectLayers::GetSelectedEffectLayerRowIndex() const
