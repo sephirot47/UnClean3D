@@ -54,7 +54,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     hl->SetPaddingLeft(10);
 
     p_bg = AddComponent<UIImageRenderer>();
-    // p_bg->SetTint(Color::White().WithValue(0.95f));
     GameObjectFactory::AddInnerBorder(p_bg->GetGameObject());
 
     UILayoutElement *le = AddComponent<UILayoutElement>();

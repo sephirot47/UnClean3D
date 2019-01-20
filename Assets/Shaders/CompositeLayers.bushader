@@ -61,8 +61,7 @@ void main()
 
             case EFFECT_LAYER_TYPE_NORMAL_LINES:
             {
-                // outAlbedo = effectLayerColor;
-                outHeight = effectLayerColor.r;
+                outHeight = previousHeight + effectLayerColor.r;
             }
             break;
         }
