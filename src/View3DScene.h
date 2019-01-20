@@ -43,7 +43,6 @@ public:
 
     EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
-    void UpdateParameters(const EffectLayerParameters &params);
     void SetViewUniforms();
     void PaintMaskBrush();
 

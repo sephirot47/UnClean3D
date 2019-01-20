@@ -38,6 +38,7 @@ ControlPanel::ControlPanel()
 
     UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
     vl->SetPaddings(10);
+    vl->SetSpacing(5);
 
     GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
 
@@ -45,7 +46,7 @@ ControlPanel::ControlPanel()
     le->SetMinWidth(600);
 
     UIImageRenderer *bg = AddComponent<UIImageRenderer>();
-    bg->SetTint(Color::Gray());
+    bg->SetTint(Color::White().WithValue(0.8f));
 
     auto CreateRow = [](const String &labelStr = "",
                         GameObject *go = nullptr,
@@ -213,119 +214,77 @@ ControlPanel::ControlPanel()
         p_serializableWidget->SetParent(p_effectLayerParamsGo);
         p_effectLayerParamsGo->SetParent(this);
 
+        p_serializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
+
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
     }
 
     // Mask
     {
+        p_maskParamsGo = GameObjectFactory::CreateUIGameObject();
+        UIVerticalLayout *vl = p_maskParamsGo->AddComponent<UIVerticalLayout>();
+        vl->SetSpacing(5);
+
+        p_maskSubParamsGo = GameObjectFactory::CreateUIGameObject();
+        UIVerticalLayout *subVL =
+            p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
+        subVL->SetSpacing(5);
+
         UILabel *maskLabel = GameObjectFactory::CreateUILabel();
         maskLabel->GetText()->SetContent("Mask");
         maskLabel->GetText()->SetTextSize(14);
         maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", maskLabel->GetGameObject())->SetParent(this);
+        CreateRow("", maskLabel->GetGameObject())->SetParent(p_maskParamsGo);
 
-        p_maskBrushEnabledButton =
+        p_maskBrushDrawButton =
             GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
-        p_maskBrushEnabledButton->SetOn(false);
-        p_maskBrushEnabledButton->GetGameObject()->SetParent(this);
+        p_maskBrushDrawButton->SetOn(false);
+        p_maskBrushDrawButton->GetGameObject()->SetParent(p_maskParamsGo);
 
         p_maskBrushSizeInput = GameObjectFactory::CreateUISlider(1, 500);
         p_maskBrushSizeInput->SetValue(50.0f);
         p_maskBrushSizeInputRow =
             CreateRow("Brush size", p_maskBrushSizeInput->GetGameObject());
-        p_maskBrushSizeInputRow->SetParent(this);
+        p_maskBrushSizeInputRow->SetParent(p_maskSubParamsGo);
 
         p_maskBrushHardnessInput = GameObjectFactory::CreateUISlider(0, 1);
         p_maskBrushHardnessInput->SetValue(0.1f);
         p_maskBrushHardnessInputRow = CreateRow(
             "Brush hardness", p_maskBrushHardnessInput->GetGameObject());
-        p_maskBrushHardnessInputRow->SetParent(this);
+        p_maskBrushHardnessInputRow->SetParent(p_maskSubParamsGo);
 
         p_maskBrushStrengthInput = GameObjectFactory::CreateUISlider(0, 1);
         p_maskBrushStrengthInput->SetValue(1.0f);
         p_maskBrushStrengthInputRow = CreateRow(
             "Brush strength", p_maskBrushStrengthInput->GetGameObject());
-        p_maskBrushStrengthInputRow->SetParent(this);
+        p_maskBrushStrengthInputRow->SetParent(p_maskSubParamsGo);
 
         p_seeMaskButton =
             GameObjectFactory::CreateUIToolButton("See Mask (Shift + M)");
         p_seeMaskButton->SetOn(false);
-        p_seeMaskButton->GetGameObject()->SetParent(this);
+        p_seeMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_maskBrushDepthAwareButton =
             GameObjectFactory::CreateUIToolButton("Depth aware mask brush");
         p_maskBrushDepthAwareButton->SetOn(true);
-        p_maskBrushDepthAwareButton->GetGameObject()->SetParent(this);
+        p_maskBrushDepthAwareButton->GetGameObject()->SetParent(
+            p_maskSubParamsGo);
 
         p_eraseMaskButton =
             GameObjectFactory::CreateUIToolButton("Erase Mask (Ctrl)");
         p_eraseMaskButton->SetOn(false);
-        p_eraseMaskButton->GetGameObject()->SetParent(this);
+        p_eraseMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_clearMaskButton = GameObjectFactory::CreateUIButton("Clear Mask (C)");
         p_clearMaskButton->AddClickedCallback([this]() { ClearMask(); });
-        p_clearMaskButton->GetGameObject()->SetParent(this);
+        p_clearMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
+
+        p_maskSubParamsGo->SetParent(p_maskParamsGo);
+        p_maskParamsGo->SetParent(this);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
-    }
-
-    // Dirt
-    p_dirtParamsGo = GameObjectFactory::CreateUIGameObject();
-    {
-        UIVerticalLayout *vl = p_dirtParamsGo->AddComponent<UIVerticalLayout>();
-        vl->SetSpacing(5);
-
-        UILabel *label = GameObjectFactory::CreateUILabel();
-        label->GetText()->SetContent("Dirt");
-        label->GetText()->SetTextSize(14);
-        label->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", label->GetGameObject())->SetParent(p_dirtParamsGo);
-
-        p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
-        p_dirtSeedInput->SetMinValue(0);
-        p_dirtSeedInput->SetDecimalPlaces(0);
-        p_dirtSeedInput->EventEmitter<IEventsValueChanged>::RegisterListener(
-            this);
-
-        p_dirtColor0Input = new UIInputColor();
-        p_dirtColor0Input->EventEmitter<IEventsValueChanged>::RegisterListener(
-            this);
-        p_dirtColor1Input = new UIInputColor();
-        p_dirtColor1Input->EventEmitter<IEventsValueChanged>::RegisterListener(
-            this);
-
-        p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider(0, 4);
-        p_dirtFrequencyMultiplyInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-
-        p_dirtFrequencyInput = GameObjectFactory::CreateUISlider(0, 25, 1);
-        p_dirtFrequencyInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-
-        p_dirtAmplitudeInput = GameObjectFactory::CreateUISlider(0, 2);
-        p_dirtAmplitudeInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-
-        p_dirtAmplitudeMultiplyInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_dirtAmplitudeMultiplyInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-
-        CreateRow("Intensity", p_dirtAmplitudeInput->GetGameObject())
-            ->SetParent(p_dirtParamsGo);
-        CreateRow("Stains size", p_dirtFrequencyInput->GetGameObject())
-            ->SetParent(p_dirtParamsGo);
-        CreateRow("Grain", p_dirtFrequencyMultiplyInput->GetGameObject())
-            ->SetParent(p_dirtParamsGo);
-        CreateRow("Sharpness", p_dirtAmplitudeMultiplyInput->GetGameObject())
-            ->SetParent(p_dirtParamsGo);
-        CreateRow("Seed", p_dirtSeedInput->GetGameObject())
-            ->SetParent(p_dirtParamsGo);
-        CreateRow("Color0", p_dirtColor0Input)->SetParent(p_dirtParamsGo);
-        CreateRow("Color1", p_dirtColor1Input)->SetParent(p_dirtParamsGo);
-
-        p_dirtParamsGo->SetParent(this);
+            ->SetParent(p_maskParamsGo);
     }
 }
 
@@ -345,14 +304,6 @@ void ControlPanel::Update()
     {
         ExportModel();
     }
-    else if (Input::GetKeyDown(Key::M) && !Input::GetKey(Key::LSHIFT))
-    {
-        p_maskBrushEnabledButton->SetOn(!p_maskBrushEnabledButton->GetOn());
-    }
-    else if (Input::GetKeyDown(Key::C))
-    {
-        ClearMask();
-    }
 
     if (GetMaskBrushEnabled())
     {
@@ -369,28 +320,8 @@ void ControlPanel::Update()
             }
         }
     }
-    p_eraseMaskButton->SetOn(GetMaskBrushEnabled() &&
-                             Input::GetKey(Key::LCTRL));
 
-    p_maskBrushEnabledButton->SetBlocked(
-        GetView3DScene()->GetSelectedEffectLayers().Size() == 0);
-    p_maskBrushDepthAwareButton->GetGameObject()->SetEnabled(
-        GetMaskBrushEnabled());
-    p_eraseMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
-    p_seeMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
-    p_clearMaskButton->GetGameObject()->SetEnabled(GetMaskBrushEnabled());
-    p_maskBrushStrengthInputRow->SetEnabled(GetMaskBrushEnabled());
-    p_maskBrushSizeInputRow->SetEnabled(GetMaskBrushEnabled());
-    p_maskBrushHardnessInputRow->SetEnabled(GetMaskBrushEnabled());
-
-    p_dirtParamsGo->SetEnabled(false);
-
-    {
-        InspectorWidgetTitle *iwt =
-            p_serializableWidget->GetInspectorWidgetTitle();
-        iwt->SetEnabled(false);
-    }
-
+    bool enableParams = false;
     Array<EffectLayer *> selectedEffectLayers =
         GetView3DScene()->GetSelectedEffectLayers();
     if (selectedEffectLayers.Size() >= 1)
@@ -402,14 +333,29 @@ void ControlPanel::Update()
         {
             p_effectLayerParamsTitle->GetText()->SetContent(
                 impl->GetTypeName());
-
             p_serializableWidget->SetSerializable(impl);
-            p_dirtParamsGo->SetEnabled(impl->GetEffectLayerType() ==
-                                       EffectLayer::Type::DIRT);
+            p_serializableWidget->UpdateFromReference();
+            enableParams = true;
         }
     }
 
-    p_serializableWidget->UpdateFromReference();
+    p_effectLayerParamsGo->SetEnabled(enableParams);
+    p_maskParamsGo->SetEnabled(enableParams);
+    p_maskSubParamsGo->SetEnabled(GetMaskBrushEnabled());
+
+    if (enableParams)
+    {
+        p_eraseMaskButton->SetOn(GetMaskBrushEnabled() &&
+                                 Input::GetKey(Key::LCTRL));
+        if (Input::GetKeyDown(Key::M) && !Input::GetKey(Key::LSHIFT))
+        {
+            p_maskBrushDrawButton->SetOn(!p_maskBrushDrawButton->GetOn());
+        }
+        else if (Input::GetKeyDown(Key::C))
+        {
+            ClearMask();
+        }
+    }
 
     MainScene::GetInstance()->SetSceneMode(
         SCAST<MainScene::SceneMode>(p_sceneModeComboBox->GetSelectedValue()));
@@ -467,45 +413,6 @@ void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
     p_uiEffectLayers->RemoveEffectLayer(effectLayerIdx);
 }
 
-void ControlPanel::UpdateSelectedEffectLayerParameters()
-{
-    m_params.dirtSeed = p_dirtSeedInput->GetValue();
-    m_params.dirtFrequency = p_dirtFrequencyInput->GetValue();
-    m_params.dirtAmplitude = p_dirtAmplitudeInput->GetValue();
-    m_params.dirtFrequencyMultiply = p_dirtFrequencyMultiplyInput->GetValue();
-    m_params.dirtAmplitudeMultiply = p_dirtAmplitudeMultiplyInput->GetValue();
-    m_params.dirtColor0 = p_dirtColor0Input->GetColor();
-    m_params.dirtColor1 = p_dirtColor1Input->GetColor();
-
-    MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
-        GetParameters());
-}
-
-void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
-{
-    Array<EffectLayer *> selectedEffectLayers =
-        GetView3DScene()->GetSelectedEffectLayers();
-    if (selectedEffectLayers.Size() >= 1)
-    {
-        EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
-        m_params = selectedEffectLayer->GetParameters();
-    }
-
-    EventListener<IEventsValueChanged>::SetReceiveEvents(false);
-
-    p_dirtSeedInput->SetValue(GetParameters().dirtSeed);
-    p_dirtFrequencyInput->SetValue(GetParameters().dirtFrequency);
-    p_dirtFrequencyMultiplyInput->SetValue(
-        GetParameters().dirtFrequencyMultiply);
-    p_dirtAmplitudeInput->SetValue(GetParameters().dirtAmplitude);
-    p_dirtAmplitudeMultiplyInput->SetValue(
-        GetParameters().dirtAmplitudeMultiply);
-    p_dirtColor0Input->SetColor(GetParameters().dirtColor0);
-    p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
-
-    EventListener<IEventsValueChanged>::SetReceiveEvents(true);
-}
-
 void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
 {
     sp->Bind();
@@ -539,7 +446,7 @@ void ControlPanel::ClearMask()
 
 bool ControlPanel::GetMaskBrushEnabled() const
 {
-    return p_maskBrushEnabledButton->GetOn();
+    return p_maskBrushDrawButton->GetOn();
 }
 
 float ControlPanel::GetMaskBrushSize() const
@@ -584,11 +491,6 @@ bool ControlPanel::IsVisibleUIEffectLayer(uint effectLayerIdx) const
     return false;
 }
 
-const EffectLayerParameters &ControlPanel::GetParameters() const
-{
-    return m_params;
-}
-
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
 {
     p_sceneModeComboBox->SetSelectionByValue(SCAST<uint>(sceneMode));
@@ -609,7 +511,7 @@ View3DScene *ControlPanel::GetView3DScene() const
     return MainScene::GetInstance()->GetView3DScene();
 }
 
-void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
+void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *)
 {
-    UpdateSelectedEffectLayerParameters();
+    GetView3DScene()->InvalidateTextures();
 }

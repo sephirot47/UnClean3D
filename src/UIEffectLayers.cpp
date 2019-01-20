@@ -136,9 +136,6 @@ void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
 void UIEffectLayers::SetSelection(uint idx)
 {
     m_selectedEffectLayerRowIndex = idx;
-
-    ControlPanel *cpanel = MainScene::GetInstance()->GetControlPanel();
-    cpanel->UpdateInputsAndParametersFromSelectedEffectLayer();
 }
 
 void UIEffectLayers::SetSelection(UIEffectLayerRow *effectLayerRow)

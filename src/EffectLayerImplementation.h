@@ -17,7 +17,6 @@ public:
     EffectLayerImplementation();
     virtual ~EffectLayerImplementation() override;
 
-    const EffectLayerParameters &GetParameters() const;
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
     EffectLayer *GetEffectLayer() const;
     virtual String GetTypeName() const = 0;

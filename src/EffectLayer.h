@@ -8,8 +8,6 @@
 #include "BangEditor/BangEditor.h"
 #include "BangEditor/SerializableInspectorWidget.h"
 
-#include "EffectLayerParameters.h"
-
 using namespace Bang;
 
 namespace Bang
@@ -37,7 +35,6 @@ public:
     virtual void GenerateEffectTexture();
     void ReloadShaders();
 
-    virtual void UpdateParameters(const EffectLayerParameters &parameters);
     void SetImplementation(EffectLayerImplementation *impl);
     void SetType(EffectLayer::Type type);
 
@@ -48,13 +45,10 @@ public:
     Texture2D *GetMaskTexture() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
-    const EffectLayerParameters &GetParameters() const;
     EffectLayerImplementation *GetImplementation() const;
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
 private:
-    EffectLayerParameters m_params;
-
     EffectLayerImplementation *p_implementation = nullptr;  // PIMPL
     MeshRenderer *p_meshRenderer = nullptr;
 

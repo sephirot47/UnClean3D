@@ -31,10 +31,57 @@ using namespace Bang;
 
 EffectLayerDirt::EffectLayerDirt()
 {
+    m_seed = Random::GetRange(0, 1000);
 }
 
 EffectLayerDirt::~EffectLayerDirt()
 {
+}
+
+void EffectLayerDirt::Reflect()
+{
+    EffectLayerImplementation::Reflect();
+
+    ReflectVar<float>("Intensity",
+                      [this](float intensity) {
+                          m_amplitude = intensity;
+                          Invalidate();
+                      },
+                      [this]() { return m_amplitude; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 2.0f));
+    ReflectVar<float>("Stains size",
+                      [this](float stainsSize) {
+                          m_stainsSize = stainsSize;
+                          Invalidate();
+                      },
+                      [this]() { return m_stainsSize; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 25.0f));
+    ReflectVar<float>("Grain",
+                      [this](float grain) {
+                          m_grain = grain;
+                          Invalidate();
+                      },
+                      [this]() { return m_grain; },
+                      BANG_REFLECT_HINT_SLIDER(1.0f, 10.0f));
+    ReflectVar<Color>("Outer Color",
+                      [this](const Color &outerColor) {
+                          m_outerColor = outerColor;
+                          Invalidate();
+                      },
+                      [this]() { return m_outerColor; });
+    ReflectVar<Color>("Inner Color",
+                      [this](const Color &innerColor) {
+                          m_innerColor = innerColor;
+                          Invalidate();
+                      },
+                      [this]() { return m_innerColor; });
+    ReflectVar<float>("Seed",
+                      [this](float seed) {
+                          m_seed = seed;
+                          Invalidate();
+                      },
+                      [this]() { return m_seed; },
+                      BANG_REFLECT_HINT_MIN_VALUE(0.0f));
 }
 
 Path EffectLayerDirt::GetGenerateEffectTextureShaderProgramPath() const
@@ -57,14 +104,12 @@ void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
     EffectLayerImplementation::SetGenerateEffectUniforms(sp);
 
-    sp->SetFloat("DirtOctaves", 4.0f);
-    sp->SetFloat("DirtFrequency", (1.0f / GetParameters().dirtFrequency));
-    sp->SetFloat("DirtFrequencyMultiply",
-                 GetParameters().dirtFrequencyMultiply);
-    sp->SetFloat("DirtAmplitude", GetParameters().dirtAmplitude);
-    sp->SetFloat("DirtAmplitudeMultiply",
-                 GetParameters().dirtAmplitudeMultiply);
-    sp->SetFloat("DirtSeed", GetParameters().dirtSeed);
-    sp->SetColor("DirtColor0", GetParameters().dirtColor0);
-    sp->SetColor("DirtColor1", GetParameters().dirtColor1);
+    sp->SetFloat("DirtOctaves", 8.0f);
+    sp->SetFloat("DirtFrequency", (1.0f / m_stainsSize));
+    sp->SetFloat("DirtFrequencyMultiply", m_grain);
+    sp->SetFloat("DirtAmplitude", m_amplitude);
+    sp->SetFloat("DirtAmplitudeMultiply", (1.0f / m_grain));
+    sp->SetFloat("DirtSeed", m_seed);
+    sp->SetColor("DirtOuterColor", m_outerColor);
+    sp->SetColor("DirtInnerColor", m_innerColor);
 }

@@ -181,11 +181,6 @@ void EffectLayer::ReloadShaders()
     GenerateEffectTexture();
 }
 
-void EffectLayer::UpdateParameters(const EffectLayerParameters &parameters)
-{
-    m_params = parameters;
-}
-
 void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
 {
     if (GetImplementation())
@@ -305,11 +300,6 @@ void EffectLayer::ClearMask()
 Mesh *EffectLayer::GetTextureMesh() const
 {
     return m_textureMesh.Get();
-}
-
-const EffectLayerParameters &EffectLayer::GetParameters() const
-{
-    return m_params;
 }
 
 Texture2D *EffectLayer::GetEffectTexture() const

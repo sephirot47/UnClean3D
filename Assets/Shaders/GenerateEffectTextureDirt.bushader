@@ -25,8 +25,8 @@ uniform float DirtFrequency;
 uniform float DirtFrequencyMultiply;
 uniform float DirtAmplitude;
 uniform float DirtAmplitudeMultiply;
-uniform vec4 DirtColor0;
-uniform vec4 DirtColor1;
+uniform vec4 DirtOuterColor;
+uniform vec4 DirtInnerColor;
 
 in vec3 finPosition;
 
@@ -51,9 +51,9 @@ void main()
     noiseValue = clamp(noiseValue, 0.01, 1);
     vec3 noise = vec3(noiseValue);
 
-    vec3 dirtColor0 = DirtColor0.rgb;
-    vec3 dirtColor1 = DirtColor1.rgb;
-    vec3 coloredNoise = mix(dirtColor0, dirtColor1, noise);
+    vec3 dirtOuterColor = DirtOuterColor.rgb;
+    vec3 dirtInnerColor = DirtInnerColor.rgb;
+    vec3 coloredNoise = mix(dirtOuterColor, dirtInnerColor, noise);
 
     OutColor = vec4(coloredNoise, noiseValue);
 }

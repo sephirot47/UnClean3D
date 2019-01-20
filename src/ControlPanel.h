@@ -5,7 +5,6 @@
 #include "Bang/GameObject.h"
 #include "Bang/IEventsValueChanged.h"
 
-#include "EffectLayerParameters.h"
 #include "MainScene.h"
 
 namespace Bang
@@ -43,8 +42,6 @@ public:
 
     void CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
-    void UpdateSelectedEffectLayerParameters();
-    void UpdateInputsAndParametersFromSelectedEffectLayer();
     void SetMaskUniforms(ShaderProgram *sp);
 
     void ClearMask();
@@ -58,12 +55,10 @@ public:
     uint GetSelectedUIEffectLayerIndex() const;
     bool IsVisibleUIEffectLayer(uint effectLayerIdx) const;
 
-    const EffectLayerParameters &GetParameters() const;
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
     Path m_openModelPath = Path::Empty();
-    EffectLayerParameters m_params;
 
     // File
     UIButton *p_openModelButton = nullptr;
@@ -76,7 +71,9 @@ private:
     UIComboBox *p_texturesSizeInput = nullptr;
 
     // Mask
-    UIToolButton *p_maskBrushEnabledButton = nullptr;
+    GameObject *p_maskParamsGo = nullptr;
+    GameObject *p_maskSubParamsGo = nullptr;
+    UIToolButton *p_maskBrushDrawButton = nullptr;
     UIToolButton *p_eraseMaskButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;
     UIToolButton *p_maskBrushDepthAwareButton = nullptr;
@@ -94,16 +91,6 @@ private:
     // Effect layer params
     GameObject *p_effectLayerParamsGo = nullptr;
     UILabel *p_effectLayerParamsTitle = nullptr;
-
-    // Dirt
-    GameObject *p_dirtParamsGo = nullptr;
-    UIInputNumber *p_dirtSeedInput = nullptr;
-    UIInputColor *p_dirtColor0Input = nullptr;
-    UIInputColor *p_dirtColor1Input = nullptr;
-    UISlider *p_dirtFrequencyInput = nullptr;
-    UISlider *p_dirtAmplitudeInput = nullptr;
-    UISlider *p_dirtFrequencyMultiplyInput = nullptr;
-    UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
 
     // SerializableWidget
     SerializableInspectorWidget *p_serializableWidget = nullptr;

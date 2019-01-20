@@ -18,11 +18,6 @@ EffectLayerImplementation::~EffectLayerImplementation()
         &IEventsDestroy::OnDestroyed, this);
 }
 
-const EffectLayerParameters &EffectLayerImplementation::GetParameters() const
-{
-    return GetEffectLayer()->GetParameters();
-}
-
 void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
     View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();

@@ -313,7 +313,6 @@ void View3DScene::ReloadShaders()
         for (EffectLayer *effectLayer : effectLayers)
         {
             effectLayer->ReloadShaders();
-            UpdateParameters(effectLayer->GetParameters());
         }
     }
 }
@@ -440,16 +439,6 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
         effectLayers.RemoveByIndex(effectLayerIdx);
     }
     InvalidateTextures();
-}
-
-void View3DScene::UpdateParameters(const EffectLayerParameters &params)
-{
-    Array<EffectLayer *> selectedEffectLayers = GetSelectedEffectLayers();
-    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
-    {
-        selectedEffectLayer->UpdateParameters(params);
-        InvalidateTextures();
-    }
 }
 
 void View3DScene::ApplyControlPanelSettingsToModel()
