@@ -8,16 +8,22 @@
 
 using namespace Bang;
 
-class EffectLayerImplementation
+class EffectLayerImplementation : public Serializable,
+                                  public EventEmitter<IEventsDestroy>
 {
 public:
+    SERIALIZABLE_ABSTRACT(EffectLayerImplementation)
+
     EffectLayerImplementation();
-    virtual ~EffectLayerImplementation();
+    virtual ~EffectLayerImplementation() override;
 
     const EffectLayerParameters &GetParameters() const;
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
     EffectLayer *GetEffectLayer() const;
     virtual String GetTypeName() const = 0;
+
+    // Serializable
+    virtual void Reflect() override;
 
 protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;

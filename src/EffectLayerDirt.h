@@ -11,6 +11,8 @@ using namespace Bang;
 class EffectLayerDirt : public EffectLayerImplementation
 {
 public:
+    SERIALIZABLE(EffectLayerDirt)
+
     EffectLayerDirt();
     virtual ~EffectLayerDirt() override;
 

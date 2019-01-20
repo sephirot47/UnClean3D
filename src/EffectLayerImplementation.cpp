@@ -14,6 +14,8 @@ EffectLayerImplementation::EffectLayerImplementation()
 
 EffectLayerImplementation::~EffectLayerImplementation()
 {
+    EventEmitter<IEventsDestroy>::PropagateToListeners(
+        &IEventsDestroy::OnDestroyed, this);
 }
 
 const EffectLayerParameters &EffectLayerImplementation::GetParameters() const
@@ -33,4 +35,9 @@ void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)
 EffectLayer *EffectLayerImplementation::GetEffectLayer() const
 {
     return p_effectLayer;
+}
+
+void EffectLayerImplementation::Reflect()
+{
+    Serializable::Reflect();
 }

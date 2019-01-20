@@ -6,6 +6,7 @@
 #include "Bang/Input.h"
 #include "Bang/Transform.h"
 #include "Bang/UIButton.h"
+#include "Bang/UICheckBox.h"
 #include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -18,6 +19,7 @@
 #include "Bang/UIVerticalLayout.h"
 #include "BangEditor/EditorDialog.h"
 #include "BangEditor/EditorPaths.h"
+#include "BangEditor/SerializableInspectorWidget.h"
 #include "BangEditor/UIInputColor.h"
 
 #include "EffectLayer.h"
@@ -244,6 +246,17 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
     }
 
+    p_serializableWidgetContainer = GameObjectFactory::CreateUIGameObject();
+    {
+        p_serializableWidgetContainer->AddComponent<UIVerticalLayout>();
+
+        p_serializableWidget = new SerializableInspectorWidget();
+        p_serializableWidget->Init();
+        p_serializableWidget->SetParent(p_serializableWidgetContainer);
+
+        p_serializableWidgetContainer->SetParent(this);
+    }
+
     // Dirt
     p_dirtParamsGo = GameObjectFactory::CreateUIGameObject();
     {
@@ -391,15 +404,19 @@ void ControlPanel::Update()
     if (selectedEffectLayers.Size() >= 1)
     {
         EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
+
         if (EffectLayerImplementation *impl =
                 selectedEffectLayer->GetImplementation())
         {
+            p_serializableWidget->SetSerializable(impl);
             p_dirtParamsGo->SetEnabled(impl->GetEffectLayerType() ==
                                        EffectLayer::Type::DIRT);
             p_normalLinesParamsGo->SetEnabled(impl->GetEffectLayerType() ==
                                               EffectLayer::Type::NORMAL_LINES);
         }
     }
+
+    p_serializableWidget->UpdateFromReference();
 
     MainScene::GetInstance()->SetSceneMode(
         SCAST<MainScene::SceneMode>(p_sceneModeComboBox->GetSelectedValue()));

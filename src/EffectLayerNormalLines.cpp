@@ -12,6 +12,16 @@ EffectLayerNormalLines::~EffectLayerNormalLines()
 {
 }
 
+void EffectLayerNormalLines::Reflect()
+{
+    EffectLayerImplementation::Reflect();
+
+    ReflectVar<float>("Height",
+                      [this](float height) { m_height = height; },
+                      [this]() { return m_height; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+}
+
 EffectLayer::Type EffectLayerNormalLines::GetEffectLayerType() const
 {
     return EffectLayer::Type::NORMAL_LINES;

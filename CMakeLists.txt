@@ -24,4 +24,5 @@ file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
 add_executable(UnClean3D ${SRC_FILES} ${OTHER_FILES})
 add_dependencies(UnClean3D BangLib BangEditorLib)
+add_bang_compilation_flags(UnClean3D)
 target_link_libraries(UnClean3D BangLib BangEditorLib)

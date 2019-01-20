@@ -11,8 +11,13 @@ using namespace Bang;
 class EffectLayerNormalLines : public EffectLayerImplementation
 {
 public:
+    SERIALIZABLE(EffectLayerNormalLines)
+
     EffectLayerNormalLines();
     virtual ~EffectLayerNormalLines() override;
+
+    // Serializable
+    virtual void Reflect() override;
 
 protected:
     // EffectLayer
@@ -20,6 +25,9 @@ protected:
     virtual String GetTypeName() const override;
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp) override;
+
+private:
+    float m_height = 0.5f;
 };
 
 #endif  // EFFECTLAYERNORMALLINES_H

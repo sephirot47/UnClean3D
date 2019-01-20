@@ -20,6 +20,7 @@ class UIInputNumber;
 namespace BangEditor
 {
 class UIInputColor;
+class SerializableInspectorWidget;
 }
 
 class UIEffectLayers;
@@ -103,6 +104,10 @@ private:
     GameObject *p_normalLinesParamsGo = nullptr;
     UISlider *p_normalLinesHeightInput = nullptr;
     UISlider *p_normalLinesWidthInput = nullptr;
+
+    // SerializableWidget
+    GameObject *p_serializableWidgetContainer = nullptr;
+    SerializableInspectorWidget *p_serializableWidget = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;
