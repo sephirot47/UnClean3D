@@ -53,7 +53,7 @@ public:
 private:
     EffectLayerParameters m_params;
 
-    EffectLayerImplementation *p_implementation = nullptr;
+    EffectLayerImplementation *p_implementation = nullptr;  // PIMPL
     MeshRenderer *p_meshRenderer = nullptr;
 
     VBO *m_positionsVBO = nullptr;
@@ -71,28 +71,6 @@ private:
     Texture2D *p_lastDrawnMaskTexture = nullptr;
 
     void GrowTextureBorders(Texture2D *texture);
-};
-
-// PIMPL
-class EffectLayerImplementation
-{
-public:
-    EffectLayerImplementation();
-    virtual ~EffectLayerImplementation();
-
-    const EffectLayerParameters &GetParameters() const;
-    virtual EffectLayer::Type GetEffectLayerType() const = 0;
-    EffectLayer *GetEffectLayer() const;
-    virtual String GetTypeName() const = 0;
-
-protected:
-    virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
-    virtual void SetGenerateEffectUniforms(ShaderProgram *sp);
-
-private:
-    EffectLayer *p_effectLayer = nullptr;
-
-    friend class EffectLayer;
 };
 
 #endif  // EFFECTLAYER_H

@@ -4,7 +4,8 @@
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
-#include "EffectLayer.h" +
+#include "EffectLayerImplementation.h"
+
 using namespace Bang;
 
 class EffectLayerNormalLines : public EffectLayerImplementation

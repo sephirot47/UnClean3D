@@ -9,6 +9,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayer.h"
+#include "EffectLayerImplementation.h"
 #include "MainScene.h"
 
 using namespace Bang;

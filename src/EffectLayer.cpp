@@ -30,6 +30,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerDirt.h"
+#include "EffectLayerImplementation.h"
 #include "EffectLayerNormalLines.h"
 #include "MainScene.h"
 #include "View3DScene.h"
@@ -365,31 +366,4 @@ void EffectLayer::GrowTextureBorders(Texture2D *texture)
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-}
-
-EffectLayerImplementation::EffectLayerImplementation()
-{
-}
-
-EffectLayerImplementation::~EffectLayerImplementation()
-{
-}
-
-const EffectLayerParameters &EffectLayerImplementation::GetParameters() const
-{
-    return GetEffectLayer()->GetParameters();
-}
-
-void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)
-{
-    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
-    sp->SetMatrix4("SceneModelMatrix",
-                   view3DScene->GetModelGameObject()
-                       ->GetTransform()
-                       ->GetLocalToWorldMatrix());
-}
-
-EffectLayer *EffectLayerImplementation::GetEffectLayer() const
-{
-    return p_effectLayer;
 }

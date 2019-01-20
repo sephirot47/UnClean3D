@@ -16,6 +16,7 @@
 #include "Bang/UIVerticalLayout.h"
 
 #include "EffectLayer.h"
+#include "EffectLayerImplementation.h"
 #include "MainScene.h"
 #include "View3DScene.h"
 
