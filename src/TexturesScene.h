@@ -28,28 +28,20 @@ public:
 
 private:
     GameObject *p_gridGo = nullptr;
+    GameObject *p_bigImageGo = nullptr;
+    UIImageRenderer *p_bigImageRenderer = nullptr;
     TextureContainer *p_originalAlbedoTexCont = nullptr;
     TextureContainer *p_originalNormalTexCont = nullptr;
     TextureContainer *p_originalRoughnessTexCont = nullptr;
     TextureContainer *p_originalMetalnessTexCont = nullptr;
+    TextureContainer *p_finalAlbedoTexCont = nullptr;
+    TextureContainer *p_finalNormalTexCont = nullptr;
+    TextureContainer *p_finalRoughnessTexCont = nullptr;
+    TextureContainer *p_finalMetalnessTexCont = nullptr;
     Map<EffectLayer *, TextureContainer *> m_effectLayerToTexCont;
     Map<EffectLayer *, TextureContainer *> m_effectLayerToMaskTexCont;
 
     TextureContainer *CreateAndAddTextureContainer(const String &label);
-};
-
-class TextureContainer : public GameObject
-{
-public:
-    TextureContainer(const String &label = "Label");
-    virtual ~TextureContainer() override;
-
-    UILabel *GetLabel() const;
-    UIImageRenderer *GetImageRenderer() const;
-
-private:
-    UIImageRenderer *p_imageRenderer = nullptr;
-    UILabel *p_label = nullptr;
 };
 
 #endif  // TEXTURESSCENE_H

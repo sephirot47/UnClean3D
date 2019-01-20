@@ -159,6 +159,7 @@ void EffectLayer::GenerateEffectTexture()
     sp->Bind();
     GetImplementation()->SetGenerateEffectUniforms(sp);
 
+    GL::ClearColorBuffer(Color::Zero());
     GL::Render(GetTextureMesh()->GetVAO(),
                GL::Primitive::TRIANGLES,
                GetTextureMesh()->GetNumVerticesIds());
@@ -202,7 +203,7 @@ void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
             GetImplementation()->GetGenerateEffectTextureShaderProgramPath();
         m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
 
-        GenerateEffectTexture();
+        MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
     }
 }
 

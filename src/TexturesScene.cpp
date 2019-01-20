@@ -4,7 +4,9 @@
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Material.h"
 #include "Bang/MeshRenderer.h"
+#include "Bang/RectTransform.h"
 #include "Bang/Texture2D.h"
+#include "Bang/Transform.h"
 #include "Bang/UIGridLayout.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -16,8 +18,10 @@
 #include "Bang/UIVerticalLayout.h"
 
 #include "EffectLayer.h"
+#include "EffectLayerCompositer.h"
 #include "EffectLayerImplementation.h"
 #include "MainScene.h"
+#include "TextureContainer.h"
 #include "View3DScene.h"
 
 using namespace Bang;
@@ -33,7 +37,7 @@ TexturesScene::TexturesScene()
     UILayoutElement *gridLE = p_gridGo->AddComponent<UILayoutElement>();
     gridLE->SetFlexibleSize(Vector2(1.0f));
     UIGridLayout *gl = p_gridGo->AddComponent<UIGridLayout>();
-    gl->SetCellSize(Vector2i(512));
+    gl->SetCellSize(Vector2i(200));
     gl->SetSpacing(30);
     gl->SetPaddings(10);
 
@@ -44,9 +48,25 @@ TexturesScene::TexturesScene()
     p_originalMetalnessTexCont =
         CreateAndAddTextureContainer("Original Metalness");
 
+    p_finalAlbedoTexCont = CreateAndAddTextureContainer("Final Albedo");
+    p_finalNormalTexCont = CreateAndAddTextureContainer("Final Normal");
+    p_finalRoughnessTexCont = CreateAndAddTextureContainer("Final Roughness");
+    p_finalMetalnessTexCont = CreateAndAddTextureContainer("Final Metalness");
+
     scrollPanel->GetScrollArea()->GetBackground()->SetTint(Color::Black());
     scrollPanel->GetScrollArea()->SetContainedGameObject(p_gridGo);
     scrollPanel->GetGameObject()->SetParent(this);
+
+    p_bigImageGo = GameObjectFactory::CreateUIGameObject();
+    UIImageRenderer *bigImageBg = p_bigImageGo->AddComponent<UIImageRenderer>();
+    bigImageBg->SetTint(Color::Black());
+    p_bigImageRenderer = p_bigImageGo->AddComponent<UIImageRenderer>();
+    p_bigImageRenderer->SetEnabled(true);
+    p_bigImageGo->GetRectTransform()->SetMargins(100);
+    p_bigImageGo->GetTransform()->TranslateLocal(Vector3(0, 0, -0.5));
+    GameObjectFactory::AddOuterBorder(
+        p_bigImageGo, Vector2i(5), Color::Black());
+    p_bigImageGo->SetParent(this);
 }
 
 TexturesScene::~TexturesScene()
@@ -65,9 +85,10 @@ void TexturesScene::Update()
 {
     GameObject::Update();
 
-    View3DScene *viewScene = MainScene::GetInstance()->GetView3DScene();
+    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
 
-    Array<EffectLayer *> allEffectLayers = viewScene->GetAllEffectLayers();
+    // Clean or add effect layer texture containers as needed
+    Array<EffectLayer *> allEffectLayers = view3DScene->GetAllEffectLayers();
     for (uint i = 0; i < allEffectLayers.Size(); ++i)
     {
         EffectLayer *effectLayer = allEffectLayers[i];
@@ -123,7 +144,29 @@ void TexturesScene::Update()
         }
     }
 
-    if (GameObject *modelGo = viewScene->GetModelGameObject())
+    // Set big image texture if there is some overed texture
+    {
+        TextureContainer *overedTexCont = nullptr;
+        Array<TextureContainer *> allTextureContainers =
+            FindObjectsInDescendants<TextureContainer>();
+        for (TextureContainer *texCont : allTextureContainers)
+        {
+            if (texCont->GetFocusable()->IsMouseOver())
+            {
+                overedTexCont = texCont;
+                break;
+            }
+        }
+
+        if (overedTexCont)
+        {
+            p_bigImageRenderer->SetImageTexture(
+                overedTexCont->GetImageRenderer()->GetImageTexture());
+        }
+        p_bigImageGo->SetEnabled(overedTexCont != nullptr);
+    }
+
+    if (GameObject *modelGo = view3DScene->GetModelGameObject())
     {
         Array<MeshRenderer *> mrs =
             modelGo->GetComponentsInDescendantsAndThis<MeshRenderer>();
@@ -153,55 +196,20 @@ void TexturesScene::Update()
                 }
             }
         }
+
+        EffectLayerCompositer *compositer =
+            view3DScene->GetEffectLayerCompositer();
+        p_finalAlbedoTexCont->GetImageRenderer()->SetImageTexture(
+            compositer->GetFinalAlbedoTexture());
+        p_finalNormalTexCont->GetImageRenderer()->SetImageTexture(
+            compositer->GetFinalNormalTexture());
+        p_finalRoughnessTexCont->GetImageRenderer()->SetImageTexture(
+            compositer->GetFinalRoughnessTexture());
+        p_finalMetalnessTexCont->GetImageRenderer()->SetImageTexture(
+            compositer->GetFinalMetalnessTexture());
     }
 }
 
 void TexturesScene::OnModelChanged(Model *)
 {
-}
-
-TextureContainer::TextureContainer(const String &label)
-{
-    GameObjectFactory::CreateUIGameObjectInto(this);
-
-    UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
-    vl->SetSpacing(5);
-
-    UILayoutElement *goLE = AddComponent<UILayoutElement>();
-    goLE->SetFlexibleSize(Vector2(1.0f));
-
-    p_label = GameObjectFactory::CreateUILabel();
-    p_label->GetText()->SetTextSize(20);
-    p_label->GetText()->SetTextColor(Color::White());
-    p_label->GetText()->SetContent(label);
-    p_label->GetGameObject()->SetParent(this);
-    UILayoutElement *textureLabelLE =
-        p_label->GetGameObject()->AddComponent<UILayoutElement>();
-    textureLabelLE->SetMinHeight(30);
-    textureLabelLE->SetFlexibleSize(Vector2(1.0f, 0.0f));
-    textureLabelLE->SetLayoutPriority(2);
-
-    p_imageRenderer = GameObjectFactory::CreateUIImage();
-    UILayoutElement *imgLE =
-        p_imageRenderer->GetGameObject()->AddComponent<UILayoutElement>();
-    imgLE->SetPreferredSize(Vector2i(50));
-    imgLE->SetFlexibleSize(Vector2(1.0f));
-    p_imageRenderer->GetGameObject()->SetParent(this);
-
-    GameObjectFactory::AddOuterBorder(
-        p_imageRenderer->GetGameObject(), Vector2i(2), Color::White());
-}
-
-TextureContainer::~TextureContainer()
-{
-}
-
-UILabel *TextureContainer::GetLabel() const
-{
-    return p_label;
-}
-
-UIImageRenderer *TextureContainer::GetImageRenderer() const
-{
-    return p_imageRenderer;
 }

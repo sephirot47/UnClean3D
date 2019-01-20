@@ -116,6 +116,13 @@ void View3DScene::Update()
     // Debug_DPeek(m_fpsChrono.GetMeanFPS());
 
     // Generate needed textures
+    if (GetControlPanel()->GetMaskBrushEnabled() &&
+        Input::GetMouseButton(MouseButton::LEFT))
+    {
+        PaintMaskBrush();
+        InvalidateTextures();
+    }
+
     if (!m_validTextures)
     {
         if (Time::GetNow()
@@ -127,6 +134,9 @@ void View3DScene::Update()
             {
                 effectLayer->GenerateEffectTexture();
             }
+
+            CompositeTextures();
+
             m_lastTimeTexturesGenerated = Time::GetNow();
             m_validTextures = true;
         }
@@ -287,12 +297,6 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 
     Scene::Render(rp, renderChildren);
 
-    if (GetControlPanel()->GetMaskBrushEnabled() &&
-        Input::GetMouseButton(MouseButton::LEFT))
-    {
-        PaintMaskBrush();
-    }
-
     if (rp == RenderPass::SCENE_OPAQUE)
     {
         RestoreOriginalAlbedoTexturesToModel();
@@ -329,7 +333,9 @@ void View3DScene::OnModelChanged(Model *newModel)
             }
         }
         m_meshRendererToInfo.Clear();
-        m_validTextures = false;
+        ApplyControlPanelSettingsToModel();
+        ApplyCompositeTexturesToModel();
+        InvalidateTextures();
     }
 
     if (newModel)
@@ -433,6 +439,7 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
         Array<EffectLayer *> &effectLayers = it.second.effectLayers;
         effectLayers.RemoveByIndex(effectLayerIdx);
     }
+    InvalidateTextures();
 }
 
 void View3DScene::UpdateParameters(const EffectLayerParameters &params)
@@ -441,7 +448,7 @@ void View3DScene::UpdateParameters(const EffectLayerParameters &params)
     for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
     {
         selectedEffectLayer->UpdateParameters(params);
-        m_validTextures = false;
+        InvalidateTextures();
     }
 }
 
@@ -464,29 +471,11 @@ void View3DScene::ApplyCompositeTexturesToModel()
         const MeshRendererInfo &mrInfo = it.second;
         if (Material *mat = mr->GetMaterial())
         {
-            Texture2D *albedoTexture = mat->GetAlbedoTexture();
-            Texture2D *normalTexture = mat->GetNormalMapTexture();
-            Texture2D *roughnessTexture = mat->GetRoughnessTexture();
-            Texture2D *metalnessTexture = mat->GetMetalnessTexture();
-
-            const Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
-            Texture2D *outAlbedoTexture = nullptr;
-            Texture2D *outNormalTexture = nullptr;
-            Texture2D *outRoughnessTexture = nullptr;
-            Texture2D *outMetalnessTexture = nullptr;
-            m_effectLayerCompositer->CompositeLayers(effectLayers,
-                                                     albedoTexture,
-                                                     normalTexture,
-                                                     roughnessTexture,
-                                                     metalnessTexture,
-                                                     &outAlbedoTexture,
-                                                     &outNormalTexture,
-                                                     &outRoughnessTexture,
-                                                     &outMetalnessTexture);
-            mat->SetAlbedoTexture(outAlbedoTexture);
-            mat->SetNormalMapTexture(outNormalTexture);
-            mat->SetRoughnessTexture(outRoughnessTexture);
-            mat->SetMetalnessTexture(outMetalnessTexture);
+            EffectLayerCompositer *compositer = GetEffectLayerCompositer();
+            mat->SetAlbedoTexture(compositer->GetFinalAlbedoTexture());
+            mat->SetNormalMapTexture(compositer->GetFinalNormalTexture());
+            mat->SetRoughnessTexture(compositer->GetFinalRoughnessTexture());
+            mat->SetMetalnessTexture(compositer->GetFinalMetalnessTexture());
         }
     }
 }
@@ -503,6 +492,30 @@ void View3DScene::PaintMaskBrush()
     {
         selectedEffectLayer->PaintMaskBrush();
     }
+}
+
+void View3DScene::CompositeTextures()
+{
+    for (const auto &it : m_meshRendererToInfo)
+    {
+        MeshRenderer *mr = it.first;
+        const MeshRendererInfo &mrInfo = it.second;
+        if (Material *mat = mr->GetMaterial())
+        {
+            const Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
+            EffectLayerCompositer *compositer = GetEffectLayerCompositer();
+            compositer->CompositeLayers(effectLayers,
+                                        mrInfo.originalAlbedoTexture.Get(),
+                                        mrInfo.originalNormalTexture.Get(),
+                                        mrInfo.originalRoughnessTexture.Get(),
+                                        mrInfo.originalMetalnessTexture.Get());
+        }
+    }
+}
+
+void View3DScene::InvalidateTextures()
+{
+    m_validTextures = false;
 }
 
 void View3DScene::RestoreOriginalAlbedoTexturesToModel()
@@ -565,6 +578,11 @@ Array<EffectLayer *> View3DScene::GetSelectedEffectLayers() const
         }
     }
     return effectLayers;
+}
+
+EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
+{
+    return m_effectLayerCompositer;
 }
 
 Model *View3DScene::GetCurrentModel() const

@@ -49,16 +49,37 @@ void EffectLayerCompositer::ReloadShaders()
     m_heightfieldToNormalTextureSP.Get()->ReImport();
 }
 
+Texture2D *EffectLayerCompositer::GetFinalAlbedoTexture() const
+{
+    return p_finalAlbedoTexture.Get();
+}
+
+Texture2D *EffectLayerCompositer::GetFinalNormalTexture() const
+{
+    return p_finalNormalTexture.Get();
+}
+
+Texture2D *EffectLayerCompositer::GetFinalHeightTexture() const
+{
+    return p_finalHeightTexture.Get();
+}
+
+Texture2D *EffectLayerCompositer::GetFinalRoughnessTexture() const
+{
+    return p_finalRoughnessTexture.Get();
+}
+
+Texture2D *EffectLayerCompositer::GetFinalMetalnessTexture() const
+{
+    return p_finalMetalnessTexture.Get();
+}
+
 void EffectLayerCompositer::CompositeLayers(
     const Array<EffectLayer *> &effectLayers,
     Texture2D *albedoOriginalTex,
     Texture2D *normalOriginalTex,
     Texture2D *roughnessOriginalTex,
-    Texture2D *metalnessOriginalTex,
-    Texture2D **outAlbedoTexture,
-    Texture2D **outNormalTexture,
-    Texture2D **outRoughnessTexture,
-    Texture2D **outMetalnessTexture)
+    Texture2D *metalnessOriginalTex)
 {
     ControlPanel *controlPanel = MainScene::GetInstance()->GetControlPanel();
 
@@ -84,46 +105,54 @@ void EffectLayerCompositer::CompositeLayers(
     m_metalnessPingPongTexture1.Get()->Resize(texSize);
 
     Texture2D *albedoDrawTex = m_albedoPingPongTexture0.Get();
-    Texture2D *albedoReadTex = albedoOriginalTex;
+    Texture2D *albedoReadTex = m_albedoPingPongTexture1.Get();
     Texture2D *normalDrawTex = m_normalPingPongTexture0.Get();
-    Texture2D *normalReadTex = normalOriginalTex;
+    Texture2D *normalReadTex = m_normalPingPongTexture1.Get();
     Texture2D *heightDrawTex = m_heightPingPongTexture0.Get();
     Texture2D *heightReadTex = m_heightPingPongTexture1.Get();
     Texture2D *roughnessDrawTex = m_roughnessPingPongTexture0.Get();
-    Texture2D *roughnessReadTex = roughnessOriginalTex;
+    Texture2D *roughnessReadTex = m_roughnessPingPongTexture1.Get();
     Texture2D *metalnessDrawTex = m_metalnessPingPongTexture0.Get();
-    Texture2D *metalnessReadTex = metalnessOriginalTex;
+    Texture2D *metalnessReadTex = m_metalnessPingPongTexture1.Get();
 
-    // Set height read texture to 0
-    GL::Disable(GL::Enablable::BLEND);
-    m_framebuffer->SetAttachmentTexture(heightReadTex, GL::Attachment::COLOR0);
-    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-    GL::ClearColorBuffer(Color::Zero());
-
-    // Add base roughness and metalness on top of original textures
-    GL::Enable(GL::Enablable::BLEND);
+    // Initialize read textures
     {
-        GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
+        // Clear height
+        GL::Disable(GL::Enablable::BLEND);
+        m_framebuffer->SetAttachmentTexture(heightReadTex,
+                                            GL::Attachment::COLOR0);
+        m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+        GL::ClearColorBuffer(Color::Zero());
 
-        // Roughness
-        {
-            m_framebuffer->SetAttachmentTexture(roughnessReadTex,
-                                                GL::Attachment::COLOR0);
-            m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-            GL::ClearColorBuffer(Color::One() *
-                                 controlPanel->GetBaseRoughness());
-        }
+        // Copy albedo and normal textures
+        GEngine::GetInstance()->CopyTexture(albedoOriginalTex, albedoReadTex);
+        GEngine::GetInstance()->CopyTexture(normalOriginalTex, normalReadTex);
 
-        // Metalness
+        // Add base roughness and metalness on top of original textures
+        GL::Enable(GL::Enablable::BLEND);
         {
-            m_framebuffer->SetAttachmentTexture(metalnessReadTex,
-                                                GL::Attachment::COLOR0);
-            m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-            GL::ClearColorBuffer(Color::One() *
-                                 controlPanel->GetBaseMetalness());
+            GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
+
+            // Roughness
+            {
+                m_framebuffer->SetAttachmentTexture(roughnessReadTex,
+                                                    GL::Attachment::COLOR0);
+                m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+                GL::ClearColorBuffer(Color::One() *
+                                     controlPanel->GetBaseRoughness());
+            }
+
+            // Metalness
+            {
+                m_framebuffer->SetAttachmentTexture(metalnessReadTex,
+                                                    GL::Attachment::COLOR0);
+                m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+                GL::ClearColorBuffer(Color::One() *
+                                     controlPanel->GetBaseMetalness());
+            }
         }
+        GL::Disable(GL::Enablable::BLEND);
     }
-    GL::Disable(GL::Enablable::BLEND);
 
     // Bind ShaderProgram and set uniforms
     ShaderProgram *sp = m_compositeLayersSP.Get();
@@ -174,15 +203,6 @@ void EffectLayerCompositer::CompositeLayers(
         std::swap(heightDrawTex, heightReadTex);
         std::swap(roughnessDrawTex, roughnessReadTex);
         std::swap(metalnessDrawTex, metalnessReadTex);
-
-        if (i == 0)
-        {
-            albedoDrawTex = m_albedoPingPongTexture1.Get();
-            normalDrawTex = m_normalPingPongTexture1.Get();
-            heightDrawTex = m_heightPingPongTexture1.Get();
-            roughnessDrawTex = m_roughnessPingPongTexture1.Get();
-            metalnessDrawTex = m_metalnessPingPongTexture1.Get();
-        }
     }
 
     sp = m_heightfieldToNormalTextureSP.Get();
@@ -200,8 +220,9 @@ void EffectLayerCompositer::CompositeLayers(
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
 
-    *outAlbedoTexture = albedoReadTex;
-    *outNormalTexture = normalReadTex;
-    *outRoughnessTexture = roughnessReadTex;
-    *outMetalnessTexture = metalnessReadTex;
+    p_finalAlbedoTexture.Set(albedoReadTex);
+    p_finalNormalTexture.Set(normalReadTex);
+    p_finalHeightTexture.Set(heightReadTex);
+    p_finalRoughnessTexture.Set(roughnessReadTex);
+    p_finalMetalnessTexture.Set(metalnessReadTex);
 }

@@ -27,11 +27,13 @@ public:
                          Texture2D *albedoOriginalTexture,
                          Texture2D *normalOriginalTexture,
                          Texture2D *roughnessOriginalTexture,
-                         Texture2D *metalnessOriginalTexture,
-                         Texture2D **outAlbedoTexture,
-                         Texture2D **outNormalTexture,
-                         Texture2D **outRoughnessTexture,
-                         Texture2D **outMetalnessTexture);
+                         Texture2D *metalnessOriginalTexture);
+
+    Texture2D *GetFinalAlbedoTexture() const;
+    Texture2D *GetFinalNormalTexture() const;
+    Texture2D *GetFinalHeightTexture() const;
+    Texture2D *GetFinalRoughnessTexture() const;
+    Texture2D *GetFinalMetalnessTexture() const;
 
 private:
     Framebuffer *m_framebuffer = nullptr;
@@ -46,6 +48,12 @@ private:
     AH<Texture2D> m_roughnessPingPongTexture1;
     AH<Texture2D> m_metalnessPingPongTexture0;
     AH<Texture2D> m_metalnessPingPongTexture1;
+
+    AH<Texture2D> p_finalAlbedoTexture;
+    AH<Texture2D> p_finalNormalTexture;
+    AH<Texture2D> p_finalHeightTexture;
+    AH<Texture2D> p_finalRoughnessTexture;
+    AH<Texture2D> p_finalMetalnessTexture;
 
     AH<ShaderProgram> m_compositeLayersSP;
     AH<ShaderProgram> m_heightfieldToNormalTextureSP;

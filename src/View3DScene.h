@@ -44,10 +44,13 @@ public:
     EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void UpdateParameters(const EffectLayerParameters &params);
-    void ApplyControlPanelSettingsToModel();
-    void ApplyCompositeTexturesToModel();
     void SetViewUniforms();
     void PaintMaskBrush();
+
+    void CompositeTextures();
+    void InvalidateTextures();
+    void ApplyControlPanelSettingsToModel();
+    void ApplyCompositeTexturesToModel();
     void RestoreOriginalAlbedoTexturesToModel();
 
     Camera *GetCamera() const;
@@ -55,6 +58,7 @@ public:
     const Vector3 &GetModelOriginalLocalScale() const;
     Array<EffectLayer *> GetAllEffectLayers() const;
     Array<EffectLayer *> GetSelectedEffectLayers() const;
+    EffectLayerCompositer *GetEffectLayerCompositer() const;
     Model *GetCurrentModel() const;
 
 private:
