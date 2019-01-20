@@ -99,6 +99,11 @@ private:
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;
     UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
 
+    // Normal Lines
+    GameObject *p_normalLinesParamsGo = nullptr;
+    UISlider *p_normalLinesHeightInput = nullptr;
+    UISlider *p_normalLinesWidthInput = nullptr;
+
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;
     View3DScene *GetView3DScene() const;

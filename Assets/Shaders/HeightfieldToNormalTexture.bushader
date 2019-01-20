@@ -22,8 +22,8 @@ void main()
     float rightHeight = texture2D(HeightfieldTexture, uv + step * vec2(1,0)).r;
     float upHeight    = texture2D(HeightfieldTexture, uv + step * vec2(0,1)).r;
 
-    vec3 rightVector = (vec3(1, 0, rightHeight));
-    vec3 upVector = (vec3(0, 1, upHeight));
+    vec3 rightVector = (vec3(1, 0, (rightHeight-thisHeight)));
+    vec3 upVector = (vec3(0, 1, (upHeight-thisHeight)));
     vec3 normal = cross(rightVector, upVector);
     // normal = vec3(0,0,1);
 

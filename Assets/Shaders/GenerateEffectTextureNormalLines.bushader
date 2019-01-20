@@ -17,6 +17,8 @@ void main()
 #define BANG_FRAGMENT
 
 uniform mat4 SceneModelMatrix;
+uniform float NormalLinesHeight;
+uniform float NormalLinesFrequency;
 
 in vec3 finPosition;
 
@@ -25,7 +27,7 @@ layout(location = 0) out vec4 OutColor;
 void main()
 {
     vec3 worldPos = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
-    float height = sin(worldPos.y * 40);
+    float height = sin(worldPos.y * NormalLinesFrequency) * NormalLinesHeight;
     OutColor = vec4(vec3(height), 1);
 }
 

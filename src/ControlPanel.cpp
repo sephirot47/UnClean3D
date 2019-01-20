@@ -147,16 +147,14 @@ ControlPanel::ControlPanel()
             HorizontalAlignment::LEFT);
         CreateRow("", generalSettingsLabel->GetGameObject())->SetParent(this);
 
-        p_baseRoughnessInput = GameObjectFactory::CreateUISlider();
-        p_baseRoughnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_baseRoughnessInput = GameObjectFactory::CreateUISlider(0, 1);
         p_baseRoughnessInput->SetValue(1.0f);
         p_baseRoughnessInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
             ->SetParent(this);
 
-        p_baseMetalnessInput = GameObjectFactory::CreateUISlider();
-        p_baseMetalnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_baseMetalnessInput = GameObjectFactory::CreateUISlider(0, 1);
         p_baseMetalnessInput->SetValue(0.0f);
         p_baseMetalnessInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
@@ -207,23 +205,20 @@ ControlPanel::ControlPanel()
         p_maskBrushEnabledButton->SetOn(false);
         p_maskBrushEnabledButton->GetGameObject()->SetParent(this);
 
-        p_maskBrushSizeInput = GameObjectFactory::CreateUISlider();
-        p_maskBrushSizeInput->SetMinMaxValues(1.0f, 500.0f);
+        p_maskBrushSizeInput = GameObjectFactory::CreateUISlider(1, 500);
         p_maskBrushSizeInput->SetValue(50.0f);
         p_maskBrushSizeInputRow =
             CreateRow("Brush size", p_maskBrushSizeInput->GetGameObject());
         p_maskBrushSizeInputRow->SetParent(this);
 
-        p_maskBrushHardnessInput = GameObjectFactory::CreateUISlider();
-        p_maskBrushHardnessInput->SetMinMaxValues(0.0f, 1.0f);
+        p_maskBrushHardnessInput = GameObjectFactory::CreateUISlider(0, 1);
         p_maskBrushHardnessInput->SetValue(0.1f);
         p_maskBrushHardnessInputRow = CreateRow(
             "Brush hardness", p_maskBrushHardnessInput->GetGameObject());
         p_maskBrushHardnessInputRow->SetParent(this);
 
-        p_maskBrushStrengthInput = GameObjectFactory::CreateUISlider();
-        p_maskBrushStrengthInput->SetMinMaxValues(0.0f, 1.0f);
-        p_maskBrushStrengthInput->SetValue(0.5f);
+        p_maskBrushStrengthInput = GameObjectFactory::CreateUISlider(0, 1);
+        p_maskBrushStrengthInput->SetValue(1.0f);
         p_maskBrushStrengthInputRow = CreateRow(
             "Brush strength", p_maskBrushStrengthInput->GetGameObject());
         p_maskBrushStrengthInputRow->SetParent(this);
@@ -257,11 +252,11 @@ ControlPanel::ControlPanel()
         UIVerticalLayout *vl = p_dirtParamsGo->AddComponent<UIVerticalLayout>();
         vl->SetSpacing(5);
 
-        UILabel *dirtLabel = GameObjectFactory::CreateUILabel();
-        dirtLabel->GetText()->SetContent("Dirt");
-        dirtLabel->GetText()->SetTextSize(14);
-        dirtLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", dirtLabel->GetGameObject())->SetParent(p_dirtParamsGo);
+        UILabel *label = GameObjectFactory::CreateUILabel();
+        label->GetText()->SetContent("Dirt");
+        label->GetText()->SetTextSize(14);
+        label->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        CreateRow("", label->GetGameObject())->SetParent(p_dirtParamsGo);
 
         p_dirtSeedInput = GameObjectFactory::CreateUIInputNumber();
         p_dirtSeedInput->SetMinValue(0);
@@ -276,23 +271,19 @@ ControlPanel::ControlPanel()
         p_dirtColor1Input->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
 
-        p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider();
-        p_dirtFrequencyMultiplyInput->SetMinMaxValues(0.0f, 4.0f);
+        p_dirtFrequencyMultiplyInput = GameObjectFactory::CreateUISlider(0, 4);
         p_dirtFrequencyMultiplyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
-        p_dirtFrequencyInput = GameObjectFactory::CreateUISlider();
-        p_dirtFrequencyInput->SetMinMaxValues(0.0f, 25.0f);
+        p_dirtFrequencyInput = GameObjectFactory::CreateUISlider(0, 25, 1);
         p_dirtFrequencyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
-        p_dirtAmplitudeInput = GameObjectFactory::CreateUISlider();
-        p_dirtAmplitudeInput->SetMinMaxValues(0.0f, 2.0f);
+        p_dirtAmplitudeInput = GameObjectFactory::CreateUISlider(0, 2);
         p_dirtAmplitudeInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
-        p_dirtAmplitudeMultiplyInput = GameObjectFactory::CreateUISlider();
-        p_dirtAmplitudeMultiplyInput->SetMinMaxValues(0.0f, 1.0f);
+        p_dirtAmplitudeMultiplyInput = GameObjectFactory::CreateUISlider(0, 1);
         p_dirtAmplitudeMultiplyInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
 
@@ -310,6 +301,33 @@ ControlPanel::ControlPanel()
         CreateRow("Color1", p_dirtColor1Input)->SetParent(p_dirtParamsGo);
 
         p_dirtParamsGo->SetParent(this);
+    }
+
+    // Normal Lines
+    p_normalLinesParamsGo = GameObjectFactory::CreateUIGameObject();
+    {
+        UIVerticalLayout *vl =
+            p_normalLinesParamsGo->AddComponent<UIVerticalLayout>();
+        vl->SetSpacing(5);
+
+        UILabel *label = GameObjectFactory::CreateUILabel();
+        label->GetText()->SetContent("Normal Lines");
+        label->GetText()->SetTextSize(14);
+        label->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        CreateRow("", label->GetGameObject())->SetParent(p_normalLinesParamsGo);
+
+        p_normalLinesHeightInput = GameObjectFactory::CreateUISlider(0, 1);
+        p_normalLinesHeightInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+        p_normalLinesWidthInput = GameObjectFactory::CreateUISlider(0.01f, 30);
+        p_normalLinesWidthInput
+            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+
+        CreateRow("Height", p_normalLinesHeightInput->GetGameObject())
+            ->SetParent(p_normalLinesParamsGo);
+        CreateRow("Width", p_normalLinesWidthInput->GetGameObject())
+            ->SetParent(p_normalLinesParamsGo);
+        p_normalLinesParamsGo->SetParent(this);
     }
 }
 
@@ -368,6 +386,7 @@ void ControlPanel::Update()
     p_maskBrushHardnessInputRow->SetEnabled(GetMaskBrushEnabled());
 
     p_dirtParamsGo->SetEnabled(false);
+    p_normalLinesParamsGo->SetEnabled(false);
 
     Array<EffectLayer *> selectedEffectLayers =
         GetView3DScene()->GetSelectedEffectLayers();
@@ -377,8 +396,10 @@ void ControlPanel::Update()
         if (EffectLayerImplementation *impl =
                 selectedEffectLayer->GetImplementation())
         {
-            p_dirtParamsGo->SetEnabled(DCAST<EffectLayerDirt *>(impl) !=
-                                       nullptr);
+            p_dirtParamsGo->SetEnabled(impl->GetEffectLayerType() ==
+                                       EffectLayer::Type::DIRT);
+            p_normalLinesParamsGo->SetEnabled(impl->GetEffectLayerType() ==
+                                              EffectLayer::Type::NORMAL_LINES);
         }
     }
 
@@ -448,6 +469,9 @@ void ControlPanel::UpdateSelectedEffectLayerParameters()
     m_params.dirtColor0 = p_dirtColor0Input->GetColor();
     m_params.dirtColor1 = p_dirtColor1Input->GetColor();
 
+    m_params.normalLinesWidth = p_normalLinesWidthInput->GetValue();
+    m_params.normalLinesHeight = p_normalLinesHeightInput->GetValue();
+
     MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
         GetParameters());
 }
@@ -473,6 +497,9 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
         GetParameters().dirtAmplitudeMultiply);
     p_dirtColor0Input->SetColor(GetParameters().dirtColor0);
     p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
+
+    p_normalLinesWidthInput->SetValue(GetParameters().normalLinesWidth);
+    p_normalLinesHeightInput->SetValue(GetParameters().normalLinesHeight);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
