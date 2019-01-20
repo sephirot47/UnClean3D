@@ -21,12 +21,11 @@ public:
     enum class SceneMode
     {
         VIEW3D,
-        UV,
         TEXTURES
     };
 
     MainScene();
-    virtual ~MainScene();
+    virtual ~MainScene() override;
 
     // Scene
     void Start() override;

@@ -16,7 +16,6 @@
 #include "EffectLayerDirt.h"
 #include "SceneImage.h"
 #include "TexturesScene.h"
-#include "UvScene.h"
 #include "View3DScene.h"
 
 using namespace Bang;
@@ -30,7 +29,6 @@ MainScene::MainScene()
     GameObjectFactory::CreateUISceneInto(this);
     UIHorizontalLayout *hl = AddComponent<UIHorizontalLayout>();
     p_view3DScene = new View3DScene();
-    p_uvScene = new UvScene();
     p_texturesScene = new TexturesScene();
 
     p_sceneImage = new SceneImage();
@@ -66,15 +64,11 @@ void MainScene::Update()
     {
         // ResetModel();
     }
-    else if (Input::GetKeyDown(Key::V))
+    else if (Input::GetKeyDown(Key::F1))
     {
         SetSceneMode(MainScene::SceneMode::VIEW3D);
     }
-    else if (Input::GetKeyDown(Key::U))
-    {
-        SetSceneMode(MainScene::SceneMode::UV);
-    }
-    else if (Input::GetKeyDown(Key::T))
+    else if (Input::GetKeyDown(Key::F2))
     {
         SetSceneMode(MainScene::SceneMode::TEXTURES);
     }
@@ -130,7 +124,6 @@ void MainScene::LoadModel(const Path &modelPath)
 {
     p_currentModel = Assets::Load<Model>(modelPath);
     GetView3DScene()->OnModelChanged(GetCurrentModel());
-    GetUvScene()->OnModelChanged(GetCurrentModel());
     GetTexturesScene()->OnModelChanged(GetCurrentModel());
 }
 
@@ -193,7 +186,6 @@ Scene *MainScene::GetCurrentRenderScene() const
     switch (GetSceneMode())
     {
         case SceneMode::VIEW3D: return GetView3DScene(); break;
-        case SceneMode::UV: return GetUvScene(); break;
         case SceneMode::TEXTURES: return GetTexturesScene(); break;
     }
     return nullptr;

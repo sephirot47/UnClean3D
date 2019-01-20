@@ -125,8 +125,6 @@ ControlPanel::ControlPanel()
         p_sceneModeComboBox = GameObjectFactory::CreateUIComboBox();
         p_sceneModeComboBox->AddItem("View 3D",
                                      SCAST<uint>(MainScene::SceneMode::VIEW3D));
-        p_sceneModeComboBox->AddItem("Uv",
-                                     SCAST<uint>(MainScene::SceneMode::UV));
         p_sceneModeComboBox->AddItem(
             "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
 
