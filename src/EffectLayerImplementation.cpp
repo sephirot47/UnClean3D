@@ -41,3 +41,9 @@ void EffectLayerImplementation::Reflect()
 {
     Serializable::Reflect();
 }
+
+void EffectLayerImplementation::Invalidate()
+{
+    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
+    view3DScene->InvalidateTextures();
+}

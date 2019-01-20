@@ -6,6 +6,8 @@
 #include "Bang/ShaderProgram.h"
 #include "Bang/Texture2D.h"
 #include "BangEditor/BangEditor.h"
+#include "BangEditor/SerializableInspectorWidget.h"
+
 #include "EffectLayerParameters.h"
 
 using namespace Bang;

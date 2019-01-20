@@ -64,16 +64,17 @@ void DefaultFragCommonMain(vec4 albedoColor)
         receivesLighting = 0.75;
     }
 
+    /*
     float maskBrushApportation =
             GetMaskBrushApportationFromCurrentMousePosition(B_FIn_Position,
                                                             B_ProjectionView,
                                                             B_Viewport_Size);
-
     if (maskBrushApportation > 0)
     {
         finalAlbedo.r  += maskBrushApportation;
         finalAlbedo.gb = clamp(finalAlbedo.gb * (1-maskBrushApportation), 0, 1);
     }
+    */
 
     vec4 finalColor = vec4(0,0,0,1);
     if (SeeMask)

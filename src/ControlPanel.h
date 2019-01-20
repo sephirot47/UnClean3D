@@ -11,6 +11,7 @@
 namespace Bang
 {
 class UIButton;
+class UILabel;
 class UISlider;
 class UIComboBox;
 class UIToolButton;
@@ -90,6 +91,10 @@ private:
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;
 
+    // Effect layer params
+    GameObject *p_effectLayerParamsGo = nullptr;
+    UILabel *p_effectLayerParamsTitle = nullptr;
+
     // Dirt
     GameObject *p_dirtParamsGo = nullptr;
     UIInputNumber *p_dirtSeedInput = nullptr;
@@ -100,13 +105,7 @@ private:
     UISlider *p_dirtFrequencyMultiplyInput = nullptr;
     UISlider *p_dirtAmplitudeMultiplyInput = nullptr;
 
-    // Normal Lines
-    GameObject *p_normalLinesParamsGo = nullptr;
-    UISlider *p_normalLinesHeightInput = nullptr;
-    UISlider *p_normalLinesWidthInput = nullptr;
-
     // SerializableWidget
-    GameObject *p_serializableWidgetContainer = nullptr;
     SerializableInspectorWidget *p_serializableWidget = nullptr;
 
     Path GetInitialDir() const;

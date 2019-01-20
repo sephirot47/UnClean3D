@@ -24,6 +24,7 @@ public:
 
     // Serializable
     virtual void Reflect() override;
+    void Invalidate();
 
 protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;

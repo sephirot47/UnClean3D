@@ -17,9 +17,20 @@ void EffectLayerNormalLines::Reflect()
     EffectLayerImplementation::Reflect();
 
     ReflectVar<float>("Height",
-                      [this](float height) { m_height = height; },
+                      [this](float height) {
+                          m_height = height;
+                          Invalidate();
+                      },
                       [this]() { return m_height; },
                       BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+
+    ReflectVar<float>("Width",
+                      [this](float width) {
+                          m_width = width;
+                          Invalidate();
+                      },
+                      [this]() { return m_width; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 30.0f));
 }
 
 EffectLayer::Type EffectLayerNormalLines::GetEffectLayerType() const
@@ -42,7 +53,6 @@ void EffectLayerNormalLines::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
     EffectLayerImplementation::SetGenerateEffectUniforms(sp);
 
-    sp->SetFloat("NormalLinesHeight", GetParameters().normalLinesHeight);
-    sp->SetFloat("NormalLinesFrequency",
-                 (30.0f - GetParameters().normalLinesWidth));
+    sp->SetFloat("NormalLinesHeight", m_height);
+    sp->SetFloat("NormalLinesFrequency", (30.0f - m_width));
 }

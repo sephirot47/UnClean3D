@@ -192,6 +192,31 @@ ControlPanel::ControlPanel()
             ->SetParent(this);
     }
 
+    // Effect Layer params
+    {
+        p_effectLayerParamsGo = GameObjectFactory::CreateUIGameObject();
+        UIVerticalLayout *vl =
+            p_effectLayerParamsGo->AddComponent<UIVerticalLayout>();
+        vl->SetSpacing(5);
+
+        p_effectLayerParamsTitle = GameObjectFactory::CreateUILabel();
+        p_effectLayerParamsTitle->GetText()->SetContent("Title");
+        p_effectLayerParamsTitle->GetText()->SetTextSize(14);
+        p_effectLayerParamsTitle->GetText()->SetHorizontalAlign(
+            HorizontalAlignment::LEFT);
+        CreateRow("", p_effectLayerParamsTitle->GetGameObject())
+            ->SetParent(p_effectLayerParamsGo);
+
+        p_serializableWidget = new SerializableInspectorWidget();
+        p_serializableWidget->Init();
+
+        p_serializableWidget->SetParent(p_effectLayerParamsGo);
+        p_effectLayerParamsGo->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+            ->SetParent(this);
+    }
+
     // Mask
     {
         UILabel *maskLabel = GameObjectFactory::CreateUILabel();
@@ -244,17 +269,6 @@ ControlPanel::ControlPanel()
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
-    }
-
-    p_serializableWidgetContainer = GameObjectFactory::CreateUIGameObject();
-    {
-        p_serializableWidgetContainer->AddComponent<UIVerticalLayout>();
-
-        p_serializableWidget = new SerializableInspectorWidget();
-        p_serializableWidget->Init();
-        p_serializableWidget->SetParent(p_serializableWidgetContainer);
-
-        p_serializableWidgetContainer->SetParent(this);
     }
 
     // Dirt
@@ -313,33 +327,6 @@ ControlPanel::ControlPanel()
 
         p_dirtParamsGo->SetParent(this);
     }
-
-    // Normal Lines
-    p_normalLinesParamsGo = GameObjectFactory::CreateUIGameObject();
-    {
-        UIVerticalLayout *vl =
-            p_normalLinesParamsGo->AddComponent<UIVerticalLayout>();
-        vl->SetSpacing(5);
-
-        UILabel *label = GameObjectFactory::CreateUILabel();
-        label->GetText()->SetContent("Normal Lines");
-        label->GetText()->SetTextSize(14);
-        label->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", label->GetGameObject())->SetParent(p_normalLinesParamsGo);
-
-        p_normalLinesHeightInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_normalLinesHeightInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_normalLinesWidthInput = GameObjectFactory::CreateUISlider(0.01f, 30);
-        p_normalLinesWidthInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-
-        CreateRow("Height", p_normalLinesHeightInput->GetGameObject())
-            ->SetParent(p_normalLinesParamsGo);
-        CreateRow("Width", p_normalLinesWidthInput->GetGameObject())
-            ->SetParent(p_normalLinesParamsGo);
-        p_normalLinesParamsGo->SetParent(this);
-    }
 }
 
 ControlPanel::~ControlPanel()
@@ -397,7 +384,12 @@ void ControlPanel::Update()
     p_maskBrushHardnessInputRow->SetEnabled(GetMaskBrushEnabled());
 
     p_dirtParamsGo->SetEnabled(false);
-    p_normalLinesParamsGo->SetEnabled(false);
+
+    {
+        InspectorWidgetTitle *iwt =
+            p_serializableWidget->GetInspectorWidgetTitle();
+        iwt->SetEnabled(false);
+    }
 
     Array<EffectLayer *> selectedEffectLayers =
         GetView3DScene()->GetSelectedEffectLayers();
@@ -408,11 +400,12 @@ void ControlPanel::Update()
         if (EffectLayerImplementation *impl =
                 selectedEffectLayer->GetImplementation())
         {
+            p_effectLayerParamsTitle->GetText()->SetContent(
+                impl->GetTypeName());
+
             p_serializableWidget->SetSerializable(impl);
             p_dirtParamsGo->SetEnabled(impl->GetEffectLayerType() ==
                                        EffectLayer::Type::DIRT);
-            p_normalLinesParamsGo->SetEnabled(impl->GetEffectLayerType() ==
-                                              EffectLayer::Type::NORMAL_LINES);
         }
     }
 
@@ -484,9 +477,6 @@ void ControlPanel::UpdateSelectedEffectLayerParameters()
     m_params.dirtColor0 = p_dirtColor0Input->GetColor();
     m_params.dirtColor1 = p_dirtColor1Input->GetColor();
 
-    m_params.normalLinesWidth = p_normalLinesWidthInput->GetValue();
-    m_params.normalLinesHeight = p_normalLinesHeightInput->GetValue();
-
     MainScene::GetInstance()->GetView3DScene()->UpdateParameters(
         GetParameters());
 }
@@ -512,9 +502,6 @@ void ControlPanel::UpdateInputsAndParametersFromSelectedEffectLayer()
         GetParameters().dirtAmplitudeMultiply);
     p_dirtColor0Input->SetColor(GetParameters().dirtColor0);
     p_dirtColor1Input->SetColor(GetParameters().dirtColor1);
-
-    p_normalLinesWidthInput->SetValue(GetParameters().normalLinesWidth);
-    p_normalLinesHeightInput->SetValue(GetParameters().normalLinesHeight);
 
     EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
