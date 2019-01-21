@@ -26,7 +26,8 @@ public:
     enum Type
     {
         DIRT = 0,
-        NORMAL_LINES
+        NORMAL_LINES,
+        FRACTAL_BUMPS
     };
 
     EffectLayer(MeshRenderer *mr);

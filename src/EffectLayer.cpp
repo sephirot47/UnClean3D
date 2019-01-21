@@ -30,6 +30,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerDirt.h"
+#include "EffectLayerFractalBumps.h"
 #include "EffectLayerImplementation.h"
 #include "EffectLayerNormalLines.h"
 #include "MainScene.h"
@@ -216,6 +217,10 @@ void EffectLayer::SetType(EffectLayer::Type type)
 
             case EffectLayer::Type::NORMAL_LINES:
                 newImpl = new EffectLayerNormalLines();
+                break;
+
+            case EffectLayer::Type::FRACTAL_BUMPS:
+                newImpl = new EffectLayerFractalBumps();
                 break;
 
             default: ASSERT(false);

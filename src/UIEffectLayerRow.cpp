@@ -82,6 +82,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_effectLayerTypeInput->AddItem("Dirt", EffectLayer::Type::DIRT);
     p_effectLayerTypeInput->AddItem("Normal Lines",
                                     EffectLayer::Type::NORMAL_LINES);
+    p_effectLayerTypeInput->AddItem("Fractal Bumps",
+                                    EffectLayer::Type::FRACTAL_BUMPS);
     p_effectLayerTypeInput->SetSelectionByIndex(0);
     p_effectLayerTypeInput->GetGameObject()->SetParent(this);
 

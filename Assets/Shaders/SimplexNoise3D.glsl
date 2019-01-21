@@ -103,6 +103,25 @@ float snoise(vec3 v)
     m = m * m;
     float result = 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                           dot(p2,x2), dot(p3,x3) ) );
-    // result = result * 0.5 + 0.5;
     return result;
+}
+
+float snoiseFull(vec3 v,
+                 float frequency,
+                 float frequencyMultiply,
+                 float amplitude,
+                 float amplitudeMultiply,
+                 float octaves,
+                 float seed)
+{
+    float noiseValue = 0.0f;
+    for (int i = 0; i < octaves; ++i)
+    {
+        float octaveNoiseValue = snoise(v * frequency + seed) * amplitude;
+        noiseValue += octaveNoiseValue;
+
+        frequency *= frequencyMultiply;
+        amplitude *= amplitudeMultiply;
+    }
+    return noiseValue;
 }

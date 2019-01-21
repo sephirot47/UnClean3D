@@ -37,17 +37,14 @@ void main()
     float frequency = DirtFrequency;
     float amplitude = DirtAmplitude;
 
-    float noiseValue = 0.0f;
-    for (int i = 0; i < DirtOctaves; ++i)
-    {
-        vec3 worldPosition = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
-        float octaveNoiseValue = snoise(worldPosition * frequency + DirtSeed) * amplitude;
-        noiseValue += octaveNoiseValue;
-
-        frequency *= DirtFrequencyMultiply;
-        amplitude *= DirtAmplitudeMultiply;
-    }
-
+    vec3 worldPosition = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
+    float noiseValue = snoiseFull(worldPosition,
+                                  DirtFrequency,
+                                  DirtFrequencyMultiply,
+                                  DirtAmplitude,
+                                  DirtAmplitudeMultiply,
+                                  DirtOctaves,
+                                  DirtSeed);
     noiseValue = clamp(noiseValue, 0.01, 1);
     vec3 noise = vec3(noiseValue);
 

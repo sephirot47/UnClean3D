@@ -1,0 +1,41 @@
+#vertex
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 finPosition;
+
+void main()
+{
+    finPosition = vinPosition;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "SimplexNoise3D.glsl"
+
+uniform mat4 SceneModelMatrix;
+uniform float FractalBumpsHeight;
+uniform float FractalBumpsFrequency;
+
+in vec3 finPosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec3 worldPos = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
+    float height = snoiseFull(worldPos,
+                              FractalBumpsFrequency,
+                              2.0f,
+                              FractalBumpsHeight * 5,
+                              0.5f,
+                              8.0f,
+                              1.0f);
+    OutColor = vec4(vec3(height), 1);
+}
+
+
