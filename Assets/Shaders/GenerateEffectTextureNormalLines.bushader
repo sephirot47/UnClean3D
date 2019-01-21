@@ -19,6 +19,7 @@ void main()
 uniform mat4 SceneModelMatrix;
 uniform float NormalLinesHeight;
 uniform float NormalLinesFrequency;
+uniform int NormalLinesAxis;
 
 in vec3 finPosition;
 
@@ -27,7 +28,8 @@ layout(location = 0) out vec4 OutColor;
 void main()
 {
     vec3 worldPos = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
-    float height = sin(worldPos.y * NormalLinesFrequency) * NormalLinesHeight;
+    float worldPosCoord = worldPos[NormalLinesAxis];
+    float height = sin(worldPosCoord * NormalLinesFrequency) * NormalLinesHeight;
     OutColor = vec4(vec3(height), 1);
 }
 

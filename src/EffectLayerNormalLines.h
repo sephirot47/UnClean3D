@@ -29,6 +29,7 @@ protected:
 private:
     float m_height = 0.5f;
     float m_width = 0.5f;
+    Axis3D m_axis = Axis3D::X;
 };
 
 #endif  // EFFECTLAYERNORMALLINES_H

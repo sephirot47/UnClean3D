@@ -31,6 +31,16 @@ void EffectLayerNormalLines::Reflect()
                       },
                       [this]() { return m_width; },
                       BANG_REFLECT_HINT_SLIDER(0.0f, 30.0f));
+    ReflectVarEnum<uint32_t>("Axis",
+                             [this](uint32_t axis) {
+                                 m_axis = SCAST<Axis3D>(axis);
+                                 Invalidate();
+                             },
+                             [this]() { return SCAST<uint32_t>(m_axis); },
+                             BANG_REFLECT_HINT_ENUM(true));
+    BANG_REFLECT_HINT_ENUM_FIELD_VALUE("Axis", "X", Axis3D::X);
+    BANG_REFLECT_HINT_ENUM_FIELD_VALUE("Axis", "Y", Axis3D::Y);
+    BANG_REFLECT_HINT_ENUM_FIELD_VALUE("Axis", "Z", Axis3D::Z);
 }
 
 EffectLayer::Type EffectLayerNormalLines::GetEffectLayerType() const
@@ -55,4 +65,5 @@ void EffectLayerNormalLines::SetGenerateEffectUniforms(ShaderProgram *sp)
 
     sp->SetFloat("NormalLinesHeight", m_height);
     sp->SetFloat("NormalLinesFrequency", (30.0f - m_width));
+    sp->SetInt("NormalLinesAxis", SCAST<int>(m_axis));
 }
