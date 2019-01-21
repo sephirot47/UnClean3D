@@ -40,6 +40,7 @@ public:
 
     void PaintMaskBrush();
 
+    void FillMask();
     void ClearMask();
     Texture2D *GetEffectTexture() const;
     Texture2D *GetMaskTexture() const;

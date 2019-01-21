@@ -280,6 +280,10 @@ ControlPanel::ControlPanel()
         p_clearMaskButton->AddClickedCallback([this]() { ClearMask(); });
         p_clearMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
+        p_fillMaskButton = GameObjectFactory::CreateUIButton("Fill Mask");
+        p_fillMaskButton->AddClickedCallback([this]() { FillMask(); });
+        p_fillMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
+
         p_maskSubParamsGo->SetParent(p_maskParamsGo);
         p_maskParamsGo->SetParent(this);
 
@@ -431,6 +435,16 @@ void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
     if (effectLayers.Size() >= 1)
     {
         sp->SetTexture2D("MaskTexture", effectLayers.Front()->GetMaskTexture());
+    }
+}
+
+void ControlPanel::FillMask()
+{
+    Array<EffectLayer *> selectedEffectLayers =
+        GetView3DScene()->GetSelectedEffectLayers();
+    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    {
+        selectedEffectLayer->FillMask();
     }
 }
 

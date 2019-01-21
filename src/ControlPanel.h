@@ -44,6 +44,7 @@ public:
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetMaskUniforms(ShaderProgram *sp);
 
+    void FillMask();
     void ClearMask();
     bool GetMaskBrushEnabled() const;
     float GetMaskBrushSize() const;
@@ -78,6 +79,7 @@ private:
     UIToolButton *p_seeMaskButton = nullptr;
     UIToolButton *p_maskBrushDepthAwareButton = nullptr;
     UIButton *p_clearMaskButton = nullptr;
+    UIButton *p_fillMaskButton = nullptr;
     UISlider *p_maskBrushStrengthInput = nullptr;
     UISlider *p_maskBrushSizeInput = nullptr;
     UISlider *p_maskBrushHardnessInput = nullptr;

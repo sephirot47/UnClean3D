@@ -290,6 +290,13 @@ void EffectLayer::PaintMaskBrush()
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }
 
+void EffectLayer::FillMask()
+{
+    GEngine *ge = GEngine::GetInstance();
+    ge->FillTexture(m_maskPingPongTexture0.Get(), Color::Red());
+    ge->FillTexture(m_maskPingPongTexture1.Get(), Color::Red());
+}
+
 void EffectLayer::ClearMask()
 {
     GEngine *ge = GEngine::GetInstance();
