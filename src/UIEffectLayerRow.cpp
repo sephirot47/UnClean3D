@@ -84,6 +84,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
                                     EffectLayer::Type::NORMAL_LINES);
     p_effectLayerTypeInput->AddItem("Fractal Bumps",
                                     EffectLayer::Type::FRACTAL_BUMPS);
+    p_effectLayerTypeInput->AddItem("Wave Bumps",
+                                    EffectLayer::Type::WAVE_BUMPS);
     p_effectLayerTypeInput->SetSelectionByIndex(0);
     p_effectLayerTypeInput->GetGameObject()->SetParent(this);
 

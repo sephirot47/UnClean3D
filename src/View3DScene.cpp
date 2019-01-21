@@ -315,6 +315,7 @@ void View3DScene::ReloadShaders()
             effectLayer->ReloadShaders();
         }
     }
+    InvalidateTextures();
 }
 
 void View3DScene::OnModelChanged(Model *newModel)

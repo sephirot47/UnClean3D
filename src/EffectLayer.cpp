@@ -33,6 +33,7 @@
 #include "EffectLayerFractalBumps.h"
 #include "EffectLayerImplementation.h"
 #include "EffectLayerNormalLines.h"
+#include "EffectLayerWaveBumps.h"
 #include "MainScene.h"
 #include "View3DScene.h"
 
@@ -221,6 +222,10 @@ void EffectLayer::SetType(EffectLayer::Type type)
 
             case EffectLayer::Type::FRACTAL_BUMPS:
                 newImpl = new EffectLayerFractalBumps();
+                break;
+
+            case EffectLayer::Type::WAVE_BUMPS:
+                newImpl = new EffectLayerWaveBumps();
                 break;
 
             default: ASSERT(false);

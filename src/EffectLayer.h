@@ -27,7 +27,8 @@ public:
     {
         DIRT = 0,
         NORMAL_LINES,
-        FRACTAL_BUMPS
+        FRACTAL_BUMPS,
+        WAVE_BUMPS
     };
 
     EffectLayer(MeshRenderer *mr);

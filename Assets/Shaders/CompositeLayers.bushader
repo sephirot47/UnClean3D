@@ -5,6 +5,7 @@
 const int EFFECT_LAYER_TYPE_DIRT = 0;
 const int EFFECT_LAYER_TYPE_NORMAL_LINES = 1;
 const int EFFECT_LAYER_TYPE_FRACTAL_BUMPS = 2;
+const int EFFECT_LAYER_TYPE_WAVE_BUMPS = 3;
 
 uniform sampler2D EffectLayerTexture;
 uniform sampler2D EffectLayerMaskTexture;
@@ -62,6 +63,7 @@ void main()
 
             case EFFECT_LAYER_TYPE_NORMAL_LINES:
             case EFFECT_LAYER_TYPE_FRACTAL_BUMPS:
+            case EFFECT_LAYER_TYPE_WAVE_BUMPS:
             {
                 outHeight = previousHeight + effectLayerColor.r;
             }

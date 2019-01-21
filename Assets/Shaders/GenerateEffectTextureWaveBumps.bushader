@@ -1,0 +1,46 @@
+#vertex
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 finPosition;
+
+void main()
+{
+    finPosition = vinPosition;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "SimplexNoise3D.glsl"
+
+uniform mat4 SceneModelMatrix;
+uniform float WaveBumpsGlobalHeight;
+uniform float WaveBumpsFrequencyX;
+uniform float WaveBumpsFrequencyY;
+uniform float WaveBumpsFrequencyZ;
+uniform float WaveBumpsHeightX;
+uniform float WaveBumpsHeightY;
+uniform float WaveBumpsHeightZ;
+
+in vec3 finPosition;
+
+layout(location = 0) out vec4 OutColor;
+
+float psin(float v) { return sin(v) * 0.5 + 0.5; }
+float pcos(float v) { return cos(v) * 0.5 + 0.5; }
+
+void main()
+{
+    vec3 worldPos = (vec4(finPosition, 1)).xyz;
+    float height = psin(worldPos.x * WaveBumpsFrequencyX) * WaveBumpsHeightX +
+                   psin(worldPos.y * WaveBumpsFrequencyY) * WaveBumpsHeightY +
+                   psin(worldPos.z * WaveBumpsFrequencyZ) * WaveBumpsHeightZ;
+    height *= WaveBumpsGlobalHeight;
+    OutColor = vec4(vec3(height), 1);
+}
+
+
