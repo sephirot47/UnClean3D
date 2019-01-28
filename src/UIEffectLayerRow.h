@@ -42,7 +42,6 @@ private:
 
     UIToolButton *p_visibleButton = nullptr;
     UIFocusable *p_focusable = nullptr;
-    UIImageRenderer *p_bg = nullptr;
     UIComboBox *p_effectLayerTypeInput = nullptr;
     UILabel *p_layerNameLabel = nullptr;
 

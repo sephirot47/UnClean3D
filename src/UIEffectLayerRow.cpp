@@ -55,8 +55,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     hl->SetPaddingRight(10);
     hl->SetPaddingLeft(10);
 
-    p_bg = AddComponent<UIImageRenderer>();
-    GameObjectFactory::AddInnerBorder(p_bg->GetGameObject());
+    GameObjectFactory::AddInnerBorder(this);
 
     UILayoutElement *le = AddComponent<UILayoutElement>();
     le->SetFlexibleWidth(1.0f);
@@ -122,24 +121,6 @@ UIEffectLayerRow::~UIEffectLayerRow()
 void UIEffectLayerRow::Update()
 {
     GameObject::Update();
-
-    Color bgColor;
-    if (IsSelected())
-    {
-        bgColor = UITheme::GetSelectedColor();
-    }
-    else
-    {
-        if (p_focusable->IsMouseOver())
-        {
-            bgColor = UITheme::GetOverColor();
-        }
-        else
-        {
-            bgColor = Color::White().WithValue(0.95f);
-        }
-    }
-    p_bg->SetTint(bgColor);
 }
 
 String UIEffectLayerRow::GetName() const

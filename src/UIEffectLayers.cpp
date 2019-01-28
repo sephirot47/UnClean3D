@@ -118,7 +118,7 @@ UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
         new UIEffectLayerRow(this, newEffectLayer);
 
     p_uiList->AddItem(effectLayerRow);
-    p_effectLayerRows.PushFront(effectLayerRow);
+    p_effectLayerRows.PushBack(effectLayerRow);
 
     SetSelection(effectLayerRow);
 
@@ -134,7 +134,7 @@ void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
 
 void UIEffectLayers::SetSelection(uint idx)
 {
-    m_selectedEffectLayerRowIndex = idx;
+    p_uiList->SetSelection(idx);
 }
 
 void UIEffectLayers::SetSelection(UIEffectLayerRow *effectLayerRow)
@@ -154,7 +154,7 @@ bool UIEffectLayers::IsAllLayersVisibleButtonOn() const
 
 uint UIEffectLayers::GetSelectedEffectLayerRowIndex() const
 {
-    return m_selectedEffectLayerRowIndex;
+    return p_uiList->GetSelectedIndex();
 }
 
 UIEffectLayerRow *UIEffectLayers::GetSelectedEffectLayerRow() const

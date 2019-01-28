@@ -40,7 +40,6 @@ public:
     const Array<UIEffectLayerRow *> &GetUIEffectLayerRows() const;
 
 private:
-    uint m_selectedEffectLayerRowIndex = SCAST<uint>(-1);
     Array<UIEffectLayerRow *> p_effectLayerRows;
 
     UIToolButton *p_allLayersVisibleButton = nullptr;
