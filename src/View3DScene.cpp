@@ -426,7 +426,7 @@ EffectLayer *View3DScene::CreateNewEffectLayer()
         Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
 
         newEffectLayer = new EffectLayer(mr);
-        effectLayers.PushFront(newEffectLayer);
+        effectLayers.PushBack(newEffectLayer);
     }
     return newEffectLayer;
 }
@@ -521,6 +521,16 @@ void View3DScene::RestoreOriginalAlbedoTexturesToModel()
             mat->SetRoughnessTexture(mrInfo.originalRoughnessTexture.Get());
             mat->SetMetalnessTexture(mrInfo.originalMetalnessTexture.Get());
         }
+    }
+}
+
+void View3DScene::MoveEffectLayer(EffectLayer *effectLayer, uint newIndex)
+{
+    for (auto &pair : m_meshRendererToInfo)
+    {
+        MeshRendererInfo &mrInfo = pair.second;
+        mrInfo.effectLayers.Remove(effectLayer);
+        mrInfo.effectLayers.Insert(effectLayer, newIndex);
     }
 }
 

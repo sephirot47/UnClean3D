@@ -159,7 +159,7 @@ void EffectLayerCompositer::CompositeLayers(
     sp->Bind();
     for (uint i = 0; i < effectLayers.Size(); ++i)
     {
-        if (!controlPanel->IsVisibleUIEffectLayer(i))
+        if (!effectLayers[i]->GetVisible())
         {
             continue;
         }

@@ -33,6 +33,7 @@ public:
     String GetName() const;
     bool IsSelected() const;
     bool GetIsLayerVisible() const;
+    EffectLayer *GetEffectLayer() const;
     UIToolButton *GetIsLayerVisibleButton() const;
 
 private:

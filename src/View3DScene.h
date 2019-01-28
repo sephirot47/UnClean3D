@@ -51,6 +51,7 @@ public:
     void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
     void RestoreOriginalAlbedoTexturesToModel();
+    void MoveEffectLayer(EffectLayer *effectLayer, uint newIndex);
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;

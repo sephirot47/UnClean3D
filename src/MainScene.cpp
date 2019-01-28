@@ -90,6 +90,7 @@ void MainScene::Render(RenderPass renderPass, bool renderChildren)
         AARecti renderRect(
             GetSceneImage()->GetRectTransform()->GetViewportAARect());
         Vector2i renderSize(renderRect.GetSize());
+        renderSize = Vector2i::Max(renderSize, Vector2i::One());
 
         Input::Context sceneContext;
         sceneContext.rect = renderRect;

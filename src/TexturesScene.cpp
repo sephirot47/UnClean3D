@@ -148,7 +148,7 @@ void TexturesScene::Update()
     {
         TextureContainer *overedTexCont = nullptr;
         Array<TextureContainer *> allTextureContainers =
-            FindObjectsInDescendants<TextureContainer>();
+            GetObjectsInDescendants<TextureContainer>();
         for (TextureContainer *texCont : allTextureContainers)
         {
             if (texCont->GetFocusable()->IsMouseOver())

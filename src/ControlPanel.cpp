@@ -494,17 +494,6 @@ uint ControlPanel::GetSelectedUIEffectLayerIndex() const
     return p_uiEffectLayers->GetSelectedEffectLayerRowIndex();
 }
 
-bool ControlPanel::IsVisibleUIEffectLayer(uint effectLayerIdx) const
-{
-    if (effectLayerIdx < p_uiEffectLayers->GetUIEffectLayerRows().Size())
-    {
-        UIEffectLayerRow *uiEffectLayerRow =
-            p_uiEffectLayers->GetUIEffectLayerRows()[effectLayerIdx];
-        return uiEffectLayerRow->GetIsLayerVisible();
-    }
-    return false;
-}
-
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
 {
     p_sceneModeComboBox->SetSelectionByValue(SCAST<uint>(sceneMode));

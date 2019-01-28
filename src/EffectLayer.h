@@ -39,11 +39,13 @@ public:
 
     void SetImplementation(EffectLayerImplementation *impl);
     void SetType(EffectLayer::Type type);
+    void SetVisible(bool visible);
 
     void PaintMaskBrush();
 
     void FillMask();
     void ClearMask();
+    bool GetVisible();
     Texture2D *GetEffectTexture() const;
     Texture2D *GetMaskTexture() const;
     ControlPanel *GetControlPanel() const;
@@ -58,6 +60,7 @@ private:
     VBO *m_positionsVBO = nullptr;
     VBO *m_normalsVBO = nullptr;
     Framebuffer *m_framebuffer = nullptr;
+    bool m_visible = true;
     AH<Mesh> m_textureMesh;
     AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_paintMaskBrushSP;

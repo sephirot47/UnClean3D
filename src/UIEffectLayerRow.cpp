@@ -32,6 +32,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
 {
     GameObjectFactory::CreateUIGameObjectInto(this);
 
+    SetName("UIEffectLayerRow");
+
     p_uiEffectLayers = uiEffectLayers;
     p_effectLayer = effectLayer;
 
@@ -69,6 +71,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     String layerName = Path::GetDuplicateString("NewLayer", existingLayerNames);
 
     p_layerNameLabel = GameObjectFactory::CreateUILabel();
+    p_layerNameLabel->GetGameObject()->SetName("UIEffectLayerRowNameUILabel");
     p_layerNameLabel->GetText()->SetContent(layerName);
     p_layerNameLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
     p_layerNameLabel->GetGameObject()->SetParent(this);
@@ -77,6 +80,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         ->SetParent(this);
 
     p_effectLayerTypeInput = GameObjectFactory::CreateUIComboBox();
+    p_effectLayerTypeInput->GetGameObject()->SetName(
+        "UIEffectLayerRowTypeComboBox");
     p_effectLayerTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
         this);
     p_effectLayerTypeInput->AddItem("Dirt", EffectLayer::Type::DIRT);
@@ -93,7 +98,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         "", EditorTextureFactory::GetEyeIcon());
     p_visibleButton->GetIcon()->SetTint(Color::Black());
     p_visibleButton->SetOn(true);
-    p_visibleButton->AddClickedCallback([]() {
+    p_visibleButton->AddClickedCallback([this]() {
+        p_effectLayer->SetVisible(p_visibleButton->GetOn());
         MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
     });
     p_visibleButton->GetGameObject()->SetParent(this);
@@ -151,6 +157,11 @@ bool UIEffectLayerRow::GetIsLayerVisible() const
     return p_visibleButton->GetOn();
 }
 
+EffectLayer *UIEffectLayerRow::GetEffectLayer() const
+{
+    return p_effectLayer;
+}
+
 UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
 {
     return p_visibleButton;
@@ -162,7 +173,7 @@ void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
     {
         EffectLayer::Type type = SCAST<EffectLayer::Type>(
             p_effectLayerTypeInput->GetSelectedValue());
-        p_effectLayer->SetType(type);
+        GetEffectLayer()->SetType(type);
     }
     MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
 }

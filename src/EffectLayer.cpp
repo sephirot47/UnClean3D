@@ -234,6 +234,11 @@ void EffectLayer::SetType(EffectLayer::Type type)
     }
 }
 
+void EffectLayer::SetVisible(bool visible)
+{
+    m_visible = visible;
+}
+
 void EffectLayer::PaintMaskBrush()
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
@@ -312,6 +317,11 @@ void EffectLayer::ClearMask()
     GEngine *ge = GEngine::GetInstance();
     ge->FillTexture(m_maskPingPongTexture0.Get(), Color::Zero());
     ge->FillTexture(m_maskPingPongTexture1.Get(), Color::Zero());
+}
+
+bool EffectLayer::GetVisible()
+{
+    return m_visible;
 }
 
 Mesh *EffectLayer::GetTextureMesh() const
