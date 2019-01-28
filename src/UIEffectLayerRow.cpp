@@ -97,10 +97,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         "", EditorTextureFactory::GetEyeIcon());
     p_visibleButton->GetIcon()->SetTint(Color::Black());
     p_visibleButton->SetOn(true);
-    p_visibleButton->AddClickedCallback([this]() {
-        p_effectLayer->SetVisible(p_visibleButton->GetOn());
-        MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
-    });
     p_visibleButton->GetGameObject()->SetParent(this);
 
     UIButton *removeLayerButton = GameObjectFactory::CreateUIButton(
@@ -121,6 +117,12 @@ UIEffectLayerRow::~UIEffectLayerRow()
 void UIEffectLayerRow::Update()
 {
     GameObject::Update();
+
+    if (GetEffectLayer()->GetVisible() != p_visibleButton->GetOn())
+    {
+        GetEffectLayer()->SetVisible(p_visibleButton->GetOn());
+        MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
+    }
 }
 
 String UIEffectLayerRow::GetName() const
