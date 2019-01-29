@@ -1,3 +1,6 @@
+#properties
+#cull_face none
+
 #vertex
 
 layout(location = 0) in vec3 vinTexturePosition;
@@ -25,7 +28,6 @@ uniform sampler2D PreviousMaskTexture;
 uniform mat4 SceneModelMatrix;
 uniform mat4 SceneNormalMatrix;
 uniform mat4 SceneProjectionViewMatrix;
-uniform vec3 CameraForward;
 uniform vec3 CameraWorldPos;
 uniform vec2 ViewportSize;
 uniform bool MaskBrushErasing;
@@ -46,7 +48,7 @@ void main()
         GetMaskBrushApportationFromCurrentMousePosition(worldPos.xyz,
                                                         SceneProjectionViewMatrix,
                                                         ViewportSize);
-    if (MaskBrushDepthAware)
+    if (false && MaskBrushDepthAware && maskApportation > 0)
     {
         vec4 projectedPos = SceneProjectionViewMatrix * worldPos;
         projectedPos /= projectedPos.w;
@@ -75,12 +77,15 @@ void main()
             }
         }
     }
+
     if (MaskBrushErasing)
     {
         maskApportation *= -1;
     }
+
     OutColor = vec4(worldPos.xyz, 1);
     OutColor = previousMask + vec4(maskApportation, 0, 0, 1);
 }
+
 
 

@@ -244,9 +244,11 @@ void EffectLayer::PaintMaskBrush()
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
     GL::Push(GL::Pushable::BLEND_STATES);
+    GL::Push(GL::Pushable::CULL_FACE);
     GL::Push(GL::Pushable::VIEWPORT);
 
     GL::Disable(GL::Enablable::BLEND);
+    GL::Disable(GL::Enablable::CULL_FACE);
 
     m_maskPingPongTexture0.Get()->ResizeConservingData(
         GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
@@ -279,8 +281,6 @@ void EffectLayer::PaintMaskBrush()
         sp->SetVector2("ViewportSize", Vector2(cam->GetRenderSize()));
         sp->SetTexture2D("SceneDepth",
                          cam->GetGBuffer()->GetSceneDepthStencilTexture());
-        sp->SetVector3("CameraForward",
-                       cam->GetGameObject()->GetTransform()->GetForward());
         sp->SetVector3("CameraWorldPos",
                        cam->GetGameObject()->GetTransform()->GetPosition());
         sp->SetTexture2D(
@@ -300,6 +300,7 @@ void EffectLayer::PaintMaskBrush()
     p_lastDrawnMaskTexture = drawTexture;
 
     GL::Pop(GL::Pushable::VIEWPORT);
+    GL::Pop(GL::Pushable::CULL_FACE);
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
