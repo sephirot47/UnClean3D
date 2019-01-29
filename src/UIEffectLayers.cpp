@@ -19,6 +19,7 @@
 #include "Bang/UIVerticalLayout.h"
 #include "BangEditor/EditorTextureFactory.h"
 
+#include "Clipboard.h"
 #include "ControlPanel.h"
 #include "MainScene.h"
 #include "UIEffectLayerRow.h"
@@ -116,10 +117,10 @@ void UIEffectLayers::Update()
     {
         if (GetSelectedEffectLayerRow())
         {
-            if (Input::GetKeyDown(Key::D) && Input::GetKey(Key::LCTRL))
+            if (Input::GetKey(Key::LCTRL) && Input::GetKeyDown(Key::D))
             {
                 int prevSelectedIndex = p_uiList->GetSelectedIndex();
-                GetSelectedEffectLayerRow()->Duplicate();
+                Duplicate(GetSelectedEffectLayerRow());
                 p_uiList->MoveItem(GetSelectedEffectLayerRow(),
                                    prevSelectedIndex + 1);
             }
@@ -137,8 +138,8 @@ UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
     UIEffectLayerRow *effectLayerRow =
         new UIEffectLayerRow(this, newEffectLayer);
 
-    p_uiList->AddItem(effectLayerRow);
-    p_effectLayerRows.PushBack(effectLayerRow);
+    p_uiList->AddItem(effectLayerRow, 0);
+    p_effectLayerRows.PushFront(effectLayerRow);
 
     SetSelection(effectLayerRow);
 
@@ -181,6 +182,16 @@ void UIEffectLayers::ClearLayersSelection()
 bool UIEffectLayers::IsAllLayersVisibleButtonOn() const
 {
     return p_allLayersVisibleButton->GetOn();
+}
+
+void UIEffectLayers::Duplicate(UIEffectLayerRow *effectLayerRow)
+{
+    Clipboard *cb = Clipboard::GetInstance();
+    cb->CopyEffectLayer(effectLayerRow->GetEffectLayer());
+    UIEffectLayerRow *newEffectLayerRow =
+        MainScene::GetInstance()->GetControlPanel()->CreateNewEffectLayer();
+    cb->PasteEffectLayer(newEffectLayerRow->GetEffectLayer());
+    newEffectLayerRow->UpdateFromEffectLayer();
 }
 
 uint UIEffectLayers::GetSelectedEffectLayerRowIndex() const

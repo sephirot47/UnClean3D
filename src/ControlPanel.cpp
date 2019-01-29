@@ -405,11 +405,12 @@ void ControlPanel::ExportModel()
     GetView3DScene()->RestoreOriginalAlbedoTexturesToModel();
 }
 
-EffectLayer *ControlPanel::CreateNewEffectLayer()
+UIEffectLayerRow *ControlPanel::CreateNewEffectLayer()
 {
     EffectLayer *newEL = GetView3DScene()->CreateNewEffectLayer();
-    p_uiEffectLayers->CreateNewEffectLayerRow(newEL);
-    return newEL;
+    UIEffectLayerRow *newELRow =
+        p_uiEffectLayers->CreateNewEffectLayerRow(newEL);
+    return newELRow;
 }
 
 void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)

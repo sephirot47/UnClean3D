@@ -426,7 +426,7 @@ EffectLayer *View3DScene::CreateNewEffectLayer()
         Array<EffectLayer *> &effectLayers = mrInfo.effectLayers;
 
         newEffectLayer = new EffectLayer(mr);
-        effectLayers.PushBack(newEffectLayer);
+        effectLayers.PushFront(newEffectLayer);
     }
     return newEffectLayer;
 }

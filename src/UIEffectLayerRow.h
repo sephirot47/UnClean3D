@@ -37,8 +37,6 @@ public:
     void Update() override;
     void UpdateFromEffectLayer();
 
-    void Duplicate();
-
     String GetName() const;
     bool IsSelected() const;
     bool GetIsLayerVisible() const;

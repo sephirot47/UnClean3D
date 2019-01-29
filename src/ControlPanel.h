@@ -25,6 +25,7 @@ class SerializableInspectorWidget;
 
 class EffectLayer;
 class UIEffectLayers;
+class UIEffectLayerRow;
 class View3DScene;
 using namespace BangEditor;
 
@@ -41,7 +42,7 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
-    EffectLayer *CreateNewEffectLayer();
+    UIEffectLayerRow *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetMaskUniforms(ShaderProgram *sp);
 

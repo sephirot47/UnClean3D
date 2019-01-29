@@ -145,7 +145,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         MenuItem *duplicateEffectMenuItem =
             menuRootItem->AddItem("Duplicate Effect");
         duplicateEffectMenuItem->SetSelectedCallback(
-            [this](MenuItem *) { Duplicate(); });
+            [this](MenuItem *) { p_uiEffectLayers->Duplicate(this); });
 
         pasteMaskMenuItem->SetOverAndActionEnabled(cb->HasCopiedMaskTexture());
     });
@@ -170,16 +170,6 @@ void UIEffectLayerRow::UpdateFromEffectLayer()
 {
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
     p_effectLayerTypeInput->SetSelectionByValue(GetEffectLayer()->GetType());
-}
-
-void UIEffectLayerRow::Duplicate()
-{
-    Clipboard *cb = Clipboard::GetInstance();
-    cb->CopyEffectLayer(GetEffectLayer());
-    EffectLayer *newEffectLayer =
-        MainScene::GetInstance()->GetControlPanel()->CreateNewEffectLayer();
-    cb->PasteEffectLayer(newEffectLayer);
-    UpdateFromEffectLayer();
 }
 
 String UIEffectLayerRow::GetName() const

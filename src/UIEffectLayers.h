@@ -34,6 +34,7 @@ public:
     void SetSelection(UIEffectLayerRow *effectLayerRow);
     void ClearLayersSelection();
     bool IsAllLayersVisibleButtonOn() const;
+    void Duplicate(UIEffectLayerRow *effectLayerRow);
 
     uint GetSelectedEffectLayerRowIndex() const;
     UIEffectLayerRow *GetSelectedEffectLayerRow() const;
