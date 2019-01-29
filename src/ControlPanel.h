@@ -23,6 +23,7 @@ class UIInputColor;
 class SerializableInspectorWidget;
 }
 
+class EffectLayer;
 class UIEffectLayers;
 class View3DScene;
 using namespace BangEditor;
@@ -40,7 +41,7 @@ public:
     void OpenModel(const Path &modelPath);
     void ExportModel();
 
-    void CreateNewEffectLayer();
+    EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetMaskUniforms(ShaderProgram *sp);
 

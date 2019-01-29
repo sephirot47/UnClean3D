@@ -35,10 +35,14 @@ public:
 
     // GameObject
     void Update() override;
+    void UpdateFromEffectLayer();
+
+    void Duplicate();
 
     String GetName() const;
     bool IsSelected() const;
     bool GetIsLayerVisible() const;
+    UIFocusable *GetFocusable() const;
     EffectLayer *GetEffectLayer() const;
     UIToolButton *GetIsLayerVisibleButton() const;
 

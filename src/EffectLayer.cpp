@@ -124,6 +124,8 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 
         GetTextureMesh()->UpdateVAOs();
     }
+
+    SetType(EffectLayer::Type::DIRT);
 }
 
 EffectLayer::~EffectLayer()
@@ -208,7 +210,7 @@ void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
 void EffectLayer::SetType(EffectLayer::Type type)
 {
     EffectLayerImplementation *effLayerImpl = GetImplementation();
-    if (!effLayerImpl || effLayerImpl->GetEffectLayerType() != type)
+    if (!effLayerImpl || GetType() != type)
     {
         EffectLayerImplementation *newImpl = nullptr;
         switch (type)
@@ -231,6 +233,7 @@ void EffectLayer::SetType(EffectLayer::Type type)
 
             default: ASSERT(false);
         }
+        m_type = type;
         SetImplementation(newImpl);
     }
 }
@@ -321,9 +324,14 @@ void EffectLayer::ClearMask()
     ge->FillTexture(m_maskPingPongTexture1.Get(), Color::Zero());
 }
 
-bool EffectLayer::GetVisible()
+bool EffectLayer::GetVisible() const
 {
     return m_visible;
+}
+
+EffectLayer::Type EffectLayer::GetType() const
+{
+    return m_type;
 }
 
 Mesh *EffectLayer::GetTextureMesh() const
@@ -354,6 +362,14 @@ EffectLayerImplementation *EffectLayer::GetImplementation() const
 ShaderProgram *EffectLayer::GetGenerateEffectTextureShaderProgram() const
 {
     return m_generateEffectTextureSP.Get();
+}
+
+void EffectLayer::Reflect()
+{
+    Serializable::Reflect();
+
+    BANG_REFLECT_VAR_MEMBER(EffectLayer, "Visible", SetVisible, GetVisible);
+    BANG_REFLECT_VAR_ENUM("Type", SetType, GetType, EffectLayer::Type);
 }
 
 void EffectLayer::GrowTextureBorders(Texture2D *texture)

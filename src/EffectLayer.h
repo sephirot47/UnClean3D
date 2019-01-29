@@ -20,9 +20,11 @@ class MeshRenderer;
 class ControlPanel;
 class EffectLayerImplementation;
 
-class EffectLayer
+class EffectLayer : public Serializable
 {
 public:
+    SERIALIZABLE(EffectLayer);
+
     enum Type
     {
         DIRT = 0,
@@ -31,7 +33,7 @@ public:
         WAVE_BUMPS
     };
 
-    EffectLayer(MeshRenderer *mr);
+    EffectLayer(MeshRenderer *mr = nullptr);
     virtual ~EffectLayer();
 
     virtual void GenerateEffectTexture();
@@ -45,7 +47,8 @@ public:
 
     void FillMask();
     void ClearMask();
-    bool GetVisible();
+    bool GetVisible() const;
+    EffectLayer::Type GetType() const;
     Texture2D *GetEffectTexture() const;
     Texture2D *GetMaskTexture() const;
     ControlPanel *GetControlPanel() const;
@@ -53,7 +56,11 @@ public:
     EffectLayerImplementation *GetImplementation() const;
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
+    // IReflectable
+    virtual void Reflect() override;
+
 private:
+    EffectLayer::Type m_type = Undef<EffectLayer::Type>();
     EffectLayerImplementation *p_implementation = nullptr;  // PIMPL
     MeshRenderer *p_meshRenderer = nullptr;
 

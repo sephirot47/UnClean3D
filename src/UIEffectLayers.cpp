@@ -1,8 +1,10 @@
 #include "UIEffectLayers.h"
 
 #include "Bang/GameObjectFactory.h"
+#include "Bang/Input.h"
 #include "Bang/RectTransform.h"
 #include "Bang/UIButton.h"
+#include "Bang/UICanvas.h"
 #include "Bang/UIContentSizeFitter.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -109,6 +111,24 @@ void UIEffectLayers::Update()
         allLayersVisibleButtonOn &= layerRow->GetIsLayerVisible();
     }
     p_allLayersVisibleButton->SetOn(allLayersVisibleButtonOn);
+
+    if (GetRectTransform()->IsMouseOver(true))
+    {
+        if (GetSelectedEffectLayerRow())
+        {
+            if (Input::GetKeyDown(Key::D) && Input::GetKey(Key::LCTRL))
+            {
+                int prevSelectedIndex = p_uiList->GetSelectedIndex();
+                GetSelectedEffectLayerRow()->Duplicate();
+                p_uiList->MoveItem(GetSelectedEffectLayerRow(),
+                                   prevSelectedIndex + 1);
+            }
+            else if (Input::GetKeyDown(Key::DELETE))
+            {
+                RemoveEffectLayer(GetSelectedEffectLayerRowIndex());
+            }
+        }
+    }
 }
 
 UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
@@ -130,6 +150,17 @@ void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
     UIEffectLayerRow *effectLayerRow = p_effectLayerRows[effectLayerIdx];
     p_uiList->RemoveItem(effectLayerRow);
     p_effectLayerRows.RemoveByIndex(effectLayerIdx);
+    MainScene::GetInstance()->GetView3DScene()->RemoveEffectLayer(
+        effectLayerIdx);
+
+    if (effectLayerIdx >= p_effectLayerRows.Size())
+    {
+        SetSelection(p_effectLayerRows.Size() - 1);
+    }
+    else
+    {
+        SetSelection(effectLayerIdx);
+    }
 }
 
 void UIEffectLayers::SetSelection(uint idx)

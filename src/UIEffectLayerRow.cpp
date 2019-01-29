@@ -129,6 +129,25 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             cb->PasteMaskTexture(GetEffectLayer()->GetMaskTexture());
         });
         pasteMaskMenuItem->SetOverAndActionEnabled(cb->HasCopiedMaskTexture());
+
+        menuRootItem->AddSeparator();
+
+        MenuItem *copyEffectMenuItem = menuRootItem->AddItem("Copy Effect");
+        copyEffectMenuItem->SetSelectedCallback(
+            [this, cb](MenuItem *) { cb->CopyEffectLayer(GetEffectLayer()); });
+
+        MenuItem *pasteEffectMenuItem = menuRootItem->AddItem("Paste Effect");
+        pasteEffectMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
+            cb->PasteEffectLayer(GetEffectLayer());
+            UpdateFromEffectLayer();
+        });
+
+        MenuItem *duplicateEffectMenuItem =
+            menuRootItem->AddItem("Duplicate Effect");
+        duplicateEffectMenuItem->SetSelectedCallback(
+            [this](MenuItem *) { Duplicate(); });
+
+        pasteMaskMenuItem->SetOverAndActionEnabled(cb->HasCopiedMaskTexture());
     });
 }
 
@@ -147,6 +166,22 @@ void UIEffectLayerRow::Update()
     }
 }
 
+void UIEffectLayerRow::UpdateFromEffectLayer()
+{
+    p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
+    p_effectLayerTypeInput->SetSelectionByValue(GetEffectLayer()->GetType());
+}
+
+void UIEffectLayerRow::Duplicate()
+{
+    Clipboard *cb = Clipboard::GetInstance();
+    cb->CopyEffectLayer(GetEffectLayer());
+    EffectLayer *newEffectLayer =
+        MainScene::GetInstance()->GetControlPanel()->CreateNewEffectLayer();
+    cb->PasteEffectLayer(newEffectLayer);
+    UpdateFromEffectLayer();
+}
+
 String UIEffectLayerRow::GetName() const
 {
     return p_layerNameLabel->GetText()->GetContent();
@@ -160,6 +195,11 @@ bool UIEffectLayerRow::IsSelected() const
 bool UIEffectLayerRow::GetIsLayerVisible() const
 {
     return p_visibleButton->GetOn();
+}
+
+UIFocusable *UIEffectLayerRow::GetFocusable() const
+{
+    return p_focusable;
 }
 
 EffectLayer *UIEffectLayerRow::GetEffectLayer() const
