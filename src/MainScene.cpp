@@ -12,6 +12,7 @@
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
 
+#include "Clipboard.h"
 #include "ControlPanel.h"
 #include "EffectLayerDirt.h"
 #include "SceneImage.h"
@@ -36,10 +37,13 @@ MainScene::MainScene()
 
     p_controlPanel = new ControlPanel();
     GetControlPanel()->SetParent(this);
+
+    m_clipboard = new Clipboard();
 }
 
 MainScene::~MainScene()
 {
+    delete m_clipboard;
 }
 
 void MainScene::Start()
@@ -175,6 +179,11 @@ ControlPanel *MainScene::GetControlPanel() const
 MainScene::SceneMode MainScene::GetSceneMode() const
 {
     return m_renderMode;
+}
+
+Clipboard *MainScene::GetClipboard() const
+{
+    return m_clipboard;
 }
 
 MainScene *MainScene::GetInstance()

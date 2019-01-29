@@ -12,6 +12,7 @@ class View3DScene;
 class TexturesScene;
 class SceneImage;
 class ControlPanel;
+class Clipboard;
 
 using namespace Bang;
 
@@ -44,6 +45,7 @@ public:
     SceneImage *GetSceneImage() const;
     ControlPanel *GetControlPanel() const;
     SceneMode GetSceneMode() const;
+    Clipboard *GetClipboard() const;
 
     static MainScene *GetInstance();
 
@@ -58,6 +60,7 @@ private:
     TexturesScene *p_texturesScene = nullptr;
     SceneImage *p_sceneImage = nullptr;
     ControlPanel *p_controlPanel = nullptr;
+    Clipboard *m_clipboard = nullptr;
 
     Scene *GetCurrentRenderScene() const;
 };

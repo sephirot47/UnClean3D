@@ -13,9 +13,15 @@ class UIComboBox;
 class UIFocusable;
 class UIToolButton;
 class UIImageRenderer;
-}
+};
+
+namespace BangEditor
+{
+class UIContextMenu;
+};
 
 using namespace Bang;
+using namespace BangEditor;
 
 class EffectLayer;
 class UIEffectLayers;
@@ -39,6 +45,7 @@ public:
 private:
     UIEffectLayers *p_uiEffectLayers = nullptr;
     EffectLayer *p_effectLayer = nullptr;
+    UIContextMenu *p_contextMenu = nullptr;
 
     UIToolButton *p_visibleButton = nullptr;
     UIFocusable *p_focusable = nullptr;

@@ -18,7 +18,9 @@
 #include "Bang/UIVerticalLayout.h"
 
 #include "BangEditor/EditorTextureFactory.h"
+#include "BangEditor/UIContextMenu.h"
 
+#include "Clipboard.h"
 #include "ControlPanel.h"
 #include "EffectLayer.h"
 #include "MainScene.h"
@@ -26,6 +28,7 @@
 #include "View3DScene.h"
 
 using namespace Bang;
+using namespace BangEditor;
 
 UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
                                    EffectLayer *effectLayer)
@@ -108,6 +111,25 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         cp->RemoveEffectLayer(idx);
     });
     removeLayerButton->GetGameObject()->SetParent(this);
+
+    p_contextMenu = AddComponent<UIContextMenu>();
+    p_contextMenu->SetFocusable(p_focusable);
+    p_contextMenu->SetSceneToBeAddedTo(MainScene::GetInstance());
+    p_contextMenu->SetCreateContextMenuCallback([this](MenuItem *menuRootItem) {
+        menuRootItem->SetFontSize(12);
+
+        Clipboard *cb = Clipboard::GetInstance();
+        MenuItem *copyMaskMenuItem = menuRootItem->AddItem("Copy Mask");
+        copyMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
+            cb->CopyMaskTexture(GetEffectLayer()->GetMaskTexture());
+        });
+
+        MenuItem *pasteMaskMenuItem = menuRootItem->AddItem("Paste Mask");
+        pasteMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
+            cb->PasteMaskTexture(GetEffectLayer()->GetMaskTexture());
+        });
+        pasteMaskMenuItem->SetOverAndActionEnabled(cb->HasCopiedMaskTexture());
+    });
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()

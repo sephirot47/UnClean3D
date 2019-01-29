@@ -155,6 +155,7 @@ void EffectLayer::GenerateEffectTexture()
 
     Vector2i texSize = GetControlPanel()->GetTextureSize();
     GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
+    GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
