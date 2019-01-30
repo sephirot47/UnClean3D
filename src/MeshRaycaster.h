@@ -11,8 +11,17 @@ using namespace Bang;
 class MeshRaycaster
 {
 public:
-    MeshRaycaster(Mesh *mesh);
+    MeshRaycaster();
     virtual ~MeshRaycaster();
+
+    void SetMesh(Mesh *mesh);
+
+    void Raycast(const Ray &worldSpaceRay,
+                 const Matrix4 &localToWorldMatrix,
+                 bool *intersected,
+                 Vector3 *collisionPoint);
+    bool RaycastTest(const Ray &worldSpaceRay,
+                     const Matrix4 &localToWorldMatrix);
 
     Mesh *GetMesh() const;
 

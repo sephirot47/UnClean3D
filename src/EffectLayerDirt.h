@@ -4,11 +4,11 @@
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
-#include "EffectLayerImplementation.h"
+#include "EffectLayerImplementationGPU.h"
 
 using namespace Bang;
 
-class EffectLayerDirt : public EffectLayerImplementation
+class EffectLayerDirt : public EffectLayerImplementationGPU
 {
 public:
     SERIALIZABLE(EffectLayerDirt)

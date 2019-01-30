@@ -25,6 +25,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerCompositer.h"
+#include "EffectLayerImplementation.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -132,7 +133,12 @@ void View3DScene::Update()
             Array<EffectLayer *> allEffectLayers = GetAllEffectLayers();
             for (EffectLayer *effectLayer : allEffectLayers)
             {
-                effectLayer->GenerateEffectTexture();
+                if (effectLayer->GetImplementation() &&
+                    effectLayer->GetImplementation()
+                        ->CanGenerateEffectTextureInRealTime())
+                {
+                    effectLayer->GenerateEffectTexture();
+                }
             }
 
             CompositeTextures();

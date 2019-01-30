@@ -102,7 +102,7 @@ String EffectLayerDirt::GetTypeName() const
 
 void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
-    EffectLayerImplementation::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
 
     sp->SetFloat("DirtOctaves", 8.0f);
     sp->SetFloat("DirtFrequency", (1.0f / m_stainsSize));

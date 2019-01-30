@@ -29,6 +29,7 @@
 #include "Bang/VBO.h"
 
 #include "ControlPanel.h"
+#include "EffectLayerAmbientOcclusion.h"
 #include "EffectLayerDirt.h"
 #include "EffectLayerFractalBumps.h"
 #include "EffectLayerImplementation.h"
@@ -135,55 +136,31 @@ EffectLayer::~EffectLayer()
 
 void EffectLayer::GenerateEffectTexture()
 {
-    if (!GetImplementation())
+    if (EffectLayerImplementation *impl = GetImplementation())
     {
-        return;
+        Vector2i texSize = GetControlPanel()->GetTextureSize();
+        GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
+        GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
+
+        impl->GenerateEffectTexture(GetEffectTexture());
     }
-
-    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-    GL::Push(GL::Pushable::SHADER_PROGRAM);
-    GL::Push(GL::Pushable::BLEND_STATES);
-    GL::Push(GL::Pushable::CULL_FACE);
-    GL::Push(GL::Pushable::VIEWPORT);
-
-    GL::Disable(GL::Enablable::BLEND);
-    GL::Disable(GL::Enablable::CULL_FACE);
-
-    // Bind framebuffer and render to texture
-    m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(GetEffectTexture(),
-                                        GL::Attachment::COLOR0);
-    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-
-    Vector2i texSize = GetControlPanel()->GetTextureSize();
-    GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
-    GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
-    GL::SetViewport(0, 0, texSize.x, texSize.y);
-
-    ShaderProgram *sp = GetGenerateEffectTextureShaderProgram();
-    sp->Bind();
-    GetImplementation()->SetGenerateEffectUniforms(sp);
-
-    GL::ClearColorBuffer(Color::Zero());
-    GL::Render(GetTextureMesh()->GetVAO(),
-               GL::Primitive::TRIANGLES,
-               GetTextureMesh()->GetNumVerticesIds());
-
-    GL::Pop(GL::Pushable::VIEWPORT);
-    GL::Pop(GL::Pushable::CULL_FACE);
-    GL::Pop(GL::Pushable::BLEND_STATES);
-    GL::Pop(GL::Pushable::SHADER_PROGRAM);
-    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-
     GrowTextureBorders(GetEffectTexture());
 }
 
 void EffectLayer::ReloadShaders()
 {
-    m_generateEffectTextureSP.Get()->ReImport();
+    if (EffectLayerImplementation *impl = GetImplementation())
+    {
+        impl->ReloadShaders();
+    }
     m_paintMaskBrushSP.Get()->ReImport();
     m_growTextureBordersSP.Get()->ReImport();
-    GenerateEffectTexture();
+
+    if (GetImplementation() &&
+        GetImplementation()->CanGenerateEffectTextureInRealTime())
+    {
+        GenerateEffectTexture();
+    }
 }
 
 void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
@@ -198,11 +175,6 @@ void EffectLayer::SetImplementation(EffectLayerImplementation *impl)
     if (GetImplementation())
     {
         GetImplementation()->p_effectLayer = this;
-
-        Path spPath =
-            GetImplementation()->GetGenerateEffectTextureShaderProgramPath();
-        m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
-
         MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
     }
 }
@@ -231,9 +203,14 @@ void EffectLayer::SetType(EffectLayer::Type type)
                 newImpl = new EffectLayerWaveBumps();
                 break;
 
+            case EffectLayer::Type::AMBIENT_OCCLUSION:
+                newImpl = new EffectLayerAmbientOcclusion();
+                break;
+
             default: ASSERT(false);
         }
         m_type = type;
+        newImpl->Init();
         SetImplementation(newImpl);
     }
 }
@@ -357,11 +334,6 @@ ControlPanel *EffectLayer::GetControlPanel() const
 EffectLayerImplementation *EffectLayer::GetImplementation() const
 {
     return p_implementation;
-}
-
-ShaderProgram *EffectLayer::GetGenerateEffectTextureShaderProgram() const
-{
-    return m_generateEffectTextureSP.Get();
 }
 
 void EffectLayer::Reflect()

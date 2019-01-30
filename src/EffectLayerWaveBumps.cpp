@@ -84,7 +84,7 @@ Path EffectLayerWaveBumps::GetGenerateEffectTextureShaderProgramPath() const
 
 void EffectLayerWaveBumps::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
-    EffectLayerImplementation::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
 
     sp->SetFloat("WaveBumpsGlobalHeight", m_globalHeight);
     sp->SetFloat("WaveBumpsFrequencyX", m_frequencyX);

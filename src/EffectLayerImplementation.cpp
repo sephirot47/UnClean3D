@@ -18,13 +18,12 @@ EffectLayerImplementation::~EffectLayerImplementation()
         &IEventsDestroy::OnDestroyed, this);
 }
 
-void EffectLayerImplementation::SetGenerateEffectUniforms(ShaderProgram *sp)
+void EffectLayerImplementation::Init()
 {
-    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
-    sp->SetMatrix4("SceneModelMatrix",
-                   view3DScene->GetModelGameObject()
-                       ->GetTransform()
-                       ->GetLocalToWorldMatrix());
+}
+
+void EffectLayerImplementation::ReloadShaders()
+{
 }
 
 EffectLayer *EffectLayerImplementation::GetEffectLayer() const

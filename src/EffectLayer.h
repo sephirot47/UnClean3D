@@ -30,11 +30,12 @@ public:
         DIRT = 0,
         NORMAL_LINES,
         FRACTAL_BUMPS,
-        WAVE_BUMPS
+        WAVE_BUMPS,
+        AMBIENT_OCCLUSION
     };
 
     EffectLayer(MeshRenderer *mr = nullptr);
-    virtual ~EffectLayer();
+    virtual ~EffectLayer() override;
 
     virtual void GenerateEffectTexture();
     void ReloadShaders();
@@ -54,7 +55,6 @@ public:
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
     EffectLayerImplementation *GetImplementation() const;
-    ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
     // IReflectable
     virtual void Reflect() override;
@@ -69,7 +69,6 @@ private:
     Framebuffer *m_framebuffer = nullptr;
     bool m_visible = true;
     AH<Mesh> m_textureMesh;
-    AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_paintMaskBrushSP;
     AH<ShaderProgram> m_growTextureBordersSP;
 

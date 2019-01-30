@@ -93,6 +93,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
                                     EffectLayer::Type::FRACTAL_BUMPS);
     p_effectLayerTypeInput->AddItem("Wave Bumps",
                                     EffectLayer::Type::WAVE_BUMPS);
+    p_effectLayerTypeInput->AddItem("Ambient Occlusion",
+                                    EffectLayer::Type::AMBIENT_OCCLUSION);
     p_effectLayerTypeInput->SetSelectionByIndex(0);
     p_effectLayerTypeInput->GetGameObject()->SetParent(this);
 

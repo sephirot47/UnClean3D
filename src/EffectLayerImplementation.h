@@ -6,6 +6,11 @@
 
 #include "EffectLayer.h"
 
+namespace Bang
+{
+class Texture2D;
+};
+
 using namespace Bang;
 
 class EffectLayerImplementation : public Serializable,
@@ -17,17 +22,18 @@ public:
     EffectLayerImplementation();
     virtual ~EffectLayerImplementation() override;
 
+    virtual void Init();
+    virtual void ReloadShaders();
+    virtual bool CanGenerateEffectTextureInRealTime() const = 0;
+
+    virtual void GenerateEffectTexture(Texture2D *effectTexture) = 0;
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
-    EffectLayer *GetEffectLayer() const;
     virtual String GetTypeName() const = 0;
+    EffectLayer *GetEffectLayer() const;
 
     // Serializable
     virtual void Reflect() override;
     void Invalidate();
-
-protected:
-    virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
-    virtual void SetGenerateEffectUniforms(ShaderProgram *sp);
 
 private:
     EffectLayer *p_effectLayer = nullptr;

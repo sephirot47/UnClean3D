@@ -4,14 +4,31 @@
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
+#include "EffectLayerImplementation.h"
+
 using namespace Bang;
 
-class EffectLayerImplementationCPU
+class EffectLayerImplementationCPU : public EffectLayerImplementation
 {
 public:
+    SERIALIZABLE_ABSTRACT(EffectLayerImplementationCPU)
+
     EffectLayerImplementationCPU();
-    virtual ~EffectLayerImplementationCPU();
+    virtual ~EffectLayerImplementationCPU() override;
+
+    // EffectLayerImplementation
+    virtual void Init() override;
+    void GenerateEffectTexture(Texture2D *effectTexture) override;
+    virtual bool CanGenerateEffectTextureInRealTime() const override;
+
+    // IReflectable
+    virtual void Reflect() override;
+
+protected:
+    virtual void GenerateEffectImage(Image *effectImage) = 0;
+
+private:
+    Image m_image;
 };
 
-#endif // EFFECTLAYERIMPLEMENTATIONCPU_H
-
+#endif  // EFFECTLAYERIMPLEMENTATIONCPU_H

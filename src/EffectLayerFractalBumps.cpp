@@ -49,7 +49,7 @@ Path EffectLayerFractalBumps::GetGenerateEffectTextureShaderProgramPath() const
 
 void EffectLayerFractalBumps::SetGenerateEffectUniforms(ShaderProgram *sp)
 {
-    EffectLayerImplementation::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
 
     sp->SetFloat("FractalBumpsHeight", m_height);
     sp->SetFloat("FractalBumpsFrequency", m_frequency);
