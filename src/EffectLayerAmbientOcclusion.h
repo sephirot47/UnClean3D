@@ -8,8 +8,6 @@
 
 using namespace Bang;
 
-class MeshRaycaster;
-
 class EffectLayerAmbientOcclusion : public EffectLayerImplementationCPU
 {
 public:
@@ -23,9 +21,6 @@ public:
 
     virtual EffectLayer::Type GetEffectLayerType() const override;
     virtual String GetTypeName() const override;
-
-private:
-    MeshRaycaster *m_meshRaycaster = nullptr;
 };
 
 #endif  // EFFECTLAYERAMBIENTOCCLUSION_H

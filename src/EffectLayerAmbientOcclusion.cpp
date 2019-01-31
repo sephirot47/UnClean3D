@@ -9,33 +9,16 @@
 #include "Bang/Transform.h"
 #include "Bang/Triangle2D.h"
 
-#include "MeshRaycaster.h"
 #include "View3DScene.h"
 
 using namespace Bang;
 
 EffectLayerAmbientOcclusion::EffectLayerAmbientOcclusion()
 {
-    m_meshRaycaster = new MeshRaycaster();
-
-    /*
-    AABox box;
-    box.SetMin(Vector3(2, 3, 1));
-    box.SetMax(Vector3(4, 5, 3));
-
-    Triangle tri;
-    tri.SetPoint(0, Vector3(2.5, 4, 1.5));
-    tri.SetPoint(1, Vector3(2.5, 3.5, 2));
-    tri.SetPoint(2, Vector3(3, 4, 2));
-
-    Debug_Peek(Geometry::IntersectAABoxTriangle(box, tri));
-    exit(0);
-    */
 }
 
 EffectLayerAmbientOcclusion::~EffectLayerAmbientOcclusion()
 {
-    delete m_meshRaycaster;
 }
 
 using TriId = Mesh::TriangleId;
@@ -131,20 +114,27 @@ void ProcessTriangleTexels(
                 const auto &closeTriangleIds = triGrid[x][y][z].triIds;
 
                 uint intersectedRays = 0;
-                uint totalRays = 5;
+                uint totalRays = 10;
                 for (uint i = 0; i < totalRays; ++i)
                 {
-                    Ray ray(origin, Random::GetInsideUnitSphere() * 1.0f);
+                    Vector3 rayDir = Random::GetInsideUnitSphere();
+                    if (Vector3::Dot(rayDir, triNormal) < 0.0f)
+                    {
+                        rayDir *= -1.0f;  // Normal hemisphere;
+                    }
+
+                    const float Radius = 0.05f;
+                    Ray ray(origin, rayDir * Radius);
                     for (TriId closeTriId : closeTriangleIds)
                     {
                         Triangle closeTri = mesh->GetTriangle(closeTriId);
                         closeTri = localToWorldMatrix * closeTri;
 
-                        float _;
+                        float dist;
                         bool rayIntersected;
                         Geometry::IntersectRayTriangle(
-                            ray, closeTri, &rayIntersected, &_);
-                        if (rayIntersected)
+                            ray, closeTri, &rayIntersected, &dist);
+                        if (rayIntersected && dist < Radius)
                         {
                             ++intersectedRays;
                             break;
@@ -153,9 +143,6 @@ void ProcessTriangleTexels(
                 }
 
                 float ambientOcclusion = (float(intersectedRays) / totalRays);
-                ambientOcclusion =
-                    Math::Map(ambientOcclusion, 0.5f, 1.0f, 0.0f, 1.0f);
-                ambientOcclusion = Math::Clamp(ambientOcclusion, 0.0f, 1.0f);
                 ambientOcclusion = (1.0f - ambientOcclusion);
                 const float &ao = ambientOcclusion;
                 pixelColor = Color(ao, ao, ao, 1.0f);
