@@ -1,5 +1,5 @@
-#ifndef EFFECTLAYERDIRT_H
-#define EFFECTLAYERDIRT_H
+#ifndef EFFECTLAYERAMBIENTOCCLUSIONGPU_H
+#define EFFECTLAYERAMBIENTOCCLUSIONGPU_H
 
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
@@ -8,13 +8,13 @@
 
 using namespace Bang;
 
-class EffectLayerDirt : public EffectLayerImplementationGPU
+class EffectLayerAmbientOcclusionGPU : public EffectLayerImplementationGPU
 {
 public:
-    SERIALIZABLE(EffectLayerDirt)
+    SERIALIZABLE(EffectLayerAmbientOcclusionGPU)
 
-    EffectLayerDirt();
-    virtual ~EffectLayerDirt() override;
+    EffectLayerAmbientOcclusionGPU();
+    virtual ~EffectLayerAmbientOcclusionGPU() override;
 
     // Serializable
     virtual void Reflect() override;
@@ -26,14 +26,11 @@ protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
                                            MeshRenderer *meshRend) override;
+    virtual bool CanGenerateEffectTextureInRealTime() const override;
 
 private:
-    float m_seed = 0.0f;
-    float m_stainsSize = 4.0f;
-    float m_grain = 2.5f;
-    float m_amplitude = 1.0f;
-    Color m_outerColor = Color::Red();
-    Color m_innerColor = Color::Black();
+    uint PositionsTextureSize = 1024;
+    AH<Texture2D> m_trianglePositionsTexture;
 };
 
-#endif  // EFFECTLAYERDIRT_H
+#endif  // EFFECTLAYERAMBIENTOCCLUSIONGPU_H

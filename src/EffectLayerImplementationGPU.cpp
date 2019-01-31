@@ -1,10 +1,9 @@
 #include "EffectLayerImplementationGPU.h"
 
 #include "Bang/Framebuffer.h"
+#include "Bang/MeshRenderer.h"
 #include "Bang/ShaderProgramFactory.h"
 #include "Bang/Transform.h"
-
-#include "View3DScene.h"
 
 using namespace Bang;
 
@@ -31,7 +30,8 @@ void EffectLayerImplementationGPU::ReloadShaders()
 }
 
 void EffectLayerImplementationGPU::GenerateEffectTexture(
-    Texture2D *effectTexture)
+    Texture2D *effectTexture,
+    MeshRenderer *meshRend)
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
@@ -53,7 +53,7 @@ void EffectLayerImplementationGPU::GenerateEffectTexture(
     if (ShaderProgram *sp = GetGenerateEffectTextureShaderProgram())
     {
         sp->Bind();
-        SetGenerateEffectUniforms(sp);
+        SetGenerateEffectUniforms(sp, meshRend);
 
         GL::ClearColorBuffer(Color::Zero());
         GL::Render(GetEffectLayer()->GetTextureMesh()->GetVAO(),
@@ -73,13 +73,13 @@ bool EffectLayerImplementationGPU::CanGenerateEffectTextureInRealTime() const
     return true;
 }
 
-void EffectLayerImplementationGPU::SetGenerateEffectUniforms(ShaderProgram *sp)
+void EffectLayerImplementationGPU::SetGenerateEffectUniforms(
+    ShaderProgram *sp,
+    MeshRenderer *meshRend)
 {
-    View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
-    sp->SetMatrix4("SceneModelMatrix",
-                   view3DScene->GetModelGameObject()
-                       ->GetTransform()
-                       ->GetLocalToWorldMatrix());
+    sp->SetMatrix4(
+        "SceneModelMatrix",
+        meshRend->GetGameObject()->GetTransform()->GetLocalToWorldMatrix());
 }
 
 ShaderProgram *

@@ -31,7 +31,8 @@ public:
         NORMAL_LINES,
         FRACTAL_BUMPS,
         WAVE_BUMPS,
-        AMBIENT_OCCLUSION
+        AMBIENT_OCCLUSION,
+        AMBIENT_OCCLUSION_GPU
     };
 
     EffectLayer(MeshRenderer *mr = nullptr);
@@ -49,6 +50,7 @@ public:
     void FillMask();
     void ClearMask();
     bool GetVisible() const;
+    Mesh *GetMesh() const;
     EffectLayer::Type GetType() const;
     Texture2D *GetEffectTexture() const;
     Texture2D *GetMaskTexture() const;

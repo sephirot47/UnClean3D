@@ -59,9 +59,10 @@ Path EffectLayerNormalLines::GetGenerateEffectTextureShaderProgramPath() const
         "GenerateEffectTextureNormalLines.bushader");
 }
 
-void EffectLayerNormalLines::SetGenerateEffectUniforms(ShaderProgram *sp)
+void EffectLayerNormalLines::SetGenerateEffectUniforms(ShaderProgram *sp,
+                                                       MeshRenderer *meshRend)
 {
-    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
     sp->SetFloat("NormalLinesHeight", m_height);
     sp->SetFloat("NormalLinesFrequency", (30.0f - m_width));

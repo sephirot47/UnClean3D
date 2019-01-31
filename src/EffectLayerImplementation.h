@@ -26,7 +26,8 @@ public:
     virtual void ReloadShaders();
     virtual bool CanGenerateEffectTextureInRealTime() const = 0;
 
-    virtual void GenerateEffectTexture(Texture2D *effectTexture) = 0;
+    virtual void GenerateEffectTexture(Texture2D *effectTexture,
+                                       MeshRenderer *meshRend) = 0;
     virtual EffectLayer::Type GetEffectLayerType() const = 0;
     virtual String GetTypeName() const = 0;
     EffectLayer *GetEffectLayer() const;

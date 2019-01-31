@@ -19,13 +19,15 @@ public:
     // EffectLayerImplementation
     virtual void Init() override;
     virtual void ReloadShaders() override;
-    void GenerateEffectTexture(Texture2D *effectTexture) override;
+    void GenerateEffectTexture(Texture2D *effectTexture,
+                               MeshRenderer *meshRend) override;
     virtual bool CanGenerateEffectTextureInRealTime() const override;
 
 protected:
     // EffectLayerImplementation
     virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
-    virtual void SetGenerateEffectUniforms(ShaderProgram *sp);
+    virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
+                                           MeshRenderer *meshRend);
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
 private:

@@ -18,14 +18,16 @@ public:
 
     // EffectLayerImplementation
     virtual void Init() override;
-    void GenerateEffectTexture(Texture2D *effectTexture) override;
+    void GenerateEffectTexture(Texture2D *effectTexture,
+                               MeshRenderer *meshRend) override;
     virtual bool CanGenerateEffectTextureInRealTime() const override;
 
     // IReflectable
     virtual void Reflect() override;
 
 protected:
-    virtual void GenerateEffectImage(Image *effectImage) = 0;
+    virtual void GenerateEffectImage(Image *effectImage,
+                                     MeshRenderer *meshRend) = 0;
 
 private:
     Image m_image;

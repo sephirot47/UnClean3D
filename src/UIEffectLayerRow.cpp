@@ -95,8 +95,10 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
                                     EffectLayer::Type::WAVE_BUMPS);
     p_effectLayerTypeInput->AddItem("Ambient Occlusion",
                                     EffectLayer::Type::AMBIENT_OCCLUSION);
+    p_effectLayerTypeInput->AddItem("Ambient Occlusion GPU",
+                                    EffectLayer::Type::AMBIENT_OCCLUSION_GPU);
     p_effectLayerTypeInput->SetSelectionByValue(
-        EffectLayer::Type::AMBIENT_OCCLUSION);
+        EffectLayer::Type::AMBIENT_OCCLUSION_GPU);
     p_effectLayerTypeInput->GetGameObject()->SetParent(this);
 
     p_visibleButton = GameObjectFactory::CreateUIToolButton(

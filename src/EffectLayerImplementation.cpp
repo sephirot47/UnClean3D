@@ -34,6 +34,14 @@ EffectLayer *EffectLayerImplementation::GetEffectLayer() const
 void EffectLayerImplementation::Reflect()
 {
     Serializable::Reflect();
+
+    if (!CanGenerateEffectTextureInRealTime())
+    {
+        BANG_REFLECT_BUTTON(EffectLayerImplementation, "Generate", [this]() {
+            GetEffectLayer()->GenerateEffectTexture();
+            MainScene::GetInstance()->GetView3DScene()->CompositeTextures();
+        });
+    }
 }
 
 void EffectLayerImplementation::Invalidate()

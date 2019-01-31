@@ -40,7 +40,7 @@ EffectLayerDirt::~EffectLayerDirt()
 
 void EffectLayerDirt::Reflect()
 {
-    EffectLayerImplementation::Reflect();
+    EffectLayerImplementationGPU::Reflect();
 
     ReflectVar<float>("Intensity",
                       [this](float intensity) {
@@ -100,9 +100,10 @@ String EffectLayerDirt::GetTypeName() const
     return "Dirt";
 }
 
-void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp)
+void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp,
+                                                MeshRenderer *meshRend)
 {
-    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
     sp->SetFloat("DirtOctaves", 8.0f);
     sp->SetFloat("DirtFrequency", (1.0f / m_stainsSize));

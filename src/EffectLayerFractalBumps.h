@@ -24,7 +24,8 @@ protected:
     virtual EffectLayer::Type GetEffectLayerType() const override;
     virtual String GetTypeName() const override;
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
-    virtual void SetGenerateEffectUniforms(ShaderProgram *sp) override;
+    virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
+                                           MeshRenderer *meshRend) override;
 
 private:
     float m_height = 0.5f;

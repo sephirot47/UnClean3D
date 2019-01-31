@@ -155,88 +155,72 @@ void ProcessTriangleTexels(
     }
 }
 
-void EffectLayerAmbientOcclusion::GenerateEffectImage(Image *effectImage)
+void EffectLayerAmbientOcclusion::GenerateEffectImage(Image *effectImage,
+                                                      MeshRenderer *meshRend)
 {
-    GameObject *modelGameObject =
-        MainScene::GetInstance()->GetView3DScene()->GetModelGameObject();
-    if (!modelGameObject)
+    Time startTime = Time::GetNow();
+
+    Mesh *mesh = meshRend->GetMesh();
+
+    const Matrix4 &localToWorldMatrix =
+        meshRend->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
+    AABox meshAABox = mesh->GetAABBox();
+    meshAABox = localToWorldMatrix * meshAABox;
+    meshAABox.SetMin(meshAABox.GetMin() - meshAABox.GetSize() * 0.01f);
+    meshAABox.SetMax(meshAABox.GetMax() + meshAABox.GetSize() * 0.01f);
+
+    Vector3 gridCellSize = Vector3(meshAABox.GetSize() / 20.0f);
+    Vector3i numBlocks = Vector3i(meshAABox.GetSize() / gridCellSize);
+
+    UniformGrid triGrid(numBlocks.x,
+                        UniformGrid2(numBlocks.y, UniformGrid1(numBlocks.z)));
+    Array<Array<Vector3i>> triangleLocationsInGrid(mesh->GetNumTriangles());
+
+    const uint meshNumTris = mesh->GetNumTriangles();
+    for (uint x = 0; x < numBlocks.x; ++x)
     {
-        return;
-    }
-
-    Time time = Time::GetNow();
-
-    Array<MeshRenderer *> mrs =
-        modelGameObject->GetComponentsInDescendantsAndThis<MeshRenderer>();
-    for (MeshRenderer *mr : mrs)
-    {
-        Mesh *mesh = mr->GetMesh();
-        Material *mat = mr->GetMaterial();
-        if (!mat || !mesh || mesh->GetUvsPool().IsEmpty())
+        for (uint y = 0; y < numBlocks.y; ++y)
         {
-            continue;
-        }
-
-        const Matrix4 &localToWorldMatrix =
-            mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
-        AABox meshAABox = mesh->GetAABBox();
-        meshAABox = localToWorldMatrix * meshAABox;
-        meshAABox.SetMin(meshAABox.GetMin() - meshAABox.GetSize() * 0.01f);
-        meshAABox.SetMax(meshAABox.GetMax() + meshAABox.GetSize() * 0.01f);
-
-        Vector3 gridCellSize = Vector3(meshAABox.GetSize() / 20.0f);
-        Vector3i numBlocks = Vector3i(meshAABox.GetSize() / gridCellSize);
-
-        UniformGrid triGrid(
-            numBlocks.x, UniformGrid2(numBlocks.y, UniformGrid1(numBlocks.z)));
-        Array<Array<Vector3i>> triangleLocationsInGrid(mesh->GetNumTriangles());
-
-        const uint meshNumTris = mesh->GetNumTriangles();
-        for (uint x = 0; x < numBlocks.x; ++x)
-        {
-            for (uint y = 0; y < numBlocks.y; ++y)
+            for (uint z = 0; z < numBlocks.z; ++z)
             {
-                for (uint z = 0; z < numBlocks.z; ++z)
-                {
-                    const auto &GCS = gridCellSize;
-                    AABox cellBox;
-                    cellBox.SetMin(meshAABox.GetMin() + Vector3(x, y, z) * GCS -
-                                   GCS * 0.2f);
-                    cellBox.SetMax(cellBox.GetMin() + GCS * 1.2f);
-                    triGrid[x][y][z].cellBox = cellBox;
+                const auto &GCS = gridCellSize;
+                AABox cellBox;
+                cellBox.SetMin(meshAABox.GetMin() + Vector3(x, y, z) * GCS -
+                               GCS * 0.2f);
+                cellBox.SetMax(cellBox.GetMin() + GCS * 1.2f);
+                triGrid[x][y][z].cellBox = cellBox;
 
-                    Array<TriId> &triIdsInThisCell = triGrid[x][y][z].triIds;
-                    for (TriId triId = 0; triId < meshNumTris; ++triId)
+                Array<TriId> &triIdsInThisCell = triGrid[x][y][z].triIds;
+                for (TriId triId = 0; triId < meshNumTris; ++triId)
+                {
+                    Triangle triangle = mesh->GetTriangle(triId);
+                    triangle = localToWorldMatrix * triangle;
+                    if (Geometry::IntersectAABoxTriangle(cellBox, triangle))
                     {
-                        Triangle triangle = mesh->GetTriangle(triId);
-                        triangle = localToWorldMatrix * triangle;
-                        if (Geometry::IntersectAABoxTriangle(cellBox, triangle))
-                        {
-                            triangleLocationsInGrid[triId].PushBack(
-                                Vector3i(x, y, z));
-                            triIdsInThisCell.PushBack(triId);
-                        }
+                        triangleLocationsInGrid[triId].PushBack(
+                            Vector3i(x, y, z));
+                        triIdsInThisCell.PushBack(triId);
                     }
                 }
             }
         }
-
-        const Vector2 imgSize = Vector2(effectImage->GetSize());
-        Array<Array<bool>> paintedTexels(imgSize.y,
-                                         Array<bool>(imgSize.x, false));
-        for (uint triId = 0; triId < meshNumTris; ++triId)
-        {
-            ProcessTriangleTexels(triId,
-                                  imgSize,
-                                  mesh,
-                                  triGrid,
-                                  triangleLocationsInGrid,
-                                  localToWorldMatrix,
-                                  paintedTexels,
-                                  effectImage);
-        }
     }
-    Debug_Peek((Time::GetNow() - time).GetSeconds());
+
+    const Vector2 imgSize = Vector2(effectImage->GetSize());
+    Array<Array<bool>> paintedTexels(imgSize.y, Array<bool>(imgSize.x, false));
+    for (uint triId = 0; triId < meshNumTris; ++triId)
+    {
+        ProcessTriangleTexels(triId,
+                              imgSize,
+                              mesh,
+                              triGrid,
+                              triangleLocationsInGrid,
+                              localToWorldMatrix,
+                              paintedTexels,
+                              effectImage);
+    }
+
+    Debug_Peek((Time::GetNow() - startTime).GetSeconds());
 }
 
 EffectLayer::Type EffectLayerAmbientOcclusion::GetEffectLayerType() const

@@ -17,7 +17,8 @@ public:
     virtual ~EffectLayerAmbientOcclusion() override;
 
     // EffectLayerImplementationCPU
-    virtual void GenerateEffectImage(Image *effectImage) override;
+    virtual void GenerateEffectImage(Image *effectImage,
+                                     MeshRenderer *meshRend) override;
 
     virtual EffectLayer::Type GetEffectLayerType() const override;
     virtual String GetTypeName() const override;

@@ -82,9 +82,10 @@ Path EffectLayerWaveBumps::GetGenerateEffectTextureShaderProgramPath() const
         "GenerateEffectTextureWaveBumps.bushader");
 }
 
-void EffectLayerWaveBumps::SetGenerateEffectUniforms(ShaderProgram *sp)
+void EffectLayerWaveBumps::SetGenerateEffectUniforms(ShaderProgram *sp,
+                                                     MeshRenderer *meshRend)
 {
-    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp);
+    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
     sp->SetFloat("WaveBumpsGlobalHeight", m_globalHeight);
     sp->SetFloat("WaveBumpsFrequencyX", m_frequencyX);

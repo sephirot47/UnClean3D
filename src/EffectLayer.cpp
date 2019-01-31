@@ -30,6 +30,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerAmbientOcclusion.h"
+#include "EffectLayerAmbientOcclusionGPU.h"
 #include "EffectLayerDirt.h"
 #include "EffectLayerFractalBumps.h"
 #include "EffectLayerImplementation.h"
@@ -142,9 +143,9 @@ void EffectLayer::GenerateEffectTexture()
         GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
         GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
 
-        impl->GenerateEffectTexture(GetEffectTexture());
+        impl->GenerateEffectTexture(GetEffectTexture(), p_meshRenderer);
+        GrowTextureBorders(GetEffectTexture());
     }
-    GrowTextureBorders(GetEffectTexture());
 }
 
 void EffectLayer::ReloadShaders()
@@ -205,6 +206,10 @@ void EffectLayer::SetType(EffectLayer::Type type)
 
             case EffectLayer::Type::AMBIENT_OCCLUSION:
                 newImpl = new EffectLayerAmbientOcclusion();
+                break;
+
+            case EffectLayer::Type::AMBIENT_OCCLUSION_GPU:
+                newImpl = new EffectLayerAmbientOcclusionGPU();
                 break;
 
             default: ASSERT(false);
@@ -304,6 +309,11 @@ void EffectLayer::ClearMask()
 bool EffectLayer::GetVisible() const
 {
     return m_visible;
+}
+
+Mesh *EffectLayer::GetMesh() const
+{
+    return p_meshRenderer ? p_meshRenderer->GetMesh() : nullptr;
 }
 
 EffectLayer::Type EffectLayer::GetType() const

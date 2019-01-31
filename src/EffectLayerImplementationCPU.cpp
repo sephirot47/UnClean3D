@@ -22,10 +22,11 @@ void EffectLayerImplementationCPU::Init()
 }
 
 void EffectLayerImplementationCPU::GenerateEffectTexture(
-    Texture2D *effectTexture)
+    Texture2D *effectTexture,
+    MeshRenderer *meshRend)
 {
     m_image.Resize(effectTexture->GetWidth(), effectTexture->GetHeight());
-    GenerateEffectImage(&m_image);
+    GenerateEffectImage(&m_image, meshRend);
     effectTexture->Import(m_image);
 }
 
@@ -37,9 +38,4 @@ bool EffectLayerImplementationCPU::CanGenerateEffectTextureInRealTime() const
 void EffectLayerImplementationCPU::Reflect()
 {
     EffectLayerImplementation::Reflect();
-
-    BANG_REFLECT_BUTTON(EffectLayerImplementationCPU, "Generate", [this]() {
-        GetEffectLayer()->GenerateEffectTexture();
-        MainScene::GetInstance()->GetView3DScene()->CompositeTextures();
-    });
 }

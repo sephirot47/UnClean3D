@@ -7,6 +7,7 @@ const int EFFECT_LAYER_TYPE_NORMAL_LINES = 1;
 const int EFFECT_LAYER_TYPE_FRACTAL_BUMPS = 2;
 const int EFFECT_LAYER_TYPE_WAVE_BUMPS = 3;
 const int EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION = 4;
+const int EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION_GPU = 5;
 
 uniform sampler2D EffectLayerTexture;
 uniform sampler2D EffectLayerMaskTexture;
@@ -63,10 +64,11 @@ void main()
             break;
 
             case EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION:
+            case EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION_GPU:
             {
                 float ambientOcclusion = effectLayerColor.r;
                 outAlbedo.rgb *= ambientOcclusion;
-                // outAlbedo.rgb = effectLayerColor.rgb;
+                outAlbedo.rgb = effectLayerColor.rgb;
             }
             break;
 
