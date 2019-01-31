@@ -44,7 +44,7 @@ public:
 
     UIEffectLayerRow *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
-    void SetMaskUniforms(ShaderProgram *sp);
+    void SetControlPanelUniforms(ShaderProgram *sp);
 
     void FillMask();
     void ClearMask();
@@ -75,6 +75,7 @@ private:
     // Mask
     GameObject *p_maskParamsGo = nullptr;
     GameObject *p_maskSubParamsGo = nullptr;
+    UIToolButton *p_seeWithLightButton = nullptr;
     UIToolButton *p_maskBrushDrawButton = nullptr;
     UIToolButton *p_eraseMaskButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;

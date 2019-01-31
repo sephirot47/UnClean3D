@@ -162,6 +162,10 @@ ControlPanel::ControlPanel()
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
             ->SetParent(this);
 
+        p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
+        p_seeWithLightButton->SetOn(true);
+        CreateRow("", p_seeWithLightButton->GetGameObject())->SetParent(this);
+
         p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
         p_texturesSizeInput->AddItem("64", 64);
         p_texturesSizeInput->AddItem("128", 128);
@@ -419,10 +423,11 @@ void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
     p_uiEffectLayers->RemoveEffectLayer(effectLayerIdx);
 }
 
-void ControlPanel::SetMaskUniforms(ShaderProgram *sp)
+void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
 {
     sp->Bind();
 
+    sp->SetBool("WithLight", p_seeWithLightButton->GetOn());
     sp->SetBool("SeeMask", GetMaskBrushEnabled() && p_seeMaskButton->GetOn());
     sp->SetBool("MaskBrushEnabled", GetMaskBrushEnabled());
     sp->SetBool("MaskBrushDepthAware", p_maskBrushDepthAwareButton->GetOn());

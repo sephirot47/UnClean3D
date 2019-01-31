@@ -66,6 +66,7 @@ void main()
             {
                 float ambientOcclusion = effectLayerColor.r;
                 outAlbedo.rgb *= ambientOcclusion;
+                // outAlbedo.rgb = effectLayerColor.rgb;
             }
             break;
 

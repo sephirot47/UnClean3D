@@ -267,7 +267,7 @@ void EffectLayer::PaintMaskBrush()
         sp->SetTexture2D(
             "SceneNormalTexture",
             cam->GetGBuffer()->GetAttachmentTex2D(GBuffer::AttNormal));
-        GetControlPanel()->SetMaskUniforms(m_paintMaskBrushSP.Get());
+        GetControlPanel()->SetControlPanelUniforms(m_paintMaskBrushSP.Get());
     }
 
     m_framebuffer->Bind();

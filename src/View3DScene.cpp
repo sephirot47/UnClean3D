@@ -478,7 +478,7 @@ void View3DScene::ApplyCompositeTexturesToModel()
 
 void View3DScene::SetViewUniforms()
 {
-    GetControlPanel()->SetMaskUniforms(m_view3DShaderProgram.Get());
+    GetControlPanel()->SetControlPanelUniforms(m_view3DShaderProgram.Get());
 }
 
 void View3DScene::PaintMaskBrush()

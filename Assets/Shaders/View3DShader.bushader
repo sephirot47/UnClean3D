@@ -17,6 +17,7 @@
 #include "MaterialPBRUniforms.glsl"
 
 uniform bool SeeMask;
+uniform bool WithLight;
 uniform sampler2D MaskTexture;
 
 in vec3 B_FIn_Position;
@@ -58,10 +59,14 @@ void DefaultFragCommonMain(vec4 albedoColor)
     float pixelMetalness = texture(B_MetalnessTexture, B_FIn_AlbedoUv).r * B_MaterialMetalness;
     vec3 finalPosition = B_FIn_Position.xyz;
 
-    float receivesLighting = B_MaterialReceivesLighting ? 0.25 : 0;
-    if (receivesLighting > 0 && B_ReceivesShadows)
+    float receivesLighting = 0;
+    if (WithLight)
     {
-        receivesLighting = 0.75;
+        receivesLighting = B_MaterialReceivesLighting ? 0.25 : 0;
+        if (receivesLighting > 0 && B_ReceivesShadows)
+        {
+            receivesLighting = 0.75;
+        }
     }
 
     /*
@@ -76,7 +81,7 @@ void DefaultFragCommonMain(vec4 albedoColor)
     }
     */
 
-    vec4 finalColor = vec4(0,0,0,1);
+    vec4 finalColor;
     if (SeeMask)
     {
         // float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
@@ -85,11 +90,16 @@ void DefaultFragCommonMain(vec4 albedoColor)
         pixelMetalness = 0;
         pixelRoughness = 1;
     }
-    else
+    else if (WithLight)
     {
         finalColor = GetIBLAmbientColor(B_MaterialReceivesLighting,
                                         finalPosition,  finalNormal, finalAlbedo,
                                         pixelRoughness, pixelMetalness);
+    }
+    else
+    {
+        finalColor.rgb = finalAlbedo.rgb;
+        receivesLighting = 0;
     }
 
     B_GIn_Albedo = vec4(finalAlbedo.rgb, 1);
