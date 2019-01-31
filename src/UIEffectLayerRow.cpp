@@ -7,6 +7,7 @@
 #include "Bang/Random.h"
 #include "Bang/RectTransform.h"
 #include "Bang/UIButton.h"
+#include "Bang/UICanvas.h"
 #include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -95,19 +96,22 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             "UIEffectLayerRowTypeComboBox");
         p_effectLayerTypeInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_effectLayerTypeInput->AddItem("Dirt", EffectLayer::Type::DIRT);
-        p_effectLayerTypeInput->AddItem("Normal Lines",
-                                        EffectLayer::Type::NORMAL_LINES);
-        p_effectLayerTypeInput->AddItem("Fractal Bumps",
-                                        EffectLayer::Type::FRACTAL_BUMPS);
-        p_effectLayerTypeInput->AddItem("Wave Bumps",
-                                        EffectLayer::Type::WAVE_BUMPS);
-        p_effectLayerTypeInput->AddItem("Ambient Occlusion",
-                                        EffectLayer::Type::AMBIENT_OCCLUSION);
+        p_effectLayerTypeInput->AddItem("Dirt",
+                                        SCAST<int>(EffectLayer::Type::DIRT));
         p_effectLayerTypeInput->AddItem(
-            "Ambient Occlusion GPU", EffectLayer::Type::AMBIENT_OCCLUSION_GPU);
+            "Normal Lines", SCAST<int>(EffectLayer::Type::NORMAL_LINES));
+        p_effectLayerTypeInput->AddItem(
+            "Fractal Bumps", SCAST<int>(EffectLayer::Type::FRACTAL_BUMPS));
+        p_effectLayerTypeInput->AddItem(
+            "Wave Bumps", SCAST<int>(EffectLayer::Type::WAVE_BUMPS));
+        p_effectLayerTypeInput->AddItem(
+            "Ambient Occlusion",
+            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION));
+        p_effectLayerTypeInput->AddItem(
+            "Ambient Occlusion GPU",
+            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION_GPU));
         p_effectLayerTypeInput->SetSelectionByValue(
-            EffectLayer::Type::AMBIENT_OCCLUSION_GPU);
+            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION_GPU));
         p_effectLayerTypeInput->GetGameObject()->SetParent(effectRow);
 
         p_visibleButton = GameObjectFactory::CreateUIToolButton(
@@ -204,16 +208,19 @@ void UIEffectLayerRow::Update()
         p_innerList->ClearSelection();
     }
 
+    bool somethingBeingDragged =
+        UICanvas::GetActive(this)->GetCurrentDragDroppable();
     for (GameObject *maskRow : p_maskRows)
     {
-        maskRow->SetEnabled(IsSelected());
+        maskRow->SetEnabled(!somethingBeingDragged && IsSelected());
     }
 }
 
 void UIEffectLayerRow::UpdateFromEffectLayer()
 {
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
-    p_effectLayerTypeInput->SetSelectionByValue(GetEffectLayer()->GetType());
+    p_effectLayerTypeInput->SetSelectionByValue(
+        SCAST<int>(GetEffectLayer()->GetType()));
 }
 
 String UIEffectLayerRow::GetName() const

@@ -25,7 +25,7 @@ class EffectLayer : public Serializable
 public:
     SERIALIZABLE(EffectLayer);
 
-    enum Type
+    enum class Type
     {
         DIRT = 0,
         NORMAL_LINES,
@@ -33,6 +33,13 @@ public:
         WAVE_BUMPS,
         AMBIENT_OCCLUSION,
         AMBIENT_OCCLUSION_GPU
+    };
+
+    enum class MaskType
+    {
+        FRACTAL,
+        NORMAL_BASED,
+        AMBIENT_OCCLUSION
     };
 
     EffectLayer(MeshRenderer *mr = nullptr);

@@ -181,7 +181,8 @@ void EffectLayerCompositer::CompositeLayers(
             EffectLayer *effectLayer = effectLayers[i];
             if (auto elImpl = effectLayer->GetImplementation())
             {
-                sp->SetInt("EffectLayerType", elImpl->GetEffectLayerType());
+                sp->SetInt("EffectLayerType",
+                           SCAST<int>(elImpl->GetEffectLayerType()));
             }
 
             sp->SetTexture2D("EffectLayerTexture",
