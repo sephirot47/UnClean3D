@@ -9,6 +9,7 @@
 namespace Bang
 {
 class UIComboBox;
+class UIImageRenderer;
 };
 
 using namespace Bang;

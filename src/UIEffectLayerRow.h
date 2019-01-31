@@ -5,11 +5,11 @@
 #include "Bang/GameObject.h"
 #include "Bang/IEventsUIList.h"
 #include "Bang/IEventsValueChanged.h"
+#include "Bang/UIList.h"
 #include "BangEditor/BangEditor.h"
 
 namespace Bang
 {
-class UIList;
 class UILabel;
 class UIComboBox;
 class UIFocusable;
@@ -26,6 +26,7 @@ using namespace Bang;
 using namespace BangEditor;
 
 class EffectLayer;
+class UIEffectLayerMaskRow;
 class UIEffectLayers;
 
 class UIEffectLayerRow : public GameObject,
@@ -48,18 +49,19 @@ public:
     UIToolButton *GetIsLayerVisibleButton() const;
 
 private:
-    UIImageRenderer *p_whiteBackground = nullptr;
     UIEffectLayers *p_uiEffectLayers = nullptr;
     EffectLayer *p_effectLayer = nullptr;
     UIContextMenu *p_contextMenu = nullptr;
 
-    UIList *p_innerList = nullptr;
-    Array<GameObject *> p_maskRows;
+    UIList *p_maskRowsList = nullptr;
+    Array<UIEffectLayerMaskRow *> p_maskRows;
 
     UIToolButton *p_visibleButton = nullptr;
     UIFocusable *p_focusable = nullptr;
     UIComboBox *p_effectLayerTypeInput = nullptr;
     UILabel *p_layerNameLabel = nullptr;
+
+    void OnMasksListCallback(GameObject *item, UIList::Action action);
 
     // IEventsValueChanged
     void OnValueChanged(EventEmitter<IEventsValueChanged> *ee) override;

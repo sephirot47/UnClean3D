@@ -113,7 +113,7 @@ void UIEffectLayers::Update()
     }
     p_allLayersVisibleButton->SetOn(allLayersVisibleButtonOn);
 
-    if (GetRectTransform()->IsMouseOver(true))
+    if (GetRectTransform()->IsMouseOver(false))
     {
         if (GetSelectedEffectLayerRow())
         {
@@ -192,6 +192,11 @@ void UIEffectLayers::Duplicate(UIEffectLayerRow *effectLayerRow)
         MainScene::GetInstance()->GetControlPanel()->CreateNewEffectLayer();
     cb->PasteEffectLayer(newEffectLayerRow->GetEffectLayer());
     newEffectLayerRow->UpdateFromEffectLayer();
+}
+
+UIList *UIEffectLayers::GetList() const
+{
+    return p_uiList;
 }
 
 uint UIEffectLayers::GetSelectedEffectLayerRowIndex() const

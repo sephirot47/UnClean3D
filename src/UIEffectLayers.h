@@ -36,6 +36,7 @@ public:
     bool IsAllLayersVisibleButtonOn() const;
     void Duplicate(UIEffectLayerRow *effectLayerRow);
 
+    UIList *GetList() const;
     uint GetSelectedEffectLayerRowIndex() const;
     UIEffectLayerRow *GetSelectedEffectLayerRow() const;
     const Array<UIEffectLayerRow *> &GetUIEffectLayerRows() const;

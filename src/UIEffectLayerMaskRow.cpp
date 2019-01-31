@@ -35,8 +35,9 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
         le->SetFlexibleWidth(1.0f);
 
         UIHorizontalLayout *hl = innerHLGo->AddComponent<UIHorizontalLayout>();
-        hl->SetPaddings(10);
-        hl->SetPaddingLeft(40);
+        hl->SetPaddings(2);
+        hl->SetPaddingLeft(10);
+        hl->SetPaddingRight(10);
 
         UILabel *label = GameObjectFactory::CreateUILabel();
         label->GetText()->SetContent("Mask");

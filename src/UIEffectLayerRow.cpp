@@ -43,10 +43,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_uiEffectLayers = uiEffectLayers;
     p_effectLayer = effectLayer;
 
-    UIHorizontalLayout *mainHL = AddComponent<UIHorizontalLayout>();
-
-    p_whiteBackground = AddComponent<UIImageRenderer>();
-    p_whiteBackground->SetTint(Color::White());
+    UIVerticalLayout *mainVL = AddComponent<UIVerticalLayout>();
 
     GameObject *effectRow = GameObjectFactory::CreateUIGameObject();
     {
@@ -174,17 +171,22 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         });
     }
 
-    p_innerList = GameObjectFactory::CreateUIList(false);
-    UILayoutElement *innerListLE =
-        p_innerList->GetGameObject()->AddComponent<UILayoutElement>();
-    innerListLE->SetFlexibleWidth(1.0f);
+    effectRow->SetParent(this);
 
-    p_innerList->AddItem(effectRow);
+    p_maskRowsList = GameObjectFactory::CreateUIList(false);
+
     UIEffectLayerMaskRow *maskRow = new UIEffectLayerMaskRow();
-    p_innerList->AddItem(maskRow);
-    p_innerList->GetGameObject()->SetParent(this);
-
+    p_maskRowsList->AddItem(maskRow);
     p_maskRows.PushBack(maskRow);
+
+    UIEffectLayerMaskRow *maskRow1 = new UIEffectLayerMaskRow();
+    p_maskRowsList->AddItem(maskRow1);
+    p_maskRows.PushBack(maskRow1);
+
+    p_maskRowsList->SetIdleColor(Color::White());
+    p_maskRowsList->ClearSelection();
+
+    p_maskRowsList->GetGameObject()->SetParent(this);
 
     // GameObjectFactory::AddOuterBorder(this);
 }
@@ -205,12 +207,40 @@ void UIEffectLayerRow::Update()
 
     if (!IsSelected())
     {
-        p_innerList->ClearSelection();
+        p_maskRowsList->ClearSelection();
+    }
+    else
+    {
+        if (p_maskRowsList->GetSelectedItem())
+        {
+            if (GetFocusable()->IsMouseOver())
+            {
+                p_uiEffectLayers->GetList()->SetSelectedColor(
+                    UITheme::GetOverColor());
+                if (GetFocusable()->IsBeingPressed())
+                {
+                    p_uiEffectLayers->GetList()->SetSelectedColor(
+                        UITheme::GetSelectedColor());
+                    p_maskRowsList->ClearSelection();
+                }
+            }
+            else
+            {
+                p_uiEffectLayers->GetList()->SetSelectedColor(Color::White());
+            }
+        }
+        else
+        {
+            p_uiEffectLayers->GetList()->SetIdleColor(Color::White());
+            p_uiEffectLayers->GetList()->SetOverColor(UITheme::GetOverColor());
+            p_uiEffectLayers->GetList()->SetSelectedColor(
+                UITheme::GetSelectedColor());
+        }
     }
 
     bool somethingBeingDragged =
         UICanvas::GetActive(this)->GetCurrentDragDroppable();
-    for (GameObject *maskRow : p_maskRows)
+    for (UIEffectLayerMaskRow *maskRow : p_maskRows)
     {
         maskRow->SetEnabled(!somethingBeingDragged && IsSelected());
     }
