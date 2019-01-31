@@ -1,13 +1,15 @@
 #vertex
 
+uniform mat4 SceneModelMatrix;
+
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
 
-out vec3 finPosition;
+out vec3 inWorldPosition;
 
 void main()
 {
-    finPosition = vinPosition;
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -17,7 +19,6 @@ void main()
 #define BANG_FRAGMENT
 #include "SimplexNoise3D.glsl"
 
-uniform mat4 SceneModelMatrix;
 uniform sampler2D DirtTexture;
 uniform float DirtSeed;
 uniform float DirtOctaves;
@@ -28,20 +29,20 @@ uniform float DirtAmplitudeMultiply;
 uniform vec4 DirtOuterColor;
 uniform vec4 DirtInnerColor;
 
-in vec3 finPosition;
+in vec3 inWorldPosition;
 
 layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-    float frequency = DirtFrequency;
+    float frequency = DirtFrequency * 50;
     float amplitude = DirtAmplitude;
 
-    vec3 worldPosition = (SceneModelMatrix * vec4(finPosition, 1)).xyz;
+    vec3 worldPosition = inWorldPosition;
     float noiseValue = snoiseFull(worldPosition,
-                                  DirtFrequency,
+                                  frequency,
                                   DirtFrequencyMultiply,
-                                  DirtAmplitude,
+                                  amplitude,
                                   DirtAmplitudeMultiply,
                                   DirtOctaves,
                                   DirtSeed);

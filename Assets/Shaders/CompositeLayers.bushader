@@ -48,7 +48,6 @@ void main()
     if (mask < 1)
     {
         vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
-        effectLayerColor *= (1.0 - mask);
         switch (EffectLayerType)
         {
             case EFFECT_LAYER_TYPE_DIRT:
@@ -60,6 +59,7 @@ void main()
 
                 outRoughness = clamp(previousRoughness + dirtIntensity, 0, 1);
                 outMetalness = clamp(previousMetalness - dirtIntensity, 0, 1);
+                effectLayerColor *= (1.0 - mask);
             }
             break;
 
@@ -67,8 +67,9 @@ void main()
             case EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION_GPU:
             {
                 float ambientOcclusion = effectLayerColor.r;
+                ambientOcclusion = clamp(ambientOcclusion + mask, 0, 1);
                 outAlbedo.rgb *= ambientOcclusion;
-                outAlbedo.rgb = effectLayerColor.rgb;
+                // outAlbedo.rgb = effectLayerColor.rgb;
             }
             break;
 

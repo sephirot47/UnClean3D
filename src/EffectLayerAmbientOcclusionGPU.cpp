@@ -1,6 +1,7 @@
 #include "EffectLayerAmbientOcclusionGPU.h"
 
 #include "Bang/Assets.h"
+#include "Bang/GEngine.h"
 #include "Bang/Mesh.h"
 #include "Bang/MeshRenderer.h"
 #include "Bang/Paths.h"
@@ -15,6 +16,8 @@ EffectLayerAmbientOcclusionGPU::EffectLayerAmbientOcclusionGPU()
                                                   PositionsTextureSize);
     m_trianglePositionsTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
     m_trianglePositionsTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
+    m_trianglePositionsTexture.Get()->Fill(
+        Color::White(), PositionsTextureSize, PositionsTextureSize);
 }
 
 EffectLayerAmbientOcclusionGPU::~EffectLayerAmbientOcclusionGPU()
