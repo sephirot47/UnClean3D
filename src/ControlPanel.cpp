@@ -441,7 +441,8 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
         GetView3DScene()->GetSelectedEffectLayers();
     if (effectLayers.Size() >= 1)
     {
-        sp->SetTexture2D("MaskTexture", effectLayers.Front()->GetMaskTexture());
+        sp->SetTexture2D("MaskTexture",
+                         effectLayers.Front()->GetMergedMaskTexture());
     }
 }
 
@@ -499,6 +500,16 @@ Vector2i ControlPanel::GetTextureSize() const
 uint ControlPanel::GetSelectedUIEffectLayerIndex() const
 {
     return p_uiEffectLayers->GetSelectedEffectLayerRowIndex();
+}
+
+uint ControlPanel::GetSelectedUIEffectLayerMaskIndex() const
+{
+    if (UIEffectLayerRow *selectedEffectLayerRow =
+            p_uiEffectLayers->GetSelectedEffectLayerRow())
+    {
+        return selectedEffectLayerRow->GetMaskRowsList()->GetSelectedIndex();
+    }
+    return -1u;
 }
 
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)

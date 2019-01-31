@@ -188,7 +188,7 @@ void EffectLayerCompositer::CompositeLayers(
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
             sp->SetTexture2D("EffectLayerMaskTexture",
-                             effectLayer->GetMaskTexture());
+                             effectLayer->GetMergedMaskTexture());
 
             sp->SetTexture2D("PreviousAlbedoTexture", albedoReadTex);
             sp->SetTexture2D("PreviousNormalTexture", normalReadTex);

@@ -49,7 +49,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     {
         UIHorizontalLayout *hl = effectRow->AddComponent<UIHorizontalLayout>();
         hl->SetSpacing(5);
-        hl->SetPaddings(5);
+        hl->SetPaddings(2);
         hl->SetPaddingRight(10);
         hl->SetPaddingLeft(10);
 
@@ -137,12 +137,12 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             Clipboard *cb = Clipboard::GetInstance();
             MenuItem *copyMaskMenuItem = menuRootItem->AddItem("Copy Mask");
             copyMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
-                cb->CopyMaskTexture(GetEffectLayer()->GetMaskTexture());
+                cb->CopyMaskTexture(GetEffectLayer()->GetMergedMaskTexture());
             });
 
             MenuItem *pasteMaskMenuItem = menuRootItem->AddItem("Paste Mask");
             pasteMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
-                cb->PasteMaskTexture(GetEffectLayer()->GetMaskTexture());
+                cb->PasteMaskTexture(GetEffectLayer()->GetMergedMaskTexture());
             });
             pasteMaskMenuItem->SetOverAndActionEnabled(
                 cb->HasCopiedMaskTexture());
@@ -175,20 +175,43 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
 
     p_maskRowsList = GameObjectFactory::CreateUIList(false);
 
-    UIEffectLayerMaskRow *maskRow = new UIEffectLayerMaskRow();
-    p_maskRowsList->AddItem(maskRow);
-    p_maskRows.PushBack(maskRow);
-
-    UIEffectLayerMaskRow *maskRow1 = new UIEffectLayerMaskRow();
-    p_maskRowsList->AddItem(maskRow1);
-    p_maskRows.PushBack(maskRow1);
-
     p_maskRowsList->SetIdleColor(Color::White());
     p_maskRowsList->ClearSelection();
 
     p_maskRowsList->GetGameObject()->SetParent(this);
 
-    // GameObjectFactory::AddOuterBorder(this);
+    p_addNewMaskRow = GameObjectFactory::CreateUIGameObject();
+    {
+        UIHorizontalLayout *hl =
+            p_addNewMaskRow->AddComponent<UIHorizontalLayout>();
+        hl->SetSpacing(5);
+        hl->SetPaddings(5);
+        hl->SetPaddingRight(15);
+
+        UIImageRenderer *bg = p_addNewMaskRow->AddComponent<UIImageRenderer>();
+        bg->SetTint(Color::White());
+
+        UILabel *addLabel = GameObjectFactory::CreateUILabel();
+        addLabel->GetText()->SetContent("Add New Mask");
+        addLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::RIGHT);
+        addLabel->GetGameObject()->SetParent(p_addNewMaskRow);
+
+        p_addNewMaskButton = GameObjectFactory::CreateUIButton(
+            "", EditorTextureFactory::GetAddIcon());
+        p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
+        p_addNewMaskButton->GetGameObject()->SetParent(p_addNewMaskRow);
+
+        p_addNewMaskButton->AddClickedCallback([this]() {
+            GetEffectLayer()->AddNewMask();
+
+            UIEffectLayerMaskRow *maskRow = new UIEffectLayerMaskRow();
+            maskRow->SetUIEffectLayerRow(this);
+            p_maskRowsList->AddItem(maskRow);
+            p_maskRows.PushBack(maskRow);
+
+        });
+    }
+    p_addNewMaskRow->SetParent(this);
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()
@@ -240,10 +263,12 @@ void UIEffectLayerRow::Update()
 
     bool somethingBeingDragged =
         UICanvas::GetActive(this)->GetCurrentDragDroppable();
+    bool showMaskRows = (!somethingBeingDragged && IsSelected());
     for (UIEffectLayerMaskRow *maskRow : p_maskRows)
     {
-        maskRow->SetEnabled(!somethingBeingDragged && IsSelected());
+        maskRow->SetEnabled(showMaskRows);
     }
+    p_addNewMaskRow->SetEnabled(showMaskRows);
 }
 
 void UIEffectLayerRow::UpdateFromEffectLayer()
@@ -251,6 +276,12 @@ void UIEffectLayerRow::UpdateFromEffectLayer()
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
     p_effectLayerTypeInput->SetSelectionByValue(
         SCAST<int>(GetEffectLayer()->GetType()));
+}
+
+void UIEffectLayerRow::RemoveMaskRow(UIEffectLayerMaskRow *maskRow)
+{
+    p_maskRowsList->RemoveItem(maskRow);
+    p_maskRows.Remove(maskRow);
 }
 
 String UIEffectLayerRow::GetName() const
@@ -266,6 +297,11 @@ bool UIEffectLayerRow::IsSelected() const
 bool UIEffectLayerRow::GetIsLayerVisible() const
 {
     return p_visibleButton->GetOn();
+}
+
+UIList *UIEffectLayerRow::GetMaskRowsList() const
+{
+    return p_maskRowsList;
 }
 
 UIFocusable *UIEffectLayerRow::GetFocusable() const

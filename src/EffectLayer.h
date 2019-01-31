@@ -18,6 +18,7 @@ class MeshRenderer;
 }
 
 class ControlPanel;
+class EffectLayerMask;
 class EffectLayerImplementation;
 
 class EffectLayer : public Serializable
@@ -52,6 +53,7 @@ public:
     void SetType(EffectLayer::Type type);
     void SetVisible(bool visible);
 
+    void AddNewMask();
     void PaintMaskBrush();
 
     void FillMask();
@@ -60,15 +62,17 @@ public:
     Mesh *GetMesh() const;
     EffectLayer::Type GetType() const;
     Texture2D *GetEffectTexture() const;
-    Texture2D *GetMaskTexture() const;
+    const Array<EffectLayerMask *> &GetMasks() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
+    Texture2D *GetMergedMaskTexture() const;
     EffectLayerImplementation *GetImplementation() const;
 
     // IReflectable
     virtual void Reflect() override;
 
 private:
+    Array<EffectLayerMask *> m_masks;
     EffectLayer::Type m_type = Undef<EffectLayer::Type>();
     EffectLayerImplementation *p_implementation = nullptr;  // PIMPL
     MeshRenderer *p_meshRenderer = nullptr;
@@ -82,6 +86,7 @@ private:
     AH<ShaderProgram> m_growTextureBordersSP;
 
     AH<Texture2D> m_effectTexture;
+    AH<Texture2D> m_mergedMaskTexture;
     AH<Texture2D> m_maskPingPongTexture0;
     AH<Texture2D> m_maskPingPongTexture1;
     AH<Texture2D> m_growAuxiliarTexture;

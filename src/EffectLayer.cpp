@@ -34,6 +34,7 @@
 #include "EffectLayerDirt.h"
 #include "EffectLayerFractalBumps.h"
 #include "EffectLayerImplementation.h"
+#include "EffectLayerMask.h"
 #include "EffectLayerNormalLines.h"
 #include "EffectLayerWaveBumps.h"
 #include "MainScene.h"
@@ -57,8 +58,10 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_effectTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
     // Create mask textures
+    m_mergedMaskTexture = Assets::Create<Texture2D>();
     m_maskPingPongTexture0 = Assets::Create<Texture2D>();
     m_maskPingPongTexture1 = Assets::Create<Texture2D>();
+    m_mergedMaskTexture.Get()->Fill(Color::Zero(), 1, 1);
     m_maskPingPongTexture0.Get()->Fill(Color::Zero(), 1, 1);
     m_maskPingPongTexture1.Get()->Fill(Color::Zero(), 1, 1);
     p_lastDrawnMaskTexture = m_maskPingPongTexture0.Get();
@@ -133,6 +136,11 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 EffectLayer::~EffectLayer()
 {
     delete m_framebuffer;
+
+    for (EffectLayerMask *effectLayerMask : m_masks)
+    {
+        delete effectLayerMask;
+    }
 }
 
 void EffectLayer::GenerateEffectTexture()
@@ -141,7 +149,6 @@ void EffectLayer::GenerateEffectTexture()
     {
         Vector2i texSize = GetControlPanel()->GetTextureSize();
         GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
-        GetMaskTexture()->ResizeConservingData(texSize.x, texSize.y);
 
         impl->GenerateEffectTexture(GetEffectTexture(), p_meshRenderer);
         GrowTextureBorders(GetEffectTexture());
@@ -225,6 +232,12 @@ void EffectLayer::SetVisible(bool visible)
     m_visible = visible;
 }
 
+void EffectLayer::AddNewMask()
+{
+    EffectLayerMask *newMask = new EffectLayerMask();
+    m_masks.PushBack(newMask);
+}
+
 void EffectLayer::PaintMaskBrush()
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
@@ -240,8 +253,10 @@ void EffectLayer::PaintMaskBrush()
         GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
     m_maskPingPongTexture1.Get()->ResizeConservingData(
         GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
-    GL::SetViewport(
-        0, 0, GetMaskTexture()->GetWidth(), GetMaskTexture()->GetHeight());
+    GL::SetViewport(0,
+                    0,
+                    GetMergedMaskTexture()->GetWidth(),
+                    GetMergedMaskTexture()->GetHeight());
 
     Texture2D *drawTexture =
         p_lastDrawnMaskTexture == m_maskPingPongTexture0.Get()
@@ -326,14 +341,19 @@ Mesh *EffectLayer::GetTextureMesh() const
     return m_textureMesh.Get();
 }
 
+Texture2D *EffectLayer::GetMergedMaskTexture() const
+{
+    return m_mergedMaskTexture.Get();
+}
+
 Texture2D *EffectLayer::GetEffectTexture() const
 {
     return m_effectTexture.Get();
 }
 
-Texture2D *EffectLayer::GetMaskTexture() const
+const Array<EffectLayerMask *> &EffectLayer::GetMasks() const
 {
-    return m_maskPingPongTexture0.Get();
+    return m_masks;
 }
 
 ControlPanel *EffectLayer::GetControlPanel() const

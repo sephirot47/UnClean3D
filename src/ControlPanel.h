@@ -56,6 +56,7 @@ public:
     float GetBaseMetalness() const;
     Vector2i GetTextureSize() const;
     uint GetSelectedUIEffectLayerIndex() const;
+    uint GetSelectedUIEffectLayerMaskIndex() const;
 
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 

@@ -8,12 +8,14 @@
 
 namespace Bang
 {
+class UIButton;
 class UIComboBox;
 class UIImageRenderer;
 };
 
 using namespace Bang;
 
+class UIEffectLayerRow;
 class UIEffectLayerMaskRow : public GameObject,
                              public EventListener<IEventsValueChanged>
 {
@@ -21,8 +23,13 @@ public:
     UIEffectLayerMaskRow();
     virtual ~UIEffectLayerMaskRow() override;
 
+    void SetUIEffectLayerRow(UIEffectLayerRow *uiEffectLayerRow);
+
 private:
+    UIEffectLayerRow *p_effectLayerRow = nullptr;
+
     UIComboBox *p_maskTypeInput = nullptr;
+    UIButton *p_removeButton = nullptr;
 
     // IEventsValueChanged
     virtual void OnValueChanged(EventEmitter<IEventsValueChanged> *ee) override;

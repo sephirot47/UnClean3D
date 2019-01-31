@@ -1,15 +1,19 @@
 #include "UIEffectLayerMaskRow.h"
 
 #include "Bang/GameObjectFactory.h"
+#include "Bang/UIButton.h"
 #include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "BangEditor/EditorTextureFactory.h"
 
 #include "EffectLayer.h"
+#include "UIEffectLayerRow.h"
 
 using namespace Bang;
+using namespace BangEditor;
 
 UIEffectLayerMaskRow::UIEffectLayerMaskRow()
 {
@@ -38,6 +42,7 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
         hl->SetPaddings(2);
         hl->SetPaddingLeft(10);
         hl->SetPaddingRight(10);
+        hl->SetSpacing(5);
 
         UILabel *label = GameObjectFactory::CreateUILabel();
         label->GetText()->SetContent("Mask");
@@ -55,6 +60,13 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
             "Ambient occlusion",
             SCAST<int>(EffectLayer::MaskType::AMBIENT_OCCLUSION));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
+
+        p_removeButton = GameObjectFactory::CreateUIButton(
+            "", EditorTextureFactory::GetLessIcon());
+        p_removeButton->GetIcon()->SetTint(Color::Red());
+        p_removeButton->AddClickedCallback(
+            [this]() { p_effectLayerRow->RemoveMaskRow(this); });
+        p_removeButton->GetGameObject()->SetParent(innerHLGo);
     }
 
     GameObjectFactory::AddInnerBorder(
@@ -64,6 +76,12 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
 
 UIEffectLayerMaskRow::~UIEffectLayerMaskRow()
 {
+}
+
+void UIEffectLayerMaskRow::SetUIEffectLayerRow(
+    UIEffectLayerRow *uiEffectLayerRow)
+{
+    p_effectLayerRow = uiEffectLayerRow;
 }
 
 void UIEffectLayerMaskRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)

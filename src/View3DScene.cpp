@@ -586,6 +586,29 @@ Array<EffectLayer *> View3DScene::GetSelectedEffectLayers() const
     return effectLayers;
 }
 
+Array<EffectLayerMask *> View3DScene::GetSelectedEffectLayerMasks() const
+{
+    Array<EffectLayerMask *> effectLayerMasks;
+    for (auto &it : m_meshRendererToInfo)
+    {
+        const MeshRendererInfo &mrInfo = it.second;
+        const Array<EffectLayer *> &mrEffectLayers = mrInfo.effectLayers;
+        uint elSelIdx = GetControlPanel()->GetSelectedUIEffectLayerIndex();
+        if (elSelIdx < mrEffectLayers.Size())
+        {
+            EffectLayer *efl = mrEffectLayers[elSelIdx];
+            uint maskSelectedIdx =
+                GetControlPanel()->GetSelectedUIEffectLayerMaskIndex();
+            if (maskSelectedIdx != -1u)
+            {
+                EffectLayerMask *eflMask = efl->GetMasks()[maskSelectedIdx];
+                effectLayerMasks.PushBack(eflMask);
+            }
+        }
+    }
+    return effectLayerMasks;
+}
+
 EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
 {
     return m_effectLayerCompositer;

@@ -11,6 +11,7 @@
 namespace Bang
 {
 class UILabel;
+class UIButton;
 class UIComboBox;
 class UIFocusable;
 class UIToolButton;
@@ -41,9 +42,12 @@ public:
     void Update() override;
     void UpdateFromEffectLayer();
 
+    void RemoveMaskRow(UIEffectLayerMaskRow *maskRow);
+
     String GetName() const;
     bool IsSelected() const;
     bool GetIsLayerVisible() const;
+    UIList *GetMaskRowsList() const;
     UIFocusable *GetFocusable() const;
     EffectLayer *GetEffectLayer() const;
     UIToolButton *GetIsLayerVisibleButton() const;
@@ -56,7 +60,9 @@ private:
     UIList *p_maskRowsList = nullptr;
     Array<UIEffectLayerMaskRow *> p_maskRows;
 
+    GameObject *p_addNewMaskRow = nullptr;
     UIToolButton *p_visibleButton = nullptr;
+    UIButton *p_addNewMaskButton = nullptr;
     UIFocusable *p_focusable = nullptr;
     UIComboBox *p_effectLayerTypeInput = nullptr;
     UILabel *p_layerNameLabel = nullptr;

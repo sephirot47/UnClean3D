@@ -125,7 +125,7 @@ void TexturesScene::Update()
         TextureContainer *effectMaskTexCont =
             m_effectLayerToMaskTexCont.Get(effectLayer);
         effectMaskTexCont->GetImageRenderer()->SetImageTexture(
-            effectLayer->GetMaskTexture());
+            effectLayer->GetMergedMaskTexture());
     }
 
     // Remove non used effect layers

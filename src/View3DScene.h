@@ -25,6 +25,7 @@ class LineRenderer;
 using namespace Bang;
 
 class EffectLayer;
+class EffectLayerMask;
 class EffectLayerCompositer;
 class ControlPanel;
 
@@ -58,6 +59,7 @@ public:
     const Vector3 &GetModelOriginalLocalScale() const;
     Array<EffectLayer *> GetAllEffectLayers() const;
     Array<EffectLayer *> GetSelectedEffectLayers() const;
+    Array<EffectLayerMask *> GetSelectedEffectLayerMasks() const;
     EffectLayerCompositer *GetEffectLayerCompositer() const;
     Model *GetCurrentModel() const;
 
