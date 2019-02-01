@@ -8,15 +8,23 @@
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
 #include "BangEditor/EditorTextureFactory.h"
+#include "BangEditor/UIContextMenu.h"
 
+#include "Clipboard.h"
 #include "EffectLayer.h"
+#include "EffectLayerMask.h"
+#include "MainScene.h"
 #include "UIEffectLayerRow.h"
 
 using namespace Bang;
 using namespace BangEditor;
 
-UIEffectLayerMaskRow::UIEffectLayerMaskRow()
+UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
+                                           EffectLayerMask *effectLayerMask)
 {
+    p_uiEffectLayerRow = uiEffectLayerRow;
+    p_effectLayerMask = effectLayerMask;
+
     GameObjectFactory::CreateUIGameObjectInto(this);
 
     UIHorizontalLayout *mainHL = AddComponent<UIHorizontalLayout>();
@@ -33,6 +41,36 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
     }
     leftMarginGo->SetParent(this);
 
+    UIFocusable *focusable = AddComponent<UIFocusable>();
+
+    p_contextMenu = AddComponent<UIContextMenu>();
+    p_contextMenu->SetFocusable(focusable);
+    p_contextMenu->SetSceneToBeAddedTo(MainScene::GetInstance());
+    p_contextMenu->SetCreateContextMenuCallback([this](MenuItem *menuRootItem) {
+        menuRootItem->SetFontSize(12);
+
+        Clipboard *cb = Clipboard::GetInstance();
+        MenuItem *copyMaskMenuItem = menuRootItem->AddItem("Copy Mask");
+        copyMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
+            cb->CopyEffectLayerMask(GetEffectLayerMask());
+        });
+
+        MenuItem *pasteMaskMenuItem = menuRootItem->AddItem("Paste Mask");
+        pasteMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
+            cb->PasteEffectLayerMask(GetEffectLayerMask());
+        });
+        pasteMaskMenuItem->SetOverAndActionEnabled(
+            cb->HasCopiedEffectLayerMask());
+
+        MenuItem *duplicateMaskMenuItem =
+            menuRootItem->AddItem("Duplicate Mask");
+        duplicateMaskMenuItem->SetSelectedCallback(
+            [this](MenuItem *) { GetEffectLayerRow()->Duplicate(this); });
+
+        pasteMaskMenuItem->SetOverAndActionEnabled(
+            cb->HasCopiedEffectLayerMask());
+    });
+
     GameObject *innerHLGo = GameObjectFactory::CreateUIGameObject();
     {
         UILayoutElement *le = innerHLGo->AddComponent<UILayoutElement>();
@@ -44,21 +82,19 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
         hl->SetPaddingRight(10);
         hl->SetSpacing(5);
 
-        UILabel *label = GameObjectFactory::CreateUILabel();
-        label->GetText()->SetContent("Mask");
-        label->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        label->GetGameObject()->SetParent(innerHLGo);
+        p_nameLabel = GameObjectFactory::CreateUILabel();
+        p_nameLabel->GetText()->SetContent("Mask");
+        p_nameLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        p_nameLabel->GetGameObject()->SetParent(innerHLGo);
 
         p_maskTypeInput = GameObjectFactory::CreateUIComboBox();
         p_maskTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
         p_maskTypeInput->AddItem("Fractal",
-                                 SCAST<int>(EffectLayer::MaskType::FRACTAL));
-        p_maskTypeInput->AddItem(
-            "Normal based", SCAST<int>(EffectLayer::MaskType::NORMAL_BASED));
+                                 SCAST<int>(EffectLayerMask::Type::FRACTAL));
         p_maskTypeInput->AddItem(
             "Ambient occlusion",
-            SCAST<int>(EffectLayer::MaskType::AMBIENT_OCCLUSION));
+            SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
         p_removeButton = GameObjectFactory::CreateUIButton(
@@ -78,6 +114,13 @@ UIEffectLayerMaskRow::~UIEffectLayerMaskRow()
 {
 }
 
+void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
+{
+    p_nameLabel->GetText()->SetContent(GetEffectLayerMask()->GetName());
+    p_maskTypeInput->SetSelectionByValue(
+        SCAST<int>(GetEffectLayerMask()->GetType()));
+}
+
 void UIEffectLayerMaskRow::SetUIEffectLayerRow(
     UIEffectLayerRow *uiEffectLayerRow)
 {
@@ -87,6 +130,7 @@ void UIEffectLayerMaskRow::SetUIEffectLayerRow(
 void UIEffectLayerMaskRow::SetEffectLayerMask(EffectLayerMask *effectLayerMask)
 {
     p_effectLayerMask = effectLayerMask;
+    p_effectLayerMask->SetName(p_nameLabel->GetText()->GetContent());
 }
 
 EffectLayerMask *UIEffectLayerMaskRow::GetEffectLayerMask() const

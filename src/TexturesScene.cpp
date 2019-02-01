@@ -19,7 +19,7 @@
 
 #include "EffectLayer.h"
 #include "EffectLayerCompositer.h"
-#include "EffectLayerImplementation.h"
+#include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 #include "TextureContainer.h"
 #include "View3DScene.h"
@@ -94,22 +94,18 @@ void TexturesScene::Update()
         EffectLayer *effectLayer = allEffectLayers[i];
         if (!m_effectLayerToTexCont.ContainsKey(effectLayer))
         {
-            const String effectLayerTypeName =
-                effectLayer->GetImplementation()->GetTypeName();
-
             // Effect
             {
-                String layerName =
-                    "Layer " + String(i) + " (" + effectLayerTypeName + ")";
+                String layerName = effectLayer->GetName();
                 TextureContainer *texCont =
                     CreateAndAddTextureContainer(layerName);
                 m_effectLayerToTexCont.Add(effectLayer, texCont);
             }
 
-            // Effect Mask
+            // Effect Masks
+            for (EffectLayerMask *effectLayerMask : effectLayer->GetMasks())
             {
-                String layerName = "Layer " + String(i) + " Mask (" +
-                                   effectLayerTypeName + ")";
+                String layerName = effectLayerMask->GetName();
                 TextureContainer *maskTexCont =
                     CreateAndAddTextureContainer(layerName);
                 m_effectLayerToMaskTexCont.Add(effectLayer, maskTexCont);

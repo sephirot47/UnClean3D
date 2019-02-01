@@ -2,16 +2,8 @@
 #include "ScreenPass.vert"
 
 #fragment
-const int EFFECT_LAYER_TYPE_DIRT = 0;
-const int EFFECT_LAYER_TYPE_NORMAL_LINES = 1;
-const int EFFECT_LAYER_TYPE_FRACTAL_BUMPS = 2;
-const int EFFECT_LAYER_TYPE_WAVE_BUMPS = 3;
-const int EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION = 4;
-const int EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION_GPU = 5;
 
 uniform sampler2D EffectLayerTexture;
-uniform sampler2D EffectLayerMaskTexture;
-uniform int EffectLayerType;
 
 uniform sampler2D PreviousAlbedoTexture;
 uniform sampler2D PreviousNormalTexture;
@@ -32,7 +24,6 @@ void main()
     vec2 uv = B_FIn_AlbedoUv;
 
     // Apply effect layer
-    float mask = texture(EffectLayerMaskTexture, uv).r;
     vec4  previousAlbedo    = texture(PreviousAlbedoTexture, uv);
     vec3  previousNormal    = texture(PreviousNormalTexture, uv).rgb;
     float previousHeight    = texture(PreviousHeightTexture, uv).r;
@@ -45,43 +36,8 @@ void main()
     float outRoughness = previousRoughness;
     float outMetalness = previousMetalness;
 
-    if (mask < 1)
-    {
-        vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
-        switch (EffectLayerType)
-        {
-            case EFFECT_LAYER_TYPE_DIRT:
-            {
-                float dirtIntensity = effectLayerColor.a;
-
-                outAlbedo.rgb = (effectLayerColor.rgb * dirtIntensity +
-                                 previousAlbedo.rgb * (1-dirtIntensity));
-
-                outRoughness = clamp(previousRoughness + dirtIntensity, 0, 1);
-                outMetalness = clamp(previousMetalness - dirtIntensity, 0, 1);
-                effectLayerColor *= (1.0 - mask);
-            }
-            break;
-
-            case EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION:
-            case EFFECT_LAYER_TYPE_AMBIENT_OCCLUSION_GPU:
-            {
-                float ambientOcclusion = effectLayerColor.r;
-                ambientOcclusion = clamp(ambientOcclusion + mask, 0, 1);
-                outAlbedo.rgb *= ambientOcclusion;
-                // outAlbedo.rgb = effectLayerColor.rgb;
-            }
-            break;
-
-            case EFFECT_LAYER_TYPE_NORMAL_LINES:
-            case EFFECT_LAYER_TYPE_FRACTAL_BUMPS:
-            case EFFECT_LAYER_TYPE_WAVE_BUMPS:
-            {
-                outHeight = previousHeight + effectLayerColor.r;
-            }
-            break;
-        }
-    }
+    vec4 effectLayerColor = texture2D(EffectLayerTexture, uv);
+    outAlbedo = effectLayerColor;
 
     OutAlbedo    = vec4(outAlbedo);
     OutNormal    = vec4(outNormal, 1);

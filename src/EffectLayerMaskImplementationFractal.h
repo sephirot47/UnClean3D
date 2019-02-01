@@ -1,27 +1,28 @@
-#ifndef EFFECTLAYERDIRT_H
-#define EFFECTLAYERDIRT_H
+#ifndef EFFECTLAYERMASKIMPLEMENTATIONFRACTAL_H
+#define EFFECTLAYERMASKIMPLEMENTATIONFRACTAL_H
 
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
-#include "EffectLayerImplementationGPU.h"
+#include "EffectLayerMaskImplementationGPU.h"
 
 using namespace Bang;
 
-class EffectLayerDirt : public EffectLayerImplementationGPU
+class EffectLayerMaskImplementationFractal
+    : public EffectLayerMaskImplementationGPU
 {
 public:
-    SERIALIZABLE(EffectLayerDirt)
+    SERIALIZABLE(EffectLayerMaskImplementationFractal)
 
-    EffectLayerDirt();
-    virtual ~EffectLayerDirt() override;
+    EffectLayerMaskImplementationFractal();
+    virtual ~EffectLayerMaskImplementationFractal() override;
 
     // Serializable
     virtual void Reflect() override;
 
 protected:
     // EffectLayer
-    virtual EffectLayer::Type GetEffectLayerType() const override;
+    virtual EffectLayerMask::Type GetEffectLayerMaskType() const override;
     virtual String GetTypeName() const override;
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
@@ -32,8 +33,6 @@ private:
     float m_stainsSize = 4.0f;
     float m_grain = 2.5f;
     float m_amplitude = 1.0f;
-    Color m_outerColor = Color::Red();
-    Color m_innerColor = Color::Black();
 };
 
-#endif  // EFFECTLAYERDIRT_H
+#endif  // EFFECTLAYERMASKIMPLEMENTATIONFRACTAL_H

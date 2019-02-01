@@ -8,21 +8,32 @@
 
 namespace Bang
 {
+class UILabel;
 class UIButton;
 class UIComboBox;
 class UIImageRenderer;
 };
 
-using namespace Bang;
+namespace BangEditor
+{
+class UIContextMenu;
+};
 
+using namespace Bang;
+using namespace BangEditor;
+
+class UIEffectLayers;
 class EffectLayerMask;
 class UIEffectLayerRow;
 class UIEffectLayerMaskRow : public GameObject,
                              public EventListener<IEventsValueChanged>
 {
 public:
-    UIEffectLayerMaskRow();
+    UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
+                         EffectLayerMask *effectLayerMask);
     virtual ~UIEffectLayerMaskRow() override;
+
+    void UpdateFromEffectLayerMask();
 
     void SetUIEffectLayerRow(UIEffectLayerRow *uiEffectLayerRow);
     void SetEffectLayerMask(EffectLayerMask *effectLayerMask);
@@ -31,9 +42,12 @@ public:
     UIEffectLayerRow *GetEffectLayerRow() const;
 
 private:
+    UIEffectLayers *p_uiEffectLayers = nullptr;
     UIEffectLayerRow *p_uiEffectLayerRow = nullptr;
     EffectLayerMask *p_effectLayerMask = nullptr;
 
+    UIContextMenu *p_contextMenu = nullptr;
+    UILabel *p_nameLabel = nullptr;
     UIComboBox *p_maskTypeInput = nullptr;
     UIButton *p_removeButton = nullptr;
 

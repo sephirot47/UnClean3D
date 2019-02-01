@@ -14,6 +14,7 @@ class Texture2D;
 using namespace Bang;
 
 class EffectLayer;
+class EffectLayerMask;
 
 class Clipboard
 {
@@ -25,19 +26,20 @@ public:
     bool HasCopiedEffectLayer() const;
     void PasteEffectLayer(EffectLayer *effectLayerDestiny);
 
-    void CopyMaskTexture(Texture2D *maskTexture);
-    bool HasCopiedMaskTexture() const;
-    void PasteMaskTexture(Texture2D *maskTextureDestiny) const;
+    void CopyEffectLayerMask(EffectLayerMask *mask);
+    bool HasCopiedEffectLayerMask() const;
+    void PasteEffectLayerMask(EffectLayerMask *maskDestiny) const;
 
     static Clipboard *GetInstance();
 
 private:
-    bool m_hasCopiedMaskTexture = false;
-    AH<Texture2D> m_maskTextureCopy;
-
+    AH<Texture2D> m_copiedMaskTexture;
+    bool m_hasCopiedEffectLayerMask = false;
     bool m_hasCopiedEffectLayer = false;
+
     MetaNode m_effectLayerMeta;
-    MetaNode m_effectLayerImplementationMeta;
+    MetaNode m_effectLayerMaskMeta;
+    MetaNode m_effectLayerMaskImplementationMeta;
 };
 
 #endif  // CLIPBOARD_H

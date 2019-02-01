@@ -25,8 +25,8 @@
 
 #include "ControlPanel.h"
 #include "EffectLayerCompositer.h"
-#include "EffectLayerImplementation.h"
 #include "EffectLayerMask.h"
+#include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -117,36 +117,35 @@ void View3DScene::Update()
     m_fpsChrono.MarkBegin();
     // Debug_DPeek(m_fpsChrono.GetMeanFPS());
 
-    // Generate needed textures
-    if (GetControlPanel()->GetMaskBrushEnabled() &&
-        Input::GetMouseButton(MouseButton::LEFT))
+    Array<EffectLayer *> allEffectLayers = GetAllEffectLayers();
+    for (EffectLayer *effectLayer : allEffectLayers)
     {
-        PaintMaskBrush();
-        InvalidateTextures();
+        for (EffectLayerMask *mask : effectLayer->GetMasks())
+        {
+            mask->Update();
+        }
     }
 
-    if (!m_validTextures)
+    if (Time::GetNow()
+            .GetPassedTimeSince(m_lastTimeTexturesValidated)
+            .GetSeconds() > 0.25)
     {
-        if (Time::GetNow()
-                .GetPassedTimeSince(m_lastTimeTexturesGenerated)
-                .GetSeconds() > 0.25)
+        bool allLayersValid = true;
+        for (EffectLayer *effectLayer : allEffectLayers)
         {
-            Array<EffectLayer *> allEffectLayers = GetAllEffectLayers();
-            for (EffectLayer *effectLayer : allEffectLayers)
+            if (!effectLayer->IsValid())
             {
-                if (effectLayer->GetImplementation() &&
-                    effectLayer->GetImplementation()
-                        ->CanGenerateEffectTextureInRealTime())
-                {
-                    effectLayer->GenerateEffectTexture();
-                }
+                allLayersValid = false;
+                effectLayer->GenerateEffectTexture();
             }
-
-            CompositeTextures();
-
-            m_lastTimeTexturesGenerated = Time::GetNow();
-            m_validTextures = true;
         }
+
+        if (!allLayersValid)
+        {
+            CompositeTextures();
+        }
+
+        m_lastTimeTexturesValidated = Time::GetNow();
     }
 
     // Stuff needed for later
@@ -322,7 +321,6 @@ void View3DScene::ReloadShaders()
             effectLayer->ReloadShaders();
         }
     }
-    InvalidateTextures();
 }
 
 void View3DScene::OnModelChanged(Model *newModel)
@@ -342,7 +340,6 @@ void View3DScene::OnModelChanged(Model *newModel)
         m_meshRendererToInfo.Clear();
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
-        InvalidateTextures();
     }
 
     if (newModel)
@@ -442,11 +439,10 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
 {
     for (auto &it : m_meshRendererToInfo)
     {
-        MeshRenderer *mr = it.first;
         Array<EffectLayer *> &effectLayers = it.second.effectLayers;
         effectLayers.RemoveByIndex(effectLayerIdx);
     }
-    InvalidateTextures();
+    InvalidateAll();
 }
 
 void View3DScene::ApplyControlPanelSettingsToModel()
@@ -482,18 +478,6 @@ void View3DScene::SetViewUniforms()
     GetControlPanel()->SetControlPanelUniforms(m_view3DShaderProgram.Get());
 }
 
-void View3DScene::PaintMaskBrush()
-{
-    Array<EffectLayerMask *> selectedEffectLayerMasks =
-        GetSelectedEffectLayerMasks();
-    for (EffectLayerMask *selectedEffectLayerMask : selectedEffectLayerMasks)
-    {
-        selectedEffectLayerMask->GetEffectLayer()->PaintMaskBrush(
-            selectedEffectLayerMask->GetMaskTexture());
-        selectedEffectLayerMask->GetEffectLayer()->MergeMasks();
-    }
-}
-
 void View3DScene::CompositeTextures()
 {
     for (const auto &it : m_meshRendererToInfo)
@@ -511,11 +495,6 @@ void View3DScene::CompositeTextures()
                                         mrInfo.originalMetalnessTexture.Get());
         }
     }
-}
-
-void View3DScene::InvalidateTextures()
-{
-    m_validTextures = false;
 }
 
 void View3DScene::RestoreOriginalAlbedoTexturesToModel()
@@ -541,6 +520,15 @@ void View3DScene::MoveEffectLayer(EffectLayer *effectLayer, uint newIndex)
         MeshRendererInfo &mrInfo = pair.second;
         mrInfo.effectLayers.Remove(effectLayer);
         mrInfo.effectLayers.Insert(effectLayer, newIndex);
+    }
+}
+
+void View3DScene::InvalidateAll()
+{
+    Array<EffectLayer *> effectLayers = GetAllEffectLayers();
+    for (EffectLayer *effectLayer : effectLayers)
+    {
+        effectLayer->Invalidate();
     }
 }
 

@@ -5,6 +5,7 @@
 
 uniform mat4 SceneModelMatrix;
 uniform mat4 SceneNormalMatrix;
+uniform mat4 SceneProjectionViewMatrix;
 
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
@@ -46,24 +47,24 @@ void main()
     vec3 worldPos    = inWorldPosition;
     vec3 worldNormal = inWorldNormal;
 
+    vec4 projectedPos = (SceneProjectionViewMatrix * vec4(inWorldPosition, 1));
+    projectedPos.xyz /= projectedPos.w;
+    projectedPos.xyz = projectedPos.xyz * 0.5 + 0.5;
+
     float maskApportation =
-        GetMaskBrushApportationFromCurrentMousePosition(worldPos,
-                                                        SceneProjectionViewMatrix,
-                                                        ViewportSize);
+        GetMaskBrushApportationFromCurrentMousePositionProj(projectedPos.xy,
+                                                            ViewportSize);
     if (MaskBrushDepthAware && maskApportation > 0)
     {
-        vec4 projectedPos = SceneProjectionViewMatrix * vec4(worldPos, 1);
-        projectedPos /= projectedPos.w;
-        projectedPos.xy = projectedPos.xy * 0.5 + 0.5;
-
         vec2 sceneTexturesUv = projectedPos.xy;
-        float pixelDepthFromSceneCamera = projectedPos.z * 0.5 + 0.5;
+
+        float pixelDepthFromSceneCamera = projectedPos.z;
         float pixelClosestDepthFromSceneCamera =
                     texture(SceneDepth, sceneTexturesUv).r;
 
         float depthDiff = abs(pixelDepthFromSceneCamera -
                               pixelClosestDepthFromSceneCamera);
-        float depthThresh = (0.001);
+        float depthThresh = 0.00001;
         if (depthDiff > depthThresh)
         {
             maskApportation = 0;

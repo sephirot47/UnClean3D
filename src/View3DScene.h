@@ -45,14 +45,13 @@ public:
     EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetViewUniforms();
-    void PaintMaskBrush();
 
     void CompositeTextures();
-    void InvalidateTextures();
     void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
     void RestoreOriginalAlbedoTexturesToModel();
     void MoveEffectLayer(EffectLayer *effectLayer, uint newIndex);
+    void InvalidateAll();
 
     Camera *GetCamera() const;
     GameObject *GetModelGameObject() const;
@@ -73,8 +72,7 @@ private:
         Array<EffectLayer *> effectLayers;
     };
 
-    bool m_validTextures = false;
-    Time m_lastTimeTexturesGenerated = Time::Zero();
+    Time m_lastTimeTexturesValidated = Time::Zero();
     LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;

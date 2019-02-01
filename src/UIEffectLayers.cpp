@@ -65,7 +65,6 @@ UIEffectLayers::UIEffectLayers()
                 layerRow->GetIsLayerVisibleButton()->SetOn(
                     p_allLayersVisibleButton->GetOn());
             }
-            MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
         });
         p_allLayersVisibleButton->GetGameObject()->SetParent(topButtonsHLGo);
 

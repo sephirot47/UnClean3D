@@ -42,6 +42,8 @@ public:
     void Update() override;
     void UpdateFromEffectLayer();
 
+    UIEffectLayerMaskRow *AddNewMaskRow();
+    void Duplicate(UIEffectLayerMaskRow *maskRow);
     void RemoveMaskRow(UIEffectLayerMaskRow *maskRow);
 
     String GetName() const;
@@ -50,6 +52,7 @@ public:
     UIList *GetMaskRowsList() const;
     UIFocusable *GetFocusable() const;
     EffectLayer *GetEffectLayer() const;
+    UIEffectLayers *GetUIEffectLayers() const;
     UIToolButton *GetIsLayerVisibleButton() const;
 
 private:
@@ -64,7 +67,6 @@ private:
     UIToolButton *p_visibleButton = nullptr;
     UIButton *p_addNewMaskButton = nullptr;
     UIFocusable *p_focusable = nullptr;
-    UIComboBox *p_effectLayerTypeInput = nullptr;
     UILabel *p_layerNameLabel = nullptr;
 
     void OnMasksListCallback(GameObject *item, UIList::Action action);

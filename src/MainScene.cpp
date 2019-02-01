@@ -14,7 +14,6 @@
 
 #include "Clipboard.h"
 #include "ControlPanel.h"
-#include "EffectLayerDirt.h"
 #include "SceneImage.h"
 #include "TexturesScene.h"
 #include "View3DScene.h"

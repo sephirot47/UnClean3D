@@ -5,14 +5,14 @@
 #include "Bang/Texture2D.h"
 
 #include "EffectLayer.h"
-#include "EffectLayerImplementation.h"
+#include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 
 using namespace Bang;
 
 Clipboard::Clipboard()
 {
-    m_maskTextureCopy = Assets::Create<Texture2D>();
+    m_copiedMaskTexture = Assets::Create<Texture2D>();
 }
 
 Clipboard::~Clipboard()
@@ -22,10 +22,6 @@ Clipboard::~Clipboard()
 void Clipboard::CopyEffectLayer(EffectLayer *effectLayer)
 {
     m_effectLayerMeta = effectLayer->GetMeta();
-    m_effectLayerImplementationMeta =
-        effectLayer->GetImplementation()
-            ? effectLayer->GetImplementation()->GetMeta()
-            : MetaNode();
     m_hasCopiedEffectLayer = true;
 }
 
@@ -37,30 +33,31 @@ bool Clipboard::HasCopiedEffectLayer() const
 void Clipboard::PasteEffectLayer(EffectLayer *effectLayerDestiny)
 {
     effectLayerDestiny->ImportMeta(m_effectLayerMeta);
-    if (EffectLayerImplementation *impl =
-            effectLayerDestiny->GetImplementation())
-    {
-        impl->ImportMeta(m_effectLayerImplementationMeta);
-    }
 }
 
-void Clipboard::CopyMaskTexture(Texture2D *maskTexture)
+void Clipboard::CopyEffectLayerMask(EffectLayerMask *mask)
 {
-    m_maskTextureCopy.Get()->Resize(maskTexture->GetSize());
-    GEngine::GetInstance()->CopyTexture(maskTexture, m_maskTextureCopy.Get());
-    m_hasCopiedMaskTexture = true;
+    m_effectLayerMaskMeta = mask->GetMeta();
+    m_effectLayerMaskImplementationMeta =
+        mask->GetImplementation() ? mask->GetImplementation()->GetMeta()
+                                  : MetaNode();
+
+    m_copiedMaskTexture.Get()->Resize(mask->GetMaskTexture()->GetSize());
+    GEngine::GetInstance()->CopyTexture(mask->GetMaskTexture(),
+                                        m_copiedMaskTexture.Get());
+    m_hasCopiedEffectLayerMask = true;
 }
 
-bool Clipboard::HasCopiedMaskTexture() const
+bool Clipboard::HasCopiedEffectLayerMask() const
 {
-    return m_hasCopiedMaskTexture;
+    return m_hasCopiedEffectLayerMask;
 }
 
-void Clipboard::PasteMaskTexture(Texture2D *maskTextureDestiny) const
+void Clipboard::PasteEffectLayerMask(EffectLayerMask *maskDestiny) const
 {
-    maskTextureDestiny->Resize(m_maskTextureCopy.Get()->GetSize());
-    GEngine::GetInstance()->CopyTexture(m_maskTextureCopy.Get(),
-                                        maskTextureDestiny);
+    maskDestiny->GetMaskTexture()->Resize(m_copiedMaskTexture.Get()->GetSize());
+    GEngine::GetInstance()->CopyTexture(m_copiedMaskTexture.Get(),
+                                        maskDestiny->GetMaskTexture());
 }
 
 Clipboard *Clipboard::GetInstance()

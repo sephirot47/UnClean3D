@@ -1,4 +1,4 @@
-#include "EffectLayerDirt.h"
+#include "EffectLayerMaskImplementationFractal.h"
 
 #include "Bang/Array.h"
 #include "Bang/Assets.h"
@@ -29,18 +29,18 @@
 
 using namespace Bang;
 
-EffectLayerDirt::EffectLayerDirt()
+EffectLayerMaskImplementationFractal::EffectLayerMaskImplementationFractal()
 {
     m_seed = Random::GetRange(0, 1000);
 }
 
-EffectLayerDirt::~EffectLayerDirt()
+EffectLayerMaskImplementationFractal::~EffectLayerMaskImplementationFractal()
 {
 }
 
-void EffectLayerDirt::Reflect()
+void EffectLayerMaskImplementationFractal::Reflect()
 {
-    EffectLayerImplementationGPU::Reflect();
+    EffectLayerMaskImplementationGPU::Reflect();
 
     ReflectVar<float>("Intensity",
                       [this](float intensity) {
@@ -63,18 +63,6 @@ void EffectLayerDirt::Reflect()
                       },
                       [this]() { return m_grain; },
                       BANG_REFLECT_HINT_SLIDER(1.0f, 10.0f));
-    ReflectVar<Color>("Outer Color",
-                      [this](const Color &outerColor) {
-                          m_outerColor = outerColor;
-                          Invalidate();
-                      },
-                      [this]() { return m_outerColor; });
-    ReflectVar<Color>("Inner Color",
-                      [this](const Color &innerColor) {
-                          m_innerColor = innerColor;
-                          Invalidate();
-                      },
-                      [this]() { return m_innerColor; });
     ReflectVar<float>("Seed",
                       [this](float seed) {
                           m_seed = seed;
@@ -84,33 +72,34 @@ void EffectLayerDirt::Reflect()
                       BANG_REFLECT_HINT_MIN_VALUE(0.0f));
 }
 
-Path EffectLayerDirt::GetGenerateEffectTextureShaderProgramPath() const
+Path EffectLayerMaskImplementationFractal::
+    GetGenerateEffectTextureShaderProgramPath() const
 {
     return Paths::GetProjectAssetsDir().Append("Shaders").Append(
-        "GenerateEffectTextureDirt.bushader");
+        "GenerateEffectMaskTextureFractal.bushader");
 }
 
-EffectLayer::Type EffectLayerDirt::GetEffectLayerType() const
+EffectLayerMask::Type
+EffectLayerMaskImplementationFractal::GetEffectLayerMaskType() const
 {
-    return EffectLayer::Type::DIRT;
+    return EffectLayerMask::Type::FRACTAL;
 }
 
-String EffectLayerDirt::GetTypeName() const
+String EffectLayerMaskImplementationFractal::GetTypeName() const
 {
-    return "Dirt";
+    return "Fractal";
 }
 
-void EffectLayerDirt::SetGenerateEffectUniforms(ShaderProgram *sp,
-                                                MeshRenderer *meshRend)
+void EffectLayerMaskImplementationFractal::SetGenerateEffectUniforms(
+    ShaderProgram *sp,
+    MeshRenderer *meshRend)
 {
-    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
+    EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
-    sp->SetFloat("DirtOctaves", 8.0f);
-    sp->SetFloat("DirtFrequency", (1.0f / m_stainsSize));
-    sp->SetFloat("DirtFrequencyMultiply", m_grain);
-    sp->SetFloat("DirtAmplitude", m_amplitude);
-    sp->SetFloat("DirtAmplitudeMultiply", (1.0f / m_grain));
-    sp->SetFloat("DirtSeed", m_seed);
-    sp->SetColor("DirtOuterColor", m_outerColor);
-    sp->SetColor("DirtInnerColor", m_innerColor);
+    sp->SetFloat("FractalOctaves", 8.0f);
+    sp->SetFloat("FractalFrequency", (1.0f / m_stainsSize));
+    sp->SetFloat("FractalFrequencyMultiply", m_grain);
+    sp->SetFloat("FractalAmplitude", m_amplitude);
+    sp->SetFloat("FractalAmplitudeMultiply", (1.0f / m_grain));
+    sp->SetFloat("FractalSeed", m_seed);
 }

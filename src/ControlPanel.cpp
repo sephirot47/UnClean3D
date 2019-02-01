@@ -23,8 +23,8 @@
 #include "BangEditor/UIInputColor.h"
 
 #include "EffectLayer.h"
-#include "EffectLayerDirt.h"
 #include "EffectLayerMask.h"
+#include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 #include "UIEffectLayerMaskRow.h"
 #include "UIEffectLayerRow.h"
@@ -334,14 +334,18 @@ void ControlPanel::Update()
     {
         EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
 
-        if (EffectLayerImplementation *impl =
-                selectedEffectLayer->GetImplementation())
+        if (EffectLayerMask *selectedEffectLayerMask =
+                GetSelectedEffectLayerMask())
         {
-            p_effectLayerParamsTitle->GetText()->SetContent(
-                impl->GetTypeName());
-            p_serializableWidget->SetSerializable(impl);
-            p_serializableWidget->UpdateFromReference();
-            enableParams = true;
+            if (EffectLayerMaskImplementation *impl =
+                    selectedEffectLayerMask->GetImplementation())
+            {
+                p_effectLayerParamsTitle->GetText()->SetContent(
+                    impl->GetTypeName());
+                p_serializableWidget->SetSerializable(impl);
+                p_serializableWidget->UpdateFromReference();
+                enableParams = true;
+            }
         }
     }
 
@@ -570,5 +574,5 @@ View3DScene *ControlPanel::GetView3DScene() const
 
 void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *)
 {
-    GetView3DScene()->InvalidateTextures();
+    GetView3DScene()->InvalidateAll();
 }

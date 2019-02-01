@@ -1,15 +1,17 @@
-#include "EffectLayerAmbientOcclusionGPU.h"
+#include "EffectLayerMaskImplementationAmbientOcclusion.h"
 
 #include "Bang/Assets.h"
 #include "Bang/GEngine.h"
 #include "Bang/Mesh.h"
 #include "Bang/MeshRenderer.h"
 #include "Bang/Paths.h"
+#include "Bang/ShaderProgram.h"
 #include "Bang/Transform.h"
 
 using namespace Bang;
 
-EffectLayerAmbientOcclusionGPU::EffectLayerAmbientOcclusionGPU()
+EffectLayerMaskImplementationAmbientOcclusion::
+    EffectLayerMaskImplementationAmbientOcclusion()
 {
     m_trianglePositionsTexture = Assets::Create<Texture2D>();
     m_trianglePositionsTexture.Get()->CreateEmpty(PositionsTextureSize,
@@ -20,37 +22,39 @@ EffectLayerAmbientOcclusionGPU::EffectLayerAmbientOcclusionGPU()
         Color::White(), PositionsTextureSize, PositionsTextureSize);
 }
 
-EffectLayerAmbientOcclusionGPU::~EffectLayerAmbientOcclusionGPU()
+EffectLayerMaskImplementationAmbientOcclusion::
+    ~EffectLayerMaskImplementationAmbientOcclusion()
 {
 }
 
-void EffectLayerAmbientOcclusionGPU::Reflect()
+void EffectLayerMaskImplementationAmbientOcclusion::Reflect()
 {
-    EffectLayerImplementationGPU::Reflect();
+    EffectLayerMaskImplementationGPU::Reflect();
 }
 
-EffectLayer::Type EffectLayerAmbientOcclusionGPU::GetEffectLayerType() const
+EffectLayerMask::Type
+EffectLayerMaskImplementationAmbientOcclusion::GetEffectLayerMaskType() const
 {
-    return EffectLayer::Type::AMBIENT_OCCLUSION_GPU;
+    return EffectLayerMask::Type::AMBIENT_OCCLUSION;
 }
 
-String EffectLayerAmbientOcclusionGPU::GetTypeName() const
+String EffectLayerMaskImplementationAmbientOcclusion::GetTypeName() const
 {
     return "Ambient Occlusion GPU";
 }
 
-Path EffectLayerAmbientOcclusionGPU::GetGenerateEffectTextureShaderProgramPath()
-    const
+Path EffectLayerMaskImplementationAmbientOcclusion::
+    GetGenerateEffectTextureShaderProgramPath() const
 {
     return Paths::GetProjectAssetsDir().Append("Shaders").Append(
         "GenerateEffectTextureAmbientOcclusion.bushader");
 }
 
-void EffectLayerAmbientOcclusionGPU::SetGenerateEffectUniforms(
+void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
     ShaderProgram *sp,
     MeshRenderer *meshRend)
 {
-    EffectLayerImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
+    EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
     const Matrix4 &localToWorldMatrix =
         meshRend->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
@@ -80,7 +84,8 @@ void EffectLayerAmbientOcclusionGPU::SetGenerateEffectUniforms(
     sp->SetTexture2D("TrianglePositions", m_trianglePositionsTexture.Get());
 }
 
-bool EffectLayerAmbientOcclusionGPU::CanGenerateEffectTextureInRealTime() const
+bool EffectLayerMaskImplementationAmbientOcclusion::
+    CanGenerateEffectMaskTextureInRealTime() const
 {
     return false;
 }

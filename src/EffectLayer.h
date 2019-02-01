@@ -19,29 +19,12 @@ class MeshRenderer;
 
 class ControlPanel;
 class EffectLayerMask;
-class EffectLayerImplementation;
+class EffectLayerMaskImplementation;
 
 class EffectLayer : public Serializable
 {
 public:
     SERIALIZABLE(EffectLayer);
-
-    enum class Type
-    {
-        DIRT = 0,
-        NORMAL_LINES,
-        FRACTAL_BUMPS,
-        WAVE_BUMPS,
-        AMBIENT_OCCLUSION,
-        AMBIENT_OCCLUSION_GPU
-    };
-
-    enum class MaskType
-    {
-        FRACTAL,
-        NORMAL_BASED,
-        AMBIENT_OCCLUSION
-    };
 
     EffectLayer(MeshRenderer *mr = nullptr);
     virtual ~EffectLayer() override;
@@ -50,38 +33,41 @@ public:
     virtual void MergeMasks();
     void ReloadShaders();
 
-    void SetImplementation(EffectLayerImplementation *impl);
-    void SetType(EffectLayer::Type type);
+    void SetImplementation(EffectLayerMaskImplementation *impl);
     void SetVisible(bool visible);
+    void SetName(const String &name);
 
     EffectLayerMask *AddNewMask();
     void PaintMaskBrush(Texture2D *maskTexture);
+    void Invalidate();
 
     bool GetVisible() const;
     Mesh *GetMesh() const;
-    EffectLayer::Type GetType() const;
     Texture2D *GetEffectTexture() const;
     const Array<EffectLayerMask *> &GetMasks() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
+    MeshRenderer *GetMeshRenderer() const;
     Texture2D *GetMergedMaskTexture() const;
-    EffectLayerImplementation *GetImplementation() const;
+    const String &GetName() const;
+    bool IsValid() const;
 
     // IReflectable
     virtual void Reflect() override;
 
 private:
+    bool m_isValid = false;
     Array<EffectLayerMask *> m_masks;
-    EffectLayer::Type m_type = Undef<EffectLayer::Type>();
-    EffectLayerImplementation *p_implementation = nullptr;  // PIMPL
     MeshRenderer *p_meshRenderer = nullptr;
 
     VBO *m_positionsVBO = nullptr;
     VBO *m_normalsVBO = nullptr;
     Framebuffer *m_framebuffer = nullptr;
     bool m_visible = true;
+    String m_name = "Layer";
+
     AH<Mesh> m_textureMesh;
-    AH<ShaderProgram> m_paintMaskBrushSP;
+    AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_growTextureBordersSP;
 
     AH<Texture2D> m_effectTexture;

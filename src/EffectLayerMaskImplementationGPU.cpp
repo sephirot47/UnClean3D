@@ -1,35 +1,40 @@
-#include "EffectLayerImplementationGPU.h"
+#include "EffectLayerMaskImplementationGPU.h"
 
 #include "Bang/Framebuffer.h"
+#include "Bang/GameObject.h"
 #include "Bang/MeshRenderer.h"
+#include "Bang/ShaderProgram.h"
 #include "Bang/ShaderProgramFactory.h"
 #include "Bang/Transform.h"
 
+#include "EffectLayer.h"
+#include "EffectLayerMask.h"
+
 using namespace Bang;
 
-EffectLayerImplementationGPU::EffectLayerImplementationGPU()
+EffectLayerMaskImplementationGPU::EffectLayerMaskImplementationGPU()
 {
     m_framebuffer = new Framebuffer();
 }
 
-EffectLayerImplementationGPU::~EffectLayerImplementationGPU()
+EffectLayerMaskImplementationGPU::~EffectLayerMaskImplementationGPU()
 {
 }
 
-void EffectLayerImplementationGPU::Init()
+void EffectLayerMaskImplementationGPU::Init()
 {
-    EffectLayerImplementation::Init();
+    EffectLayerMaskImplementation::Init();
 
     Path spPath = GetGenerateEffectTextureShaderProgramPath();
     m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
 }
 
-void EffectLayerImplementationGPU::ReloadShaders()
+void EffectLayerMaskImplementationGPU::ReloadShaders()
 {
     m_generateEffectTextureSP.Get()->ReImport();
 }
 
-void EffectLayerImplementationGPU::GenerateEffectTexture(
+void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
     Texture2D *effectTexture,
     MeshRenderer *meshRend)
 {
@@ -56,9 +61,13 @@ void EffectLayerImplementationGPU::GenerateEffectTexture(
         SetGenerateEffectUniforms(sp, meshRend);
 
         GL::ClearColorBuffer(Color::Zero());
-        GL::Render(GetEffectLayer()->GetTextureMesh()->GetVAO(),
-                   GL::Primitive::TRIANGLES,
-                   GetEffectLayer()->GetTextureMesh()->GetNumVerticesIds());
+        GL::Render(
+            GetEffectLayerMask()->GetEffectLayer()->GetTextureMesh()->GetVAO(),
+            GL::Primitive::TRIANGLES,
+            GetEffectLayerMask()
+                ->GetEffectLayer()
+                ->GetTextureMesh()
+                ->GetNumVerticesIds());
     }
 
     GL::Pop(GL::Pushable::VIEWPORT);
@@ -68,12 +77,13 @@ void EffectLayerImplementationGPU::GenerateEffectTexture(
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }
 
-bool EffectLayerImplementationGPU::CanGenerateEffectTextureInRealTime() const
+bool EffectLayerMaskImplementationGPU::CanGenerateEffectMaskTextureInRealTime()
+    const
 {
     return true;
 }
 
-void EffectLayerImplementationGPU::SetGenerateEffectUniforms(
+void EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(
     ShaderProgram *sp,
     MeshRenderer *meshRend)
 {
@@ -83,7 +93,7 @@ void EffectLayerImplementationGPU::SetGenerateEffectUniforms(
 }
 
 ShaderProgram *
-EffectLayerImplementationGPU::GetGenerateEffectTextureShaderProgram() const
+EffectLayerMaskImplementationGPU::GetGenerateEffectTextureShaderProgram() const
 {
     return m_generateEffectTextureSP.Get();
 }

@@ -49,7 +49,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     {
         UIHorizontalLayout *hl = effectRow->AddComponent<UIHorizontalLayout>();
         hl->SetSpacing(5);
-        hl->SetPaddings(2);
+        hl->SetPaddings(5);
         hl->SetPaddingRight(10);
         hl->SetPaddingLeft(10);
 
@@ -88,29 +88,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(effectRow);
 
-        p_effectLayerTypeInput = GameObjectFactory::CreateUIComboBox();
-        p_effectLayerTypeInput->GetGameObject()->SetName(
-            "UIEffectLayerRowTypeComboBox");
-        p_effectLayerTypeInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        p_effectLayerTypeInput->AddItem("Dirt",
-                                        SCAST<int>(EffectLayer::Type::DIRT));
-        p_effectLayerTypeInput->AddItem(
-            "Normal Lines", SCAST<int>(EffectLayer::Type::NORMAL_LINES));
-        p_effectLayerTypeInput->AddItem(
-            "Fractal Bumps", SCAST<int>(EffectLayer::Type::FRACTAL_BUMPS));
-        p_effectLayerTypeInput->AddItem(
-            "Wave Bumps", SCAST<int>(EffectLayer::Type::WAVE_BUMPS));
-        p_effectLayerTypeInput->AddItem(
-            "Ambient Occlusion",
-            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION));
-        p_effectLayerTypeInput->AddItem(
-            "Ambient Occlusion GPU",
-            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION_GPU));
-        p_effectLayerTypeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayer::Type::DIRT));
-        p_effectLayerTypeInput->GetGameObject()->SetParent(effectRow);
-
         p_visibleButton = GameObjectFactory::CreateUIToolButton(
             "", EditorTextureFactory::GetEyeIcon());
         p_visibleButton->GetIcon()->SetTint(Color::Black());
@@ -135,19 +112,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             menuRootItem->SetFontSize(12);
 
             Clipboard *cb = Clipboard::GetInstance();
-            MenuItem *copyMaskMenuItem = menuRootItem->AddItem("Copy Mask");
-            copyMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
-                cb->CopyMaskTexture(GetEffectLayer()->GetMergedMaskTexture());
-            });
-
-            MenuItem *pasteMaskMenuItem = menuRootItem->AddItem("Paste Mask");
-            pasteMaskMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
-                cb->PasteMaskTexture(GetEffectLayer()->GetMergedMaskTexture());
-            });
-            pasteMaskMenuItem->SetOverAndActionEnabled(
-                cb->HasCopiedMaskTexture());
-
-            menuRootItem->AddSeparator();
 
             MenuItem *copyEffectMenuItem = menuRootItem->AddItem("Copy Effect");
             copyEffectMenuItem->SetSelectedCallback([this, cb](MenuItem *) {
@@ -160,14 +124,13 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
                 cb->PasteEffectLayer(GetEffectLayer());
                 UpdateFromEffectLayer();
             });
+            pasteEffectMenuItem->SetOverAndActionEnabled(
+                cb->HasCopiedEffectLayerMask());
 
             MenuItem *duplicateEffectMenuItem =
                 menuRootItem->AddItem("Duplicate Effect");
             duplicateEffectMenuItem->SetSelectedCallback(
                 [this](MenuItem *) { p_uiEffectLayers->Duplicate(this); });
-
-            pasteMaskMenuItem->SetOverAndActionEnabled(
-                cb->HasCopiedMaskTexture());
         });
     }
 
@@ -207,16 +170,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
         p_addNewMaskButton->GetGameObject()->SetParent(p_addNewMaskRow);
 
-        p_addNewMaskButton->AddClickedCallback([this]() {
-            EffectLayerMask *layerMask = GetEffectLayer()->AddNewMask();
-
-            UIEffectLayerMaskRow *maskRow = new UIEffectLayerMaskRow();
-            maskRow->SetUIEffectLayerRow(this);
-            maskRow->SetEffectLayerMask(layerMask);
-            p_maskRowsList->AddItem(maskRow);
-            p_maskRowsList->SetSelection(maskRow);
-            p_maskRows.PushBack(maskRow);
-        });
+        p_addNewMaskButton->AddClickedCallback([this]() { AddNewMaskRow(); });
     }
     p_addNewMaskRow->SetParent(this);
 }
@@ -232,7 +186,7 @@ void UIEffectLayerRow::Update()
     if (GetEffectLayer()->GetVisible() != p_visibleButton->GetOn())
     {
         GetEffectLayer()->SetVisible(p_visibleButton->GetOn());
-        MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
+        GetEffectLayer()->Invalidate();
     }
 
     if (!IsSelected())
@@ -282,8 +236,30 @@ void UIEffectLayerRow::Update()
 void UIEffectLayerRow::UpdateFromEffectLayer()
 {
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
-    p_effectLayerTypeInput->SetSelectionByValue(
-        SCAST<int>(GetEffectLayer()->GetType()));
+}
+
+UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow()
+{
+    EffectLayerMask *layerMask = GetEffectLayer()->AddNewMask();
+
+    UIEffectLayerMaskRow *newMaskRow =
+        new UIEffectLayerMaskRow(this, layerMask);
+    newMaskRow->SetUIEffectLayerRow(this);
+    newMaskRow->SetEffectLayerMask(layerMask);
+    p_maskRowsList->AddItem(newMaskRow);
+    p_maskRowsList->SetSelection(newMaskRow);
+    p_maskRows.PushBack(newMaskRow);
+
+    return newMaskRow;
+}
+
+void UIEffectLayerRow::Duplicate(UIEffectLayerMaskRow *maskRow)
+{
+    Clipboard *cb = Clipboard::GetInstance();
+    cb->CopyEffectLayerMask(maskRow->GetEffectLayerMask());
+    UIEffectLayerMaskRow *newEffectLayerMaskRow = AddNewMaskRow();
+    cb->PasteEffectLayerMask(newEffectLayerMaskRow->GetEffectLayerMask());
+    newEffectLayerMaskRow->UpdateFromEffectLayerMask();
 }
 
 void UIEffectLayerRow::RemoveMaskRow(UIEffectLayerMaskRow *maskRow)
@@ -299,7 +275,7 @@ String UIEffectLayerRow::GetName() const
 
 bool UIEffectLayerRow::IsSelected() const
 {
-    return p_uiEffectLayers->GetSelectedEffectLayerRow() == this;
+    return GetUIEffectLayers()->GetSelectedEffectLayerRow() == this;
 }
 
 bool UIEffectLayerRow::GetIsLayerVisible() const
@@ -322,6 +298,11 @@ EffectLayer *UIEffectLayerRow::GetEffectLayer() const
     return p_effectLayer;
 }
 
+UIEffectLayers *UIEffectLayerRow::GetUIEffectLayers() const
+{
+    return p_uiEffectLayers;
+}
+
 UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
 {
     return p_visibleButton;
@@ -329,11 +310,4 @@ UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
 
 void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
-    if (ee == p_effectLayerTypeInput)
-    {
-        EffectLayer::Type type = SCAST<EffectLayer::Type>(
-            p_effectLayerTypeInput->GetSelectedValue());
-        GetEffectLayer()->SetType(type);
-    }
-    MainScene::GetInstance()->GetView3DScene()->InvalidateTextures();
 }

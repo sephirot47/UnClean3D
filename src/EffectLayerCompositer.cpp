@@ -9,7 +9,8 @@
 
 #include "ControlPanel.h"
 #include "EffectLayer.h"
-#include "EffectLayerImplementation.h"
+#include "EffectLayerMask.h"
+#include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -179,11 +180,6 @@ void EffectLayerCompositer::CompositeLayers(
         // Set uniforms
         {
             EffectLayer *effectLayer = effectLayers[i];
-            if (auto elImpl = effectLayer->GetImplementation())
-            {
-                sp->SetInt("EffectLayerType",
-                           SCAST<int>(elImpl->GetEffectLayerType()));
-            }
 
             sp->SetTexture2D("EffectLayerTexture",
                              effectLayer->GetEffectTexture());
