@@ -36,6 +36,10 @@ EffectLayerMask *EffectLayerMaskImplementation::GetEffectLayerMask() const
     return p_effectLayerMask;
 }
 
+void EffectLayerMaskImplementation::Update()
+{
+}
+
 void EffectLayerMaskImplementation::Reflect()
 {
     Serializable::Reflect();

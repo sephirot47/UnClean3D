@@ -29,6 +29,8 @@ public:
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 protected:
+    Framebuffer *m_framebuffer = nullptr;
+
     // EffectLayerImplementation
     virtual Path GetGenerateEffectTextureShaderProgramPath() const = 0;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
@@ -36,7 +38,6 @@ protected:
     ShaderProgram *GetGenerateEffectTextureShaderProgram() const;
 
 private:
-    Framebuffer *m_framebuffer = nullptr;
     AH<ShaderProgram> m_generateEffectTextureSP;
 };
 

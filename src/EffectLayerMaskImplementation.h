@@ -34,6 +34,8 @@ public:
     virtual String GetTypeName() const = 0;
     EffectLayerMask *GetEffectLayerMask() const;
 
+    virtual void Update();
+
     // Serializable
     virtual void Reflect() override;
     void Invalidate();

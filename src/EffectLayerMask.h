@@ -23,7 +23,8 @@ public:
     enum class Type
     {
         FRACTAL,
-        AMBIENT_OCCLUSION
+        AMBIENT_OCCLUSION,
+        BRUSH
     };
 
     EffectLayerMask();
@@ -46,6 +47,7 @@ public:
     Texture2D *GetMaskTexture() const;
     EffectLayer *GetEffectLayer() const;
     EffectLayerMaskImplementation *GetImplementation() const;
+    ControlPanel *GetControlPanel() const;
     bool IsValid() const;
 
     // IReflectable
@@ -60,9 +62,6 @@ private:
 
     Framebuffer *m_framebuffer = nullptr;
     AH<Texture2D> m_maskTexture;
-    AH<ShaderProgram> m_paintMaskBrushSP;
-
-    ControlPanel *GetControlPanel() const;
 };
 
 #endif  // EFFECTLAYERMASK_H

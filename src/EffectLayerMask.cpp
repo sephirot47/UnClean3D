@@ -14,6 +14,7 @@
 #include "ControlPanel.h"
 #include "EffectLayer.h"
 #include "EffectLayerMaskImplementationAmbientOcclusion.h"
+#include "EffectLayerMaskImplementationBrush.h"
 #include "EffectLayerMaskImplementationFractal.h"
 #include "View3DScene.h"
 
@@ -26,10 +27,6 @@ EffectLayerMask::EffectLayerMask()
 
     m_framebuffer = new Framebuffer();
 
-    m_paintMaskBrushSP.Set(ShaderProgramFactory::Get(
-        Paths::GetProjectAssetsDir().Append("Shaders").Append(
-            "PaintMaskBrush.bushader")));
-
     SetType(EffectLayerMask::Type::FRACTAL);
 }
 
@@ -40,17 +37,14 @@ EffectLayerMask::~EffectLayerMask()
 
 void EffectLayerMask::Update()
 {
-    // Generate needed textures
-    if (Input::GetMouseButton(MouseButton::LEFT) &&
-        GetControlPanel()->GetSelectedEffectLayerMask() == this)
+    if (GetImplementation())
     {
-        PaintMaskBrush();
+        GetImplementation()->Update();
     }
 }
 
 void EffectLayerMask::ReloadShaders()
 {
-    m_paintMaskBrushSP.Get()->ReImport();
     Invalidate();
 }
 
@@ -76,7 +70,13 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
                 m_implementation =
                     new EffectLayerMaskImplementationAmbientOcclusion();
                 break;
+
+            case EffectLayerMask::Type::BRUSH:
+                m_implementation = new EffectLayerMaskImplementationBrush();
+                break;
         }
+
+        m_implementation->SetEffectLayerMask(this);
     }
 }
 
@@ -126,71 +126,6 @@ void EffectLayerMask::Invalidate()
 
 void EffectLayerMask::PaintMaskBrush()
 {
-    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-    GL::Push(GL::Pushable::SHADER_PROGRAM);
-    GL::Push(GL::Pushable::BLEND_STATES);
-    GL::Push(GL::Pushable::CULL_FACE);
-    GL::Push(GL::Pushable::VIEWPORT);
-
-    GL::Disable(GL::Enablable::CULL_FACE);
-
-    GL::SetViewport(
-        0, 0, GetMaskTexture()->GetWidth(), GetMaskTexture()->GetHeight());
-
-    ShaderProgram *sp = m_paintMaskBrushSP.Get();
-    sp->Bind();
-    {
-        View3DScene *view3DScene = MainScene::GetInstance()->GetView3DScene();
-        Transform *meshTR = GetEffectLayer()
-                                ->GetMeshRenderer()
-                                ->GetGameObject()
-                                ->GetTransform();
-        sp->SetMatrix4("SceneModelMatrix", meshTR->GetLocalToWorldMatrix());
-        sp->SetMatrix4(
-            "SceneNormalMatrix",
-            GLUniforms::CalculateNormalMatrix(meshTR->GetLocalToWorldMatrix()));
-        Camera *cam = view3DScene->GetCamera();
-        sp->SetMatrix4("SceneProjectionViewMatrix",
-                       cam->GetProjectionMatrix() * cam->GetViewMatrix());
-        sp->SetVector2("ViewportSize", Vector2(cam->GetRenderSize()));
-        sp->SetTexture2D("SceneDepth",
-                         cam->GetGBuffer()->GetSceneDepthStencilTexture());
-        sp->SetVector3("CameraWorldPos",
-                       cam->GetGameObject()->GetTransform()->GetPosition());
-        sp->SetTexture2D(
-            "SceneNormalTexture",
-            cam->GetGBuffer()->GetAttachmentTex2D(GBuffer::AttNormal));
-        GetControlPanel()->SetControlPanelUniforms(m_paintMaskBrushSP.Get());
-    }
-
-    GL::Enable(GL::Enablable::BLEND);
-    if (GetControlPanel()->GetMaskBrushErasing())
-    {
-        GL::BlendEquation(GL::BlendEquationE::FUNC_REVERSE_SUBTRACT);
-        GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
-    }
-    else
-    {
-        GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
-        GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
-    }
-
-    m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(GetMaskTexture(),
-                                        GL::Attachment::COLOR0);
-    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-
-    GL::Render(GetEffectLayer()->GetTextureMesh()->GetVAO(),
-               GL::Primitive::TRIANGLES,
-               GetEffectLayer()->GetTextureMesh()->GetNumVerticesIds());
-
-    GL::Pop(GL::Pushable::VIEWPORT);
-    GL::Pop(GL::Pushable::CULL_FACE);
-    GL::Pop(GL::Pushable::BLEND_STATES);
-    GL::Pop(GL::Pushable::SHADER_PROGRAM);
-    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-
-    Invalidate();
 }
 
 const String &EffectLayerMask::GetName() const
