@@ -41,7 +41,8 @@ EffectLayerMask::~EffectLayerMask()
 void EffectLayerMask::Update()
 {
     // Generate needed textures
-    if (Input::GetMouseButton(MouseButton::LEFT))
+    if (Input::GetMouseButton(MouseButton::LEFT) &&
+        GetControlPanel()->GetSelectedEffectLayerMask() == this)
     {
         PaintMaskBrush();
     }

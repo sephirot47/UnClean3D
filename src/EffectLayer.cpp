@@ -244,8 +244,9 @@ EffectLayerMask *EffectLayer::AddNewMask()
     return newMask;
 }
 
-void EffectLayer::PaintMaskBrush(Texture2D *maskTexture)
+void EffectLayer::RemoveMask(EffectLayerMask *mask)
 {
+    m_masks.Remove(mask);
 }
 
 void EffectLayer::Invalidate()

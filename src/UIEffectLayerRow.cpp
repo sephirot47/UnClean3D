@@ -264,6 +264,7 @@ void UIEffectLayerRow::Duplicate(UIEffectLayerMaskRow *maskRow)
 
 void UIEffectLayerRow::RemoveMaskRow(UIEffectLayerMaskRow *maskRow)
 {
+    GetEffectLayer()->RemoveMask(maskRow->GetEffectLayerMask());
     p_maskRowsList->RemoveItem(maskRow);
     p_maskRows.Remove(maskRow);
 }

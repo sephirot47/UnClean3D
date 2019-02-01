@@ -56,25 +56,23 @@ void main()
                                                             ViewportSize);
     if (MaskBrushDepthAware && maskApportation > 0)
     {
-        vec2 sceneTexturesUv = projectedPos.xy;
-
-        float pixelDepthFromSceneCamera = projectedPos.z;
-        float pixelClosestDepthFromSceneCamera =
-                    texture(SceneDepth, sceneTexturesUv).r;
-
-        float depthDiff = abs(pixelDepthFromSceneCamera -
-                              pixelClosestDepthFromSceneCamera);
-        float depthThresh = 0.00001;
-        if (depthDiff > depthThresh)
+        vec3 normal = inWorldNormal;
+        vec3 pixelDir = CameraWorldPos - worldPos.xyz;
+        float dotProd = dot(pixelDir, normal);
+        if (dotProd <= 0.0)
         {
             maskApportation = 0;
         }
         else
         {
-            vec3 normal = inWorldNormal;
-            vec3 pixelDir = -normalize(worldPos.xyz - CameraWorldPos);
-            float dotProd = dot(pixelDir, normal);
-            if (dotProd <= 0.0)
+            float pixelDepthFromSceneCamera = projectedPos.z;
+            float pixelClosestDepthFromSceneCamera =
+                        texture(SceneDepth, projectedPos.xy).r;
+
+            float depthDiff = abs(pixelDepthFromSceneCamera -
+                                  pixelClosestDepthFromSceneCamera);
+            float depthThresh = 0.00001;
+            if (depthDiff > depthThresh)
             {
                 maskApportation = 0;
             }

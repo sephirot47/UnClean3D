@@ -38,7 +38,7 @@ public:
     void SetName(const String &name);
 
     EffectLayerMask *AddNewMask();
-    void PaintMaskBrush(Texture2D *maskTexture);
+    void RemoveMask(EffectLayerMask *mask);
     void Invalidate();
 
     bool GetVisible() const;
