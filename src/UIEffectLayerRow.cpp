@@ -176,6 +176,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_maskRowsList = GameObjectFactory::CreateUIList(false);
 
     p_maskRowsList->SetIdleColor(Color::White());
+    p_maskRowsList->SetDragDropEnabled(true);
     p_maskRowsList->ClearSelection();
 
     p_maskRowsList->GetGameObject()->SetParent(this);
@@ -196,6 +197,11 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         addLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::RIGHT);
         addLabel->GetGameObject()->SetParent(p_addNewMaskRow);
 
+        UIFocusable *focusable = p_addNewMaskRow->AddComponent<UIFocusable>();
+        focusable->AddEventCallback([](UIFocusable *, const UIEvent &) {
+            return UIEventResult::INTERCEPT;
+        });
+
         p_addNewMaskButton = GameObjectFactory::CreateUIButton(
             "", EditorTextureFactory::GetAddIcon());
         p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
@@ -210,7 +216,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             p_maskRowsList->AddItem(maskRow);
             p_maskRowsList->SetSelection(maskRow);
             p_maskRows.PushBack(maskRow);
-
         });
     }
     p_addNewMaskRow->SetParent(this);
@@ -242,7 +247,8 @@ void UIEffectLayerRow::Update()
             {
                 p_uiEffectLayers->GetList()->SetSelectedColor(
                     UITheme::GetOverColor());
-                if (GetFocusable()->IsBeingPressed())
+                if (GetFocusable()->IsBeingPressed() &&
+                    Input::GetMouseButtonDown(MouseButton::LEFT))
                 {
                     p_uiEffectLayers->GetList()->SetSelectedColor(
                         UITheme::GetSelectedColor());
@@ -263,9 +269,9 @@ void UIEffectLayerRow::Update()
         }
     }
 
-    bool somethingBeingDragged =
-        UICanvas::GetActive(this)->GetCurrentDragDroppable();
-    bool showMaskRows = (!somethingBeingDragged && IsSelected());
+    bool uiEffectLayerBeingDragged =
+        p_uiEffectLayers->GetList()->GetBeingDragged();
+    bool showMaskRows = (!uiEffectLayerBeingDragged && IsSelected());
     for (UIEffectLayerMaskRow *maskRow : p_maskRows)
     {
         maskRow->SetEnabled(showMaskRows);
