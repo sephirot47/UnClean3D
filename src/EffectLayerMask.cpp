@@ -45,6 +45,10 @@ void EffectLayerMask::Update()
 
 void EffectLayerMask::ReloadShaders()
 {
+    if (GetImplementation())
+    {
+        GetImplementation()->ReloadShaders();
+    }
     Invalidate();
 }
 

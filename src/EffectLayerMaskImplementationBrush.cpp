@@ -36,11 +36,56 @@ void EffectLayerMaskImplementationBrush::ReloadShaders()
 {
     EffectLayerMaskImplementationGPU::ReloadShaders();
     m_paintMaskBrushSP.Get()->ReImport();
+    Invalidate();
+}
+
+float EffectLayerMaskImplementationBrush::GetBrushSize() const
+{
+    return m_size;
 }
 
 void EffectLayerMaskImplementationBrush::Reflect()
 {
     EffectLayerMaskImplementationGPU::Reflect();
+
+    ReflectVar<float>("Strength",
+                      [this](float strength) {
+                          m_strength = strength;
+                          Invalidate();
+                      },
+                      [this]() { return m_strength; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+
+    ReflectVar<float>("Hardness",
+                      [this](float hardness) {
+                          m_hardness = hardness;
+                          Invalidate();
+                      },
+                      [this]() { return m_hardness; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+
+    ReflectVar<bool>("Depth aware",
+                     [this](bool depthAware) {
+                         m_depthAware = depthAware;
+                         Invalidate();
+                     },
+                     [this]() { return m_depthAware; });
+
+    ReflectVar<bool>("Erase",
+                     [this](bool erase) {
+                         m_erasing = erase;
+                         Invalidate();
+                     },
+                     [this]() { return m_erasing; },
+                     BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+
+    ReflectVar<float>("Size",
+                      [this](float size) {
+                          m_size = size;
+                          Invalidate();
+                      },
+                      [this]() { return m_size; },
+                      BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
 }
 
 EffectLayerMask::Type
@@ -75,6 +120,23 @@ void EffectLayerMaskImplementationBrush::Update()
         GetControlPanel()->GetSelectedEffectLayerMask() == GetEffectLayerMask())
     {
         PaintMaskBrush();
+    }
+
+    if (Input::GetKeyDown(Key::LCTRL))
+    {
+        m_erasing = true;
+    }
+
+    if (Input::GetKeyUp(Key::LCTRL))
+    {
+        m_erasing = false;
+    }
+
+    if (Input::GetKey(Key::LSHIFT))
+    {
+        float maskBrushSizeIncrement = Input::GetMouseWheel().y;
+        maskBrushSizeIncrement *= (m_size / 10);
+        m_size += maskBrushSizeIncrement;
     }
 }
 
@@ -120,11 +182,19 @@ void EffectLayerMaskImplementationBrush::PaintMaskBrush()
         sp->SetTexture2D(
             "SceneNormalTexture",
             cam->GetGBuffer()->GetAttachmentTex2D(GBuffer::AttNormal));
+
+        sp->SetBool("MaskBrushDepthAware", m_depthAware);
+        sp->SetBool("MaskBrushErasing", m_erasing);
+        sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
+        sp->SetFloat("MaskBrushHardness", m_hardness);
+        sp->SetFloat("MaskBrushSize", m_size);
+        sp->SetFloat("MaskBrushStrength", m_strength);
+
         GetControlPanel()->SetControlPanelUniforms(m_paintMaskBrushSP.Get());
     }
 
     GL::Enable(GL::Enablable::BLEND);
-    if (GetControlPanel()->GetMaskBrushErasing())
+    if (m_erasing)
     {
         GL::BlendEquation(GL::BlendEquationE::FUNC_REVERSE_SUBTRACT);
         GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);

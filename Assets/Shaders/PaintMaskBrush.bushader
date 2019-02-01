@@ -33,7 +33,6 @@ uniform mat4 SceneNormalMatrix;
 uniform mat4 SceneProjectionViewMatrix;
 uniform vec3 CameraWorldPos;
 uniform vec2 ViewportSize;
-uniform bool MaskBrushErasing;
 uniform bool MaskBrushDepthAware;
 
 in vec3 inWorldPosition;

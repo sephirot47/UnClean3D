@@ -27,6 +27,7 @@
 #include "EffectLayerCompositer.h"
 #include "EffectLayerMask.h"
 #include "EffectLayerMaskImplementation.h"
+#include "EffectLayerMaskImplementationBrush.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -198,12 +199,18 @@ void View3DScene::Update()
     }
 
     // Mask brush line rendering handling
+    if (GetControlPanel()->GetMaskBrushEnabled())
     {
         GameObject *brushGo = p_maskBrushRend->GetGameObject();
         Transform *brushTR = brushGo->GetTransform();
         brushGo->SetEnabled(GetControlPanel()->GetMaskBrushEnabled());
         brushTR->SetPosition(Vector3(Input::GetMousePosition(), 0));
-        brushTR->SetScale(controlPanel->GetMaskBrushSize());
+        EffectLayerMaskImplementationBrush *maskBrush =
+            DCAST<EffectLayerMaskImplementationBrush *>(
+                GetControlPanel()
+                    ->GetSelectedEffectLayerMask()
+                    ->GetImplementation());
+        brushTR->SetScale(maskBrush->GetBrushSize());
     }
 
     // Camera movement

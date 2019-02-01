@@ -26,12 +26,18 @@ void EffectLayerMaskImplementationGPU::Init()
     EffectLayerMaskImplementation::Init();
 
     Path spPath = GetGenerateEffectTextureShaderProgramPath();
-    m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
+    if (spPath.IsFile())
+    {
+        m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(spPath));
+    }
 }
 
 void EffectLayerMaskImplementationGPU::ReloadShaders()
 {
-    m_generateEffectTextureSP.Get()->ReImport();
+    if (m_generateEffectTextureSP)
+    {
+        m_generateEffectTextureSP.Get()->ReImport();
+    }
 }
 
 void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(

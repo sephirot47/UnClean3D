@@ -19,6 +19,8 @@ public:
 
     virtual void ReloadShaders() override;
 
+    float GetBrushSize() const;
+
     // Serializable
     virtual void Reflect() override;
 
@@ -36,6 +38,12 @@ protected:
     ControlPanel *GetControlPanel() const;
 
 private:
+    float m_strength = 0.5f;
+    float m_hardness = 0.1f;
+    float m_size = 50.0f;
+    bool m_erasing = false;
+    bool m_depthAware = true;
+
     AH<ShaderProgram> m_paintMaskBrushSP;
 };
 

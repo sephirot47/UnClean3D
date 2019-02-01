@@ -214,13 +214,12 @@ ControlPanel::ControlPanel()
         CreateRow("", p_effectLayerParamsTitle->GetGameObject())
             ->SetParent(p_effectLayerParamsGo);
 
-        p_serializableWidget = new SerializableInspectorWidget();
-        p_serializableWidget->Init();
-
-        p_serializableWidget->SetParent(p_effectLayerParamsGo);
+        p_effectSerializableWidget = new SerializableInspectorWidget();
+        p_effectSerializableWidget->Init();
+        p_effectSerializableWidget->SetParent(p_effectLayerParamsGo);
         p_effectLayerParamsGo->SetParent(this);
-
-        p_serializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
+        p_effectSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(
+            false);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(p_effectLayerParamsGo);
@@ -237,45 +236,21 @@ ControlPanel::ControlPanel()
             p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
         subVL->SetSpacing(5);
 
-        UILabel *maskLabel = GameObjectFactory::CreateUILabel();
-        maskLabel->GetText()->SetContent("Mask");
-        maskLabel->GetText()->SetTextSize(14);
-        maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", maskLabel->GetGameObject())->SetParent(p_maskParamsGo);
+        p_maskLabel = GameObjectFactory::CreateUILabel();
+        p_maskLabel->GetText()->SetContent("Mask");
+        p_maskLabel->GetText()->SetTextSize(14);
+        p_maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        CreateRow("", p_maskLabel->GetGameObject())->SetParent(p_maskParamsGo);
 
-        p_maskBrushSizeInput = GameObjectFactory::CreateUISlider(1, 500);
-        p_maskBrushSizeInput->SetValue(50.0f);
-        p_maskBrushSizeInputRow =
-            CreateRow("Brush size", p_maskBrushSizeInput->GetGameObject());
-        p_maskBrushSizeInputRow->SetParent(p_maskSubParamsGo);
-
-        p_maskBrushHardnessInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_maskBrushHardnessInput->SetValue(0.1f);
-        p_maskBrushHardnessInputRow = CreateRow(
-            "Brush hardness", p_maskBrushHardnessInput->GetGameObject());
-        p_maskBrushHardnessInputRow->SetParent(p_maskSubParamsGo);
-
-        p_maskBrushStrengthInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_maskBrushStrengthInput->SetValue(1.0f);
-        p_maskBrushStrengthInputRow = CreateRow(
-            "Brush strength", p_maskBrushStrengthInput->GetGameObject());
-        p_maskBrushStrengthInputRow->SetParent(p_maskSubParamsGo);
+        p_maskSerializableWidget = new SerializableInspectorWidget();
+        p_maskSerializableWidget->Init();
+        p_maskSerializableWidget->SetParent(p_maskParamsGo);
+        p_maskSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
 
         p_seeMaskButton =
             GameObjectFactory::CreateUIToolButton("See Mask (Shift + M)");
         p_seeMaskButton->SetOn(false);
         p_seeMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
-
-        p_maskBrushDepthAwareButton =
-            GameObjectFactory::CreateUIToolButton("Depth aware mask brush");
-        p_maskBrushDepthAwareButton->SetOn(true);
-        p_maskBrushDepthAwareButton->GetGameObject()->SetParent(
-            p_maskSubParamsGo);
-
-        p_eraseMaskButton =
-            GameObjectFactory::CreateUIToolButton("Erase Mask (Ctrl)");
-        p_eraseMaskButton->SetOn(false);
-        p_eraseMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_clearMaskButton = GameObjectFactory::CreateUIButton("Clear Mask (C)");
         p_clearMaskButton->AddClickedCallback(
@@ -315,11 +290,6 @@ void ControlPanel::Update()
     {
         if (Input::GetKey(Key::LSHIFT))
         {
-            float maskBrushSizeIncrement = Input::GetMouseWheel().y;
-            maskBrushSizeIncrement *= (p_maskBrushSizeInput->GetValue() / 10);
-            p_maskBrushSizeInput->SetValue(p_maskBrushSizeInput->GetValue() +
-                                           maskBrushSizeIncrement);
-
             if (Input::GetKeyDown(Key::M))
             {
                 p_seeMaskButton->SetOn(!p_seeMaskButton->GetOn());
@@ -332,18 +302,16 @@ void ControlPanel::Update()
         GetView3DScene()->GetSelectedEffectLayers();
     if (selectedEffectLayers.Size() >= 1)
     {
-        EffectLayer *selectedEffectLayer = selectedEffectLayers.Front();
-
         if (EffectLayerMask *selectedEffectLayerMask =
                 GetSelectedEffectLayerMask())
         {
             if (EffectLayerMaskImplementation *impl =
                     selectedEffectLayerMask->GetImplementation())
             {
-                p_effectLayerParamsTitle->GetText()->SetContent(
-                    impl->GetTypeName());
-                p_serializableWidget->SetSerializable(impl);
-                p_serializableWidget->UpdateFromReference();
+                p_maskLabel->GetText()->SetContent("Mask " +
+                                                   impl->GetTypeName());
+                p_maskSerializableWidget->SetSerializable(impl);
+                p_maskSerializableWidget->UpdateFromReference();
                 enableParams = true;
             }
         }
@@ -353,14 +321,11 @@ void ControlPanel::Update()
     UIEffectLayerMaskRow *selectedMaskRow = GetSelectedEffectLayerMaskRow();
     p_maskParamsGo->SetEnabled(enableParams && selectedEffectRow &&
                                selectedMaskRow);
-    p_maskSubParamsGo->SetEnabled(GetMaskBrushEnabled());
     p_effectLayerParamsGo->SetEnabled(enableParams && selectedEffectRow &&
                                       !selectedMaskRow);
 
     if (enableParams)
     {
-        p_eraseMaskButton->SetOn(GetMaskBrushEnabled() &&
-                                 Input::GetKey(Key::LCTRL));
         if (Input::GetKeyDown(Key::C))
         {
             ClearSelectedMask();
@@ -431,13 +396,6 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
 
     sp->SetBool("WithLight", p_seeWithLightButton->GetOn());
     sp->SetBool("SeeMask", GetMaskBrushEnabled() && p_seeMaskButton->GetOn());
-    sp->SetBool("MaskBrushEnabled", GetMaskBrushEnabled());
-    sp->SetBool("MaskBrushDepthAware", p_maskBrushDepthAwareButton->GetOn());
-    sp->SetBool("MaskBrushErasing", p_eraseMaskButton->GetOn());
-    sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
-    sp->SetFloat("MaskBrushHardness", GetMaskBrushHardness());
-    sp->SetFloat("MaskBrushSize", GetMaskBrushSize());
-    sp->SetFloat("MaskBrushStrength", p_maskBrushStrengthInput->GetValue());
 
     Array<EffectLayer *> effectLayers =
         GetView3DScene()->GetSelectedEffectLayers();
@@ -470,22 +428,9 @@ void ControlPanel::ClearSelectedMask()
 
 bool ControlPanel::GetMaskBrushEnabled() const
 {
-    return (GetSelectedEffectLayerMaskRow() != nullptr);
-}
-
-float ControlPanel::GetMaskBrushSize() const
-{
-    return p_maskBrushSizeInput->GetValue();
-}
-
-float ControlPanel::GetMaskBrushHardness() const
-{
-    return p_maskBrushHardnessInput->GetValue();
-}
-
-bool ControlPanel::GetMaskBrushErasing() const
-{
-    return p_eraseMaskButton->GetOn();
+    return (GetSelectedEffectLayerMask() &&
+            (GetSelectedEffectLayerMask()->GetType() ==
+             EffectLayerMask::Type::BRUSH));
 }
 
 float ControlPanel::GetBaseRoughness() const

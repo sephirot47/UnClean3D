@@ -51,9 +51,6 @@ public:
     void FillSelectedMask();
     void ClearSelectedMask();
     bool GetMaskBrushEnabled() const;
-    float GetMaskBrushSize() const;
-    float GetMaskBrushHardness() const;
-    bool GetMaskBrushErasing() const;
 
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
@@ -83,18 +80,11 @@ private:
     // Mask
     GameObject *p_maskParamsGo = nullptr;
     GameObject *p_maskSubParamsGo = nullptr;
+    UILabel *p_maskLabel = nullptr;
     UIToolButton *p_seeWithLightButton = nullptr;
-    UIToolButton *p_eraseMaskButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;
-    UIToolButton *p_maskBrushDepthAwareButton = nullptr;
     UIButton *p_clearMaskButton = nullptr;
     UIButton *p_fillMaskButton = nullptr;
-    UISlider *p_maskBrushStrengthInput = nullptr;
-    UISlider *p_maskBrushSizeInput = nullptr;
-    UISlider *p_maskBrushHardnessInput = nullptr;
-    GameObject *p_maskBrushStrengthInputRow = nullptr;
-    GameObject *p_maskBrushSizeInputRow = nullptr;
-    GameObject *p_maskBrushHardnessInputRow = nullptr;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;
@@ -104,7 +94,8 @@ private:
     UILabel *p_effectLayerParamsTitle = nullptr;
 
     // SerializableWidget
-    SerializableInspectorWidget *p_serializableWidget = nullptr;
+    SerializableInspectorWidget *p_effectSerializableWidget = nullptr;
+    SerializableInspectorWidget *p_maskSerializableWidget = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;
