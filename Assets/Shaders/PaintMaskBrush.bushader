@@ -3,17 +3,20 @@
 
 #vertex
 
+uniform mat4 SceneModelMatrix;
+uniform mat4 SceneNormalMatrix;
+
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
 layout(location = 2) in vec3 vinNormal;
 
-out vec3 finPosition;
-out vec3 finNormal;
+out vec3 inWorldPosition;
+out vec3 inWorldNormal;
 
 void main()
 {
-    finPosition = vinPosition;
-    finNormal = vinNormal;
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    inWorldNormal = (SceneNormalMatrix * vec4(vinNormal, 0)).xyz;
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -24,7 +27,6 @@ void main()
 #include "MaskBrush.glsl"
 
 uniform sampler2D SceneDepth;
-uniform sampler2D PreviousMaskTexture;
 uniform mat4 SceneModelMatrix;
 uniform mat4 SceneNormalMatrix;
 uniform mat4 SceneProjectionViewMatrix;
@@ -33,24 +35,24 @@ uniform vec2 ViewportSize;
 uniform bool MaskBrushErasing;
 uniform bool MaskBrushDepthAware;
 
-in vec3 finPosition;
-in vec3 finNormal;
+in vec3 inWorldPosition;
+in vec3 inWorldNormal;
 
 layout(location = 0) out vec4 OutColor;
 
 void main()
 {
     vec2 uv = B_GetViewportUv();
-    vec4 worldPos = SceneModelMatrix * vec4(finPosition, 1);
-    vec4 previousMask = texture(PreviousMaskTexture, uv);
+    vec3 worldPos    = inWorldPosition;
+    vec3 worldNormal = inWorldNormal;
 
     float maskApportation =
-        GetMaskBrushApportationFromCurrentMousePosition(worldPos.xyz,
+        GetMaskBrushApportationFromCurrentMousePosition(worldPos,
                                                         SceneProjectionViewMatrix,
                                                         ViewportSize);
-    if (false && MaskBrushDepthAware && maskApportation > 0)
+    if (MaskBrushDepthAware && maskApportation > 0)
     {
-        vec4 projectedPos = SceneProjectionViewMatrix * worldPos;
+        vec4 projectedPos = SceneProjectionViewMatrix * vec4(worldPos, 1);
         projectedPos /= projectedPos.w;
         projectedPos.xy = projectedPos.xy * 0.5 + 0.5;
 
@@ -68,7 +70,7 @@ void main()
         }
         else
         {
-            vec3 normal = normalize((SceneNormalMatrix * vec4(finNormal, 0)).xyz);
+            vec3 normal = inWorldNormal;
             vec3 pixelDir = -normalize(worldPos.xyz - CameraWorldPos);
             float dotProd = dot(pixelDir, normal);
             if (dotProd <= 0.0)
@@ -78,13 +80,7 @@ void main()
         }
     }
 
-    if (MaskBrushErasing)
-    {
-        maskApportation *= -1;
-    }
-
-    OutColor = vec4(worldPos.xyz, 1);
-    OutColor = previousMask + vec4(maskApportation, 0, 0, 1);
+    OutColor = vec4(maskApportation, 0, 0, 0);
 }
 
 

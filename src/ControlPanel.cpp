@@ -24,7 +24,9 @@
 
 #include "EffectLayer.h"
 #include "EffectLayerDirt.h"
+#include "EffectLayerMask.h"
 #include "MainScene.h"
+#include "UIEffectLayerMaskRow.h"
 #include "UIEffectLayerRow.h"
 #include "UIEffectLayers.h"
 #include "View3DScene.h"
@@ -221,7 +223,7 @@ ControlPanel::ControlPanel()
         p_serializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
+            ->SetParent(p_effectLayerParamsGo);
     }
 
     // Mask
@@ -240,11 +242,6 @@ ControlPanel::ControlPanel()
         maskLabel->GetText()->SetTextSize(14);
         maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
         CreateRow("", maskLabel->GetGameObject())->SetParent(p_maskParamsGo);
-
-        p_maskBrushDrawButton =
-            GameObjectFactory::CreateUIToolButton("Draw Mask (M)");
-        p_maskBrushDrawButton->SetOn(false);
-        p_maskBrushDrawButton->GetGameObject()->SetParent(p_maskParamsGo);
 
         p_maskBrushSizeInput = GameObjectFactory::CreateUISlider(1, 500);
         p_maskBrushSizeInput->SetValue(50.0f);
@@ -281,11 +278,12 @@ ControlPanel::ControlPanel()
         p_eraseMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_clearMaskButton = GameObjectFactory::CreateUIButton("Clear Mask (C)");
-        p_clearMaskButton->AddClickedCallback([this]() { ClearMask(); });
+        p_clearMaskButton->AddClickedCallback(
+            [this]() { ClearSelectedMask(); });
         p_clearMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_fillMaskButton = GameObjectFactory::CreateUIButton("Fill Mask");
-        p_fillMaskButton->AddClickedCallback([this]() { FillMask(); });
+        p_fillMaskButton->AddClickedCallback([this]() { FillSelectedMask(); });
         p_fillMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
         p_maskSubParamsGo->SetParent(p_maskParamsGo);
@@ -347,21 +345,21 @@ void ControlPanel::Update()
         }
     }
 
-    p_effectLayerParamsGo->SetEnabled(enableParams);
-    p_maskParamsGo->SetEnabled(enableParams);
+    UIEffectLayerRow *selectedEffectRow = GetSelectedEffectLayerRow();
+    UIEffectLayerMaskRow *selectedMaskRow = GetSelectedEffectLayerMaskRow();
+    p_maskParamsGo->SetEnabled(enableParams && selectedEffectRow &&
+                               selectedMaskRow);
     p_maskSubParamsGo->SetEnabled(GetMaskBrushEnabled());
+    p_effectLayerParamsGo->SetEnabled(enableParams && selectedEffectRow &&
+                                      !selectedMaskRow);
 
     if (enableParams)
     {
         p_eraseMaskButton->SetOn(GetMaskBrushEnabled() &&
                                  Input::GetKey(Key::LCTRL));
-        if (Input::GetKeyDown(Key::M) && !Input::GetKey(Key::LSHIFT))
+        if (Input::GetKeyDown(Key::C))
         {
-            p_maskBrushDrawButton->SetOn(!p_maskBrushDrawButton->GetOn());
-        }
-        else if (Input::GetKeyDown(Key::C))
-        {
-            ClearMask();
+            ClearSelectedMask();
         }
     }
 
@@ -446,29 +444,29 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
     }
 }
 
-void ControlPanel::FillMask()
+void ControlPanel::FillSelectedMask()
 {
-    Array<EffectLayer *> selectedEffectLayers =
-        GetView3DScene()->GetSelectedEffectLayers();
-    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    if (GetSelectedEffectLayerMask())
     {
-        selectedEffectLayer->FillMask();
+        GetSelectedEffectLayerMask()->Fill();
     }
+    GetSelectedEffectLayer()->MergeMasks();
+    GetView3DScene()->CompositeTextures();
 }
 
-void ControlPanel::ClearMask()
+void ControlPanel::ClearSelectedMask()
 {
-    Array<EffectLayer *> selectedEffectLayers =
-        GetView3DScene()->GetSelectedEffectLayers();
-    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    if (GetSelectedEffectLayerMask())
     {
-        selectedEffectLayer->ClearMask();
+        GetSelectedEffectLayerMask()->Clear();
     }
+    GetSelectedEffectLayer()->MergeMasks();
+    GetView3DScene()->CompositeTextures();
 }
 
 bool ControlPanel::GetMaskBrushEnabled() const
 {
-    return p_maskBrushDrawButton->GetOn();
+    return (GetSelectedEffectLayerMaskRow() != nullptr);
 }
 
 float ControlPanel::GetMaskBrushSize() const
@@ -479,6 +477,11 @@ float ControlPanel::GetMaskBrushSize() const
 float ControlPanel::GetMaskBrushHardness() const
 {
     return p_maskBrushHardnessInput->GetValue();
+}
+
+bool ControlPanel::GetMaskBrushErasing() const
+{
+    return p_eraseMaskButton->GetOn();
 }
 
 float ControlPanel::GetBaseRoughness() const
@@ -495,6 +498,39 @@ Vector2i ControlPanel::GetTextureSize() const
 {
     return Vector2i(p_texturesSizeInput->GetSelectedValue(),
                     p_texturesSizeInput->GetSelectedValue());
+}
+
+EffectLayer *ControlPanel::GetSelectedEffectLayer() const
+{
+    if (GetSelectedEffectLayerRow())
+    {
+        return GetSelectedEffectLayerRow()->GetEffectLayer();
+    }
+    return nullptr;
+}
+
+EffectLayerMask *ControlPanel::GetSelectedEffectLayerMask() const
+{
+    if (GetSelectedEffectLayerMaskRow())
+    {
+        return GetSelectedEffectLayerMaskRow()->GetEffectLayerMask();
+    }
+    return nullptr;
+}
+
+UIEffectLayerRow *ControlPanel::GetSelectedEffectLayerRow() const
+{
+    return p_uiEffectLayers->GetSelectedEffectLayerRow();
+}
+
+UIEffectLayerMaskRow *ControlPanel::GetSelectedEffectLayerMaskRow() const
+{
+    if (UIEffectLayerRow *selectedLayerRow = GetSelectedEffectLayerRow())
+    {
+        return SCAST<UIEffectLayerMaskRow *>(
+            selectedLayerRow->GetMaskRowsList()->GetSelectedItem());
+    }
+    return nullptr;
 }
 
 uint ControlPanel::GetSelectedUIEffectLayerIndex() const

@@ -26,6 +26,7 @@
 #include "ControlPanel.h"
 #include "EffectLayerCompositer.h"
 #include "EffectLayerImplementation.h"
+#include "EffectLayerMask.h"
 #include "MainScene.h"
 
 using namespace Bang;
@@ -483,10 +484,13 @@ void View3DScene::SetViewUniforms()
 
 void View3DScene::PaintMaskBrush()
 {
-    Array<EffectLayer *> selectedEffectLayers = GetSelectedEffectLayers();
-    for (EffectLayer *selectedEffectLayer : selectedEffectLayers)
+    Array<EffectLayerMask *> selectedEffectLayerMasks =
+        GetSelectedEffectLayerMasks();
+    for (EffectLayerMask *selectedEffectLayerMask : selectedEffectLayerMasks)
     {
-        selectedEffectLayer->PaintMaskBrush();
+        selectedEffectLayerMask->GetEffectLayer()->PaintMaskBrush(
+            selectedEffectLayerMask->GetMaskTexture());
+        selectedEffectLayerMask->GetEffectLayer()->MergeMasks();
     }
 }
 

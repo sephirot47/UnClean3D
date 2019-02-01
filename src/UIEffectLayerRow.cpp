@@ -108,7 +108,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             "Ambient Occlusion GPU",
             SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION_GPU));
         p_effectLayerTypeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayer::Type::AMBIENT_OCCLUSION_GPU));
+            SCAST<int>(EffectLayer::Type::DIRT));
         p_effectLayerTypeInput->GetGameObject()->SetParent(effectRow);
 
         p_visibleButton = GameObjectFactory::CreateUIToolButton(
@@ -202,11 +202,13 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         p_addNewMaskButton->GetGameObject()->SetParent(p_addNewMaskRow);
 
         p_addNewMaskButton->AddClickedCallback([this]() {
-            GetEffectLayer()->AddNewMask();
+            EffectLayerMask *layerMask = GetEffectLayer()->AddNewMask();
 
             UIEffectLayerMaskRow *maskRow = new UIEffectLayerMaskRow();
             maskRow->SetUIEffectLayerRow(this);
+            maskRow->SetEffectLayerMask(layerMask);
             p_maskRowsList->AddItem(maskRow);
+            p_maskRowsList->SetSelection(maskRow);
             p_maskRows.PushBack(maskRow);
 
         });

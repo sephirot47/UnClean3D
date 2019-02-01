@@ -24,8 +24,10 @@ class SerializableInspectorWidget;
 }
 
 class EffectLayer;
+class EffectLayerMask;
 class UIEffectLayers;
 class UIEffectLayerRow;
+class UIEffectLayerMaskRow;
 class View3DScene;
 using namespace BangEditor;
 
@@ -46,15 +48,20 @@ public:
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetControlPanelUniforms(ShaderProgram *sp);
 
-    void FillMask();
-    void ClearMask();
+    void FillSelectedMask();
+    void ClearSelectedMask();
     bool GetMaskBrushEnabled() const;
     float GetMaskBrushSize() const;
     float GetMaskBrushHardness() const;
+    bool GetMaskBrushErasing() const;
 
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
     Vector2i GetTextureSize() const;
+    EffectLayer *GetSelectedEffectLayer() const;
+    EffectLayerMask *GetSelectedEffectLayerMask() const;
+    UIEffectLayerRow *GetSelectedEffectLayerRow() const;
+    UIEffectLayerMaskRow *GetSelectedEffectLayerMaskRow() const;
     uint GetSelectedUIEffectLayerIndex() const;
     uint GetSelectedUIEffectLayerMaskIndex() const;
 
@@ -77,7 +84,6 @@ private:
     GameObject *p_maskParamsGo = nullptr;
     GameObject *p_maskSubParamsGo = nullptr;
     UIToolButton *p_seeWithLightButton = nullptr;
-    UIToolButton *p_maskBrushDrawButton = nullptr;
     UIToolButton *p_eraseMaskButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;
     UIToolButton *p_maskBrushDepthAwareButton = nullptr;

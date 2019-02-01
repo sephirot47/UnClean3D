@@ -15,6 +15,7 @@ class UIImageRenderer;
 
 using namespace Bang;
 
+class EffectLayerMask;
 class UIEffectLayerRow;
 class UIEffectLayerMaskRow : public GameObject,
                              public EventListener<IEventsValueChanged>
@@ -24,9 +25,14 @@ public:
     virtual ~UIEffectLayerMaskRow() override;
 
     void SetUIEffectLayerRow(UIEffectLayerRow *uiEffectLayerRow);
+    void SetEffectLayerMask(EffectLayerMask *effectLayerMask);
+
+    EffectLayerMask *GetEffectLayerMask() const;
+    UIEffectLayerRow *GetEffectLayerRow() const;
 
 private:
-    UIEffectLayerRow *p_effectLayerRow = nullptr;
+    UIEffectLayerRow *p_uiEffectLayerRow = nullptr;
+    EffectLayerMask *p_effectLayerMask = nullptr;
 
     UIComboBox *p_maskTypeInput = nullptr;
     UIButton *p_removeButton = nullptr;

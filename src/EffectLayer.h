@@ -47,17 +47,16 @@ public:
     virtual ~EffectLayer() override;
 
     virtual void GenerateEffectTexture();
+    virtual void MergeMasks();
     void ReloadShaders();
 
     void SetImplementation(EffectLayerImplementation *impl);
     void SetType(EffectLayer::Type type);
     void SetVisible(bool visible);
 
-    void AddNewMask();
-    void PaintMaskBrush();
+    EffectLayerMask *AddNewMask();
+    void PaintMaskBrush(Texture2D *maskTexture);
 
-    void FillMask();
-    void ClearMask();
     bool GetVisible() const;
     Mesh *GetMesh() const;
     EffectLayer::Type GetType() const;
@@ -87,10 +86,7 @@ private:
 
     AH<Texture2D> m_effectTexture;
     AH<Texture2D> m_mergedMaskTexture;
-    AH<Texture2D> m_maskPingPongTexture0;
-    AH<Texture2D> m_maskPingPongTexture1;
     AH<Texture2D> m_growAuxiliarTexture;
-    Texture2D *p_lastDrawnMaskTexture = nullptr;
 
     void GrowTextureBorders(Texture2D *texture);
 };

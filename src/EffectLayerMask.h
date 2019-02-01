@@ -7,13 +7,27 @@
 
 using namespace Bang;
 
-class EffectLayerMask
+class EffectLayer;
+class EffectLayerMask : public Serializable
 {
 public:
+    SERIALIZABLE(EffectLayerMask);
+
     EffectLayerMask();
-    virtual ~EffectLayerMask();
+    virtual ~EffectLayerMask() override;
+
+    void SetEffectLayer(EffectLayer *effectLayer);
+    void Clear();
+    void Fill();
+
+    Texture2D *GetMaskTexture() const;
+    EffectLayer *GetEffectLayer() const;
+
+    // IReflectable
+    virtual void Reflect() override;
 
 private:
+    EffectLayer *p_effectLayer = nullptr;
     AH<Texture2D> m_maskTexture;
 };
 

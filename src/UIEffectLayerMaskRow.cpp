@@ -65,7 +65,7 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow()
             "", EditorTextureFactory::GetLessIcon());
         p_removeButton->GetIcon()->SetTint(Color::Red());
         p_removeButton->AddClickedCallback(
-            [this]() { p_effectLayerRow->RemoveMaskRow(this); });
+            [this]() { GetEffectLayerRow()->RemoveMaskRow(this); });
         p_removeButton->GetGameObject()->SetParent(innerHLGo);
     }
 
@@ -81,7 +81,22 @@ UIEffectLayerMaskRow::~UIEffectLayerMaskRow()
 void UIEffectLayerMaskRow::SetUIEffectLayerRow(
     UIEffectLayerRow *uiEffectLayerRow)
 {
-    p_effectLayerRow = uiEffectLayerRow;
+    p_uiEffectLayerRow = uiEffectLayerRow;
+}
+
+void UIEffectLayerMaskRow::SetEffectLayerMask(EffectLayerMask *effectLayerMask)
+{
+    p_effectLayerMask = effectLayerMask;
+}
+
+EffectLayerMask *UIEffectLayerMaskRow::GetEffectLayerMask() const
+{
+    return p_effectLayerMask;
+}
+
+UIEffectLayerRow *UIEffectLayerMaskRow::GetEffectLayerRow() const
+{
+    return p_uiEffectLayerRow;
 }
 
 void UIEffectLayerMaskRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
