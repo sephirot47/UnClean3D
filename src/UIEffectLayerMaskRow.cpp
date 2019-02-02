@@ -76,9 +76,10 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
     {
         UILayoutElement *le = innerHLGo->AddComponent<UILayoutElement>();
         le->SetFlexibleWidth(1.0f);
+        le->SetMinHeight(20);
 
         UIHorizontalLayout *hl = innerHLGo->AddComponent<UIHorizontalLayout>();
-        hl->SetPaddings(2);
+        hl->SetPaddings(0);
         hl->SetPaddingLeft(10);
         hl->SetPaddingRight(10);
         hl->SetSpacing(5);

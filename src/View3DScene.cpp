@@ -85,7 +85,7 @@ View3DScene::View3DScene()
     dl->SetShadowDistance(100.0f);
     dl->SetIntensity(3.0f);
     dl->SetShadowBias(0.003f);
-    dl->SetCastShadows(false);
+    dl->SetCastShadows(true);
     dl->SetShadowSoftness(2);
     dl->SetShadowMapSize(Vector2i(1024));
     dlGo->GetTransform()->SetPosition(Vector3(5, 10, 10));

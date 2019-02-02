@@ -9,6 +9,7 @@
 namespace Bang
 {
 class UIComboBox;
+class UIToolButton;
 class UISlider;
 };
 
@@ -37,15 +38,19 @@ private:
     EffectLayer *p_effectLayer = nullptr;
 
     UIInputColor *p_colorInput = nullptr;
+    UIToolButton *p_colorVisibleButton = nullptr;
     UIComboBox *p_colorBlendModeInput = nullptr;
 
     UISlider *p_heightInput = nullptr;
+    UIToolButton *p_heightVisibleButton = nullptr;
     UIComboBox *p_heightBlendModeInput = nullptr;
 
     UISlider *p_roughnessInput = nullptr;
+    UIToolButton *p_roughnessVisibleButton = nullptr;
     UIComboBox *p_roughnessBlendModeInput = nullptr;
 
     UISlider *p_metalnessInput = nullptr;
+    UIToolButton *p_metalnessVisibleButton = nullptr;
     UIComboBox *p_metalnessBlendModeInput = nullptr;
 
     // IEventsValueChanged

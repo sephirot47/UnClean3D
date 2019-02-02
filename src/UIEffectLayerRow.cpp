@@ -175,6 +175,8 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         p_addNewMaskButton->AddClickedCallback([this]() { AddNewMaskRow(); });
     }
     p_addNewMaskRow->SetParent(this);
+
+    AddNewMaskRow();
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()
