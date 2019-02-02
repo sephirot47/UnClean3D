@@ -252,15 +252,6 @@ ControlPanel::ControlPanel()
         p_seeMaskButton->SetOn(false);
         p_seeMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
 
-        p_clearMaskButton = GameObjectFactory::CreateUIButton("Clear Mask (C)");
-        p_clearMaskButton->AddClickedCallback(
-            [this]() { ClearSelectedMask(); });
-        p_clearMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
-
-        p_fillMaskButton = GameObjectFactory::CreateUIButton("Fill Mask");
-        p_fillMaskButton->AddClickedCallback([this]() { FillSelectedMask(); });
-        p_fillMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
-
         p_maskSubParamsGo->SetParent(p_maskParamsGo);
         p_maskParamsGo->SetParent(this);
 

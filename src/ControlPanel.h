@@ -83,8 +83,6 @@ private:
     UILabel *p_maskLabel = nullptr;
     UIToolButton *p_seeWithLightButton = nullptr;
     UIToolButton *p_seeMaskButton = nullptr;
-    UIButton *p_clearMaskButton = nullptr;
-    UIButton *p_fillMaskButton = nullptr;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;

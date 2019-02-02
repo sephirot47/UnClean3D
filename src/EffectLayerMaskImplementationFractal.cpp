@@ -32,7 +32,7 @@ using namespace Bang;
 EffectLayerMaskImplementationFractal::EffectLayerMaskImplementationFractal()
 {
     m_seed = Random::GetRange(0, 1000);
-    m_amplitude = Random::GetRange(0.0f, 2.0f);
+    m_amplitude = Random::GetRange(0.5f, 2.0f);
 }
 
 EffectLayerMaskImplementationFractal::~EffectLayerMaskImplementationFractal()

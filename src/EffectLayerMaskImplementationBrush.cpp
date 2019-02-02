@@ -86,6 +86,13 @@ void EffectLayerMaskImplementationBrush::Reflect()
                       },
                       [this]() { return m_size; },
                       BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
+
+    BANG_REFLECT_BUTTON(EffectLayerMaskImplementationBrush,
+                        "Clear Mask",
+                        [this]() { GetEffectLayerMask()->Clear(); });
+    BANG_REFLECT_BUTTON(EffectLayerMaskImplementationBrush,
+                        "Fill Mask",
+                        [this]() { GetEffectLayerMask()->Fill(); });
 }
 
 EffectLayerMask::Type
