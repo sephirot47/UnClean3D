@@ -35,6 +35,7 @@ public:
     void ClearLayersSelection();
     bool IsAllLayersVisibleButtonOn() const;
     void Duplicate(UIEffectLayerRow *effectLayerRow);
+    void Clear();
 
     UIList *GetList() const;
     uint GetSelectedEffectLayerRowIndex() const;

@@ -40,10 +40,10 @@ private:
 
     AH<Texture2D> m_albedoPingPongTexture0;
     AH<Texture2D> m_albedoPingPongTexture1;
-    AH<Texture2D> m_normalPingPongTexture0;
-    AH<Texture2D> m_normalPingPongTexture1;
     AH<Texture2D> m_heightPingPongTexture0;
     AH<Texture2D> m_heightPingPongTexture1;
+    AH<Texture2D> m_miscPingPongTexture0;
+    AH<Texture2D> m_miscPingPongTexture1;
     AH<Texture2D> m_roughnessPingPongTexture0;
     AH<Texture2D> m_roughnessPingPongTexture1;
     AH<Texture2D> m_metalnessPingPongTexture0;

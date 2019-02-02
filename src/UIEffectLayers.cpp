@@ -193,6 +193,12 @@ void UIEffectLayers::Duplicate(UIEffectLayerRow *effectLayerRow)
     newEffectLayerRow->UpdateFromEffectLayer();
 }
 
+void UIEffectLayers::Clear()
+{
+    p_uiList->Clear();
+    p_effectLayerRows.Clear();
+}
+
 UIList *UIEffectLayers::GetList() const
 {
     return p_uiList;

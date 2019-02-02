@@ -75,7 +75,6 @@ private:
     LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;
-    Model *p_currentModel = nullptr;
     GameObject *p_modelContainer = nullptr;
     Vector3 m_originalModelLocalScale = Vector3::One();
     Map<MeshRenderer *, MeshRendererInfo> m_meshRendererToInfo;

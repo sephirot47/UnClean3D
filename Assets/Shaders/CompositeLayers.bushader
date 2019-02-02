@@ -3,7 +3,7 @@
 
 #fragment
 
-const int BLEND_MODE_IGNORE = 1;
+const int BLEND_MODE_IGNORE = 0;
 const int BLEND_MODE_ADD = 1;
 const int BLEND_MODE_SUBTRACT = 2;
 const int BLEND_MODE_MULTIPLY = 3;
@@ -13,7 +13,6 @@ uniform sampler2D EffectLayerColorTexture;
 uniform sampler2D EffectLayerMiscTexture;
 
 uniform sampler2D PreviousAlbedoTexture;
-uniform sampler2D PreviousNormalTexture;
 uniform sampler2D PreviousHeightTexture;
 uniform sampler2D PreviousRoughnessTexture;
 uniform sampler2D PreviousMetalnessTexture;
@@ -25,10 +24,9 @@ uniform int MetalnessBlendMode;
 in vec2 B_FIn_AlbedoUv;
 
 layout(location = 0) out vec4 OutAlbedo;
-layout(location = 1) out vec4 OutNormal;
-layout(location = 2) out vec4 OutHeight;
-layout(location = 3) out vec4 OutRoughness;
-layout(location = 4) out vec4 OutMetalness;
+layout(location = 1) out vec4 OutHeight;
+layout(location = 2) out vec4 OutRoughness;
+layout(location = 3) out vec4 OutMetalness;
 
 vec4 Blend(in int blendMode,
            in vec4 oldValue,
@@ -81,13 +79,11 @@ void main()
 
     // Apply effect layer
     vec4  previousAlbedo    = texture(PreviousAlbedoTexture, uv);
-    vec3  previousNormal    = texture(PreviousNormalTexture, uv).rgb;
     float previousHeight    = texture(PreviousHeightTexture, uv).r * 2 - 1;
     float previousRoughness = texture(PreviousRoughnessTexture, uv).r;
     float previousMetalness = texture(PreviousMetalnessTexture, uv).r;
 
     vec4 outAlbedo = previousAlbedo;
-    vec3 outNormal = previousNormal;
     float outHeight = previousHeight;
     float outRoughness = previousRoughness;
     float outMetalness = previousMetalness;
@@ -114,7 +110,6 @@ void main()
     }
 
     OutAlbedo    = vec4(outAlbedo);
-    OutNormal    = vec4(outNormal, 1);
     OutHeight    = vec4(outHeight * 0.5 + 0.5);
     OutRoughness = vec4(outRoughness);
     OutMetalness = vec4(outMetalness);

@@ -40,6 +40,11 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
 {
     p_meshRenderer = mr;
 
+    m_color = Random::GetColorOpaque();
+    m_height = Random::GetRange(-1, 1);
+    m_roughness = Random::GetRange(0, 1);
+    m_metalness = Random::GetRange(0, 1);
+
     m_framebuffer = new Framebuffer();
 
     // Create some textures

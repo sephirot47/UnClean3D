@@ -86,7 +86,7 @@ private:
     Array<EffectLayerMask *> m_masks;
     MeshRenderer *p_meshRenderer = nullptr;
 
-    Color m_color = Color::Blue();
+    Color m_color = Color::Zero();
     float m_height = -1.0f;
     float m_roughness = 0.5f;
     float m_metalness = 0.0f;

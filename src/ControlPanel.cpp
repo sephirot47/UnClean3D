@@ -329,6 +329,7 @@ void ControlPanel::OpenModel(const Path &modelPath)
     {
         m_openModelPath = modelPath;
         MainScene::GetInstance()->LoadModel(modelPath);
+        p_uiEffectLayers->Clear();
         CreateNewEffectLayer();
     }
 }

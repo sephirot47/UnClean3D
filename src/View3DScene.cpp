@@ -340,7 +340,7 @@ void View3DScene::ReloadShaders()
 
 void View3DScene::OnModelChanged(Model *newModel)
 {
-    Model *previousModel = p_currentModel;
+    Model *previousModel = GetCurrentModel();
     if (GameObject *previousModelGo = GetModelGameObject())
     {
         GameObject::Destroy(previousModelGo);
@@ -353,8 +353,6 @@ void View3DScene::OnModelChanged(Model *newModel)
             }
         }
         m_meshRendererToInfo.Clear();
-        ApplyControlPanelSettingsToModel();
-        ApplyCompositeTexturesToModel();
     }
 
     if (newModel)
@@ -379,33 +377,30 @@ void View3DScene::OnModelChanged(Model *newModel)
             // Create default textures if they do not exist
             if (!mat->GetAlbedoTexture())
             {
-                constexpr int DTS = 1024;
                 AH<Texture2D> defaultAlbedoTex = Assets::Create<Texture2D>();
-                defaultAlbedoTex.Get()->Fill(Color::Red(), DTS, DTS);
+                defaultAlbedoTex.Get()->Fill(Color::Red(), 1, 1);
                 mat->SetAlbedoTexture(defaultAlbedoTex.Get());
             }
 
-            const Vector2i albedoTexSize = mat->GetAlbedoTexture()->GetSize();
-            const Vector2i &ats = albedoTexSize;
             if (!mat->GetNormalMapTexture())
             {
                 AH<Texture2D> defaultNormalTex = Assets::Create<Texture2D>();
                 defaultNormalTex.Get()->Fill(
-                    Color(0.5f, 0.5f, 1.0f, 1.0f), ats.x, ats.y);
+                    Color(0.5f, 0.5f, 1.0f, 1.0f), 1, 1);
                 mat->SetNormalMapTexture(defaultNormalTex.Get());
             }
 
             if (!mat->GetRoughnessTexture())
             {
                 AH<Texture2D> defaultRoughnessTex = Assets::Create<Texture2D>();
-                defaultRoughnessTex.Get()->Fill(Color(1.0f), ats.x, ats.y);
+                defaultRoughnessTex.Get()->Fill(Color(1.0f), 1, 1);
                 mat->SetRoughnessTexture(defaultRoughnessTex.Get());
             }
 
             if (!mat->GetMetalnessTexture())
             {
                 AH<Texture2D> defaultMetalnessTex = Assets::Create<Texture2D>();
-                defaultMetalnessTex.Get()->Fill(Color(1.0f), ats.x, ats.y);
+                defaultMetalnessTex.Get()->Fill(Color(1.0f), 1, 1);
                 mat->SetMetalnessTexture(defaultMetalnessTex.Get());
             }
 
@@ -431,8 +426,6 @@ void View3DScene::OnModelChanged(Model *newModel)
             ResetCamera();
         }
     }
-
-    p_currentModel = newModel;
 }
 
 EffectLayer *View3DScene::CreateNewEffectLayer()
