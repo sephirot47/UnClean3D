@@ -71,6 +71,11 @@ private:
 
     void OnMasksListCallback(GameObject *item, UIList::Action action);
 
+    // IEventsUIList
+    virtual void OnItemMoved(GameObject *item,
+                             int oldIndex,
+                             int newIndex) override;
+
     // IEventsValueChanged
     void OnValueChanged(EventEmitter<IEventsValueChanged> *ee) override;
 };

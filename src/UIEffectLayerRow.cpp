@@ -25,6 +25,7 @@
 #include "Clipboard.h"
 #include "ControlPanel.h"
 #include "EffectLayer.h"
+#include "EffectLayerMask.h"
 #include "MainScene.h"
 #include "UIEffectLayerMaskRow.h"
 #include "UIEffectLayers.h"
@@ -141,6 +142,7 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_maskRowsList->SetIdleColor(Color::White());
     p_maskRowsList->SetDragDropEnabled(true);
     p_maskRowsList->ClearSelection();
+    p_maskRowsList->EventEmitter<IEventsUIList>::RegisterListener(this);
 
     p_maskRowsList->GetGameObject()->SetParent(this);
 
@@ -309,6 +311,12 @@ UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
     return p_visibleButton;
 }
 
-void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
+void UIEffectLayerRow::OnItemMoved(GameObject *item, int, int newIndex)
+{
+    UIEffectLayerMaskRow *maskRow = DCAST<UIEffectLayerMaskRow *>(item);
+    GetEffectLayer()->MoveMask(maskRow->GetEffectLayerMask(), newIndex);
+}
+
+void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *)
 {
 }

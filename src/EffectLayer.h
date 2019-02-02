@@ -38,7 +38,7 @@ public:
     virtual ~EffectLayer() override;
 
     virtual void GenerateEffectTexture();
-    virtual void MergeMasks();
+    void MergeMasks();
     void ReloadShaders();
 
     void SetImplementation(EffectLayerMaskImplementation *impl);
@@ -54,6 +54,7 @@ public:
     void SetMetalness(float metalness);
 
     EffectLayerMask *AddNewMask();
+    void MoveMask(EffectLayerMask *effectLayerMask, uint newIndex);
     void RemoveMask(EffectLayerMask *mask);
     void Invalidate(bool recursiveDown = false);
 

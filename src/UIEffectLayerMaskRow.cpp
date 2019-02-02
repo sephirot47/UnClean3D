@@ -7,6 +7,7 @@
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "Bang/UIToolButton.h"
 #include "BangEditor/EditorTextureFactory.h"
 #include "BangEditor/UIContextMenu.h"
 
@@ -101,6 +102,28 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
             SCAST<int>(EffectLayerMask::Type::FRACTAL));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
+        p_blendModeInput = GameObjectFactory::CreateUIComboBox();
+        p_blendModeInput->AddItem("Add",
+                                  SCAST<int>(EffectLayerMask::BlendMode::ADD));
+        p_blendModeInput->AddItem(
+            "Subtract", SCAST<int>(EffectLayerMask::BlendMode::SUBTRACT));
+        p_blendModeInput->AddItem(
+            "Multiply", SCAST<int>(EffectLayerMask::BlendMode::MULTIPLY));
+        p_blendModeInput->SetSelectionByValue(
+            SCAST<int>(EffectLayerMask::BlendMode::ADD));
+        p_blendModeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+            this);
+        p_blendModeInput->GetGameObject()->SetParent(innerHLGo);
+
+        p_visibleButton = GameObjectFactory::CreateUIToolButton(
+            "", EditorTextureFactory::GetEyeIcon());
+        p_visibleButton->GetIcon()->SetTint(Color::Black());
+        p_visibleButton->SetOn(true);
+        p_visibleButton->AddClickedCallback([this]() {
+            GetEffectLayerMask()->SetVisible(p_visibleButton->GetOn());
+        });
+        p_visibleButton->GetGameObject()->SetParent(innerHLGo);
+
         p_removeButton = GameObjectFactory::CreateUIButton(
             "", EditorTextureFactory::GetLessIcon());
         p_removeButton->GetIcon()->SetTint(Color::Red());
@@ -153,5 +176,10 @@ void UIEffectLayerMaskRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
     {
         GetEffectLayerMask()->SetType(
             SCAST<EffectLayerMask::Type>(p_maskTypeInput->GetSelectedValue()));
+    }
+    else if (ee == p_blendModeInput)
+    {
+        GetEffectLayerMask()->SetBlendMode(SCAST<EffectLayerMask::BlendMode>(
+            p_blendModeInput->GetSelectedValue()));
     }
 }

@@ -33,21 +33,43 @@ layout(location = 4) out vec4 OutMetalness;
 vec4 Blend(in int blendMode,
            in vec4 oldValue,
            in vec4 value,
+           in bool forColor,
            in float alpha)
 {
     vec4 newValue = oldValue;
     switch (blendMode)
     {
         case BLEND_MODE_ADD:
-            newValue += value * alpha;
+            if (forColor)
+            {
+                newValue = oldValue * (1 - alpha) + value * alpha;
+            }
+            else
+            {
+                newValue = oldValue + value;
+            }
         break;
 
         case BLEND_MODE_SUBTRACT:
-            newValue -= value * alpha;
+            if (forColor)
+            {
+                newValue = oldValue * (1 - alpha) - value * alpha;
+            }
+            else
+            {
+                newValue = oldValue - value;
+            }
         break;
 
         case BLEND_MODE_MULTIPLY:
-            newValue = value * alpha;
+            if (forColor)
+            {
+                newValue = oldValue * (1 - alpha) + oldValue * value * alpha;
+            }
+            else
+            {
+                newValue = oldValue * value;
+            }
         break;
     }
     return newValue;
@@ -60,7 +82,7 @@ void main()
     // Apply effect layer
     vec4  previousAlbedo    = texture(PreviousAlbedoTexture, uv);
     vec3  previousNormal    = texture(PreviousNormalTexture, uv).rgb;
-    float previousHeight    = texture(PreviousHeightTexture, uv).r;
+    float previousHeight    = texture(PreviousHeightTexture, uv).r * 2 - 1;
     float previousRoughness = texture(PreviousRoughnessTexture, uv).r;
     float previousMetalness = texture(PreviousMetalnessTexture, uv).r;
 
@@ -73,27 +95,27 @@ void main()
     float effectLayerMask      = texture2D(EffectLayerMaskTexture, uv).r;
     vec4 effectLayerColor      = texture2D(EffectLayerColorTexture, uv);
     vec4 effectLayerMisc       = texture2D(EffectLayerMiscTexture, uv);
-    float effectLayerHeight    = effectLayerMisc.r;
+    float effectLayerHeight    = effectLayerMisc.r * 2 - 1;
     float effectLayerRoughness = effectLayerMisc.g;
     float effectLayerMetalness = effectLayerMisc.b;
 
     if (effectLayerMask > 0)
     {
         outAlbedo = Blend(ColorBlendMode, previousAlbedo,
-                          effectLayerColor, effectLayerColor.a);
+                          effectLayerColor, true, effectLayerColor.a);
         outAlbedo.a = 1;
 
         outHeight = Blend(HeightBlendMode, vec4(previousHeight),
-                           vec4(effectLayerHeight), 1).r;
+                           vec4(effectLayerHeight), false, 1).r;
         outRoughness = Blend(RoughnessBlendMode, vec4(previousRoughness),
-                             vec4(effectLayerRoughness), 1).r;
+                             vec4(effectLayerRoughness), false, 1).r;
         outMetalness = Blend(MetalnessBlendMode, vec4(previousMetalness),
-                             vec4(effectLayerMetalness), 1).r;
+                             vec4(effectLayerMetalness), false, 1).r;
     }
 
     OutAlbedo    = vec4(outAlbedo);
     OutNormal    = vec4(outNormal, 1);
-    OutHeight    = vec4(outHeight);
+    OutHeight    = vec4(outHeight * 0.5 + 0.5);
     OutRoughness = vec4(outRoughness);
     OutMetalness = vec4(outMetalness);
 }

@@ -199,7 +199,6 @@ void EffectLayer::MergeMasks()
     GL::Push(GL::Pushable::VIEWPORT);
 
     GL::Enable(GL::Enablable::BLEND);
-    GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
 
     Vector2i size = GetEffectColorTexture()->GetSize();
     GL::SetViewport(0, 0, size.x, size.y);
@@ -212,8 +211,35 @@ void EffectLayer::MergeMasks()
     m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
     GL::ClearColorBuffer(Color::Zero());
-    for (EffectLayerMask *mask : GetMasks())
+    for (int i = GetMasks().Size() - 1; i >= 0; --i)
     {
+        EffectLayerMask *mask = GetMasks()[i];
+        if (!mask->GetVisible())
+        {
+            continue;
+        }
+
+        switch (mask->GetBlendMode())
+        {
+            case EffectLayerMask::BlendMode::IGNORE: continue; break;
+
+            case EffectLayerMask::BlendMode::ADD:
+                GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
+                GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
+                break;
+
+            case EffectLayerMask::BlendMode::MULTIPLY:
+                GL::BlendFunc(GL::BlendFactor::ZERO,
+                              GL::BlendFactor::SRC_COLOR);
+                GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
+                break;
+
+            case EffectLayerMask::BlendMode::SUBTRACT:
+                GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
+                GL::BlendEquation(GL::BlendEquationE::FUNC_REVERSE_SUBTRACT);
+                break;
+        }
+
         mask->GetMaskTexture()->ResizeConservingData(size.x, size.y);
         GEngine::GetInstance()->RenderTexture(mask->GetMaskTexture());
     }
@@ -323,6 +349,13 @@ EffectLayerMask *EffectLayer::AddNewMask()
     m_masks.PushBack(newMask);
     Invalidate();
     return newMask;
+}
+
+void EffectLayer::MoveMask(EffectLayerMask *effectLayerMask, uint newIndex)
+{
+    m_masks.Remove(effectLayerMask);
+    m_masks.Insert(effectLayerMask, newIndex);
+    Invalidate();
 }
 
 void EffectLayer::RemoveMask(EffectLayerMask *mask)

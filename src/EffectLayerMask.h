@@ -20,6 +20,14 @@ class EffectLayerMask : public Serializable
 public:
     SERIALIZABLE(EffectLayerMask);
 
+    enum class BlendMode
+    {
+        IGNORE = 0,
+        ADD,
+        SUBTRACT,
+        MULTIPLY
+    };
+
     enum class Type
     {
         FRACTAL,
@@ -33,19 +41,23 @@ public:
     virtual void Update();
     void ReloadShaders();
     void SetType(EffectLayerMask::Type type);
+    void SetBlendMode(EffectLayerMask::BlendMode blendMode);
     void SetEffectLayer(EffectLayer *effectLayer);
     void SetName(const String &name);
     void GenerateMask();
     void Clear();
     void Fill();
+    void SetVisible(bool visible);
     void Invalidate(bool recursiveDown = false);
 
     const String &GetName() const;
+    EffectLayerMask::BlendMode GetBlendMode() const;
     EffectLayerMask::Type GetType() const;
     Texture2D *GetMaskTexture() const;
     EffectLayer *GetEffectLayer() const;
     EffectLayerMaskImplementation *GetImplementation() const;
     ControlPanel *GetControlPanel() const;
+    bool GetVisible() const;
     bool IsValid() const;
 
     // IReflectable
@@ -53,6 +65,8 @@ public:
 
 private:
     String m_name = "LayerMask";
+    bool m_visible = true;
+    EffectLayerMask::BlendMode m_blendMode = EffectLayerMask::BlendMode::ADD;
     EffectLayerMaskImplementation *m_implementation = nullptr;
     EffectLayerMask::Type m_type = Undef<EffectLayerMask::Type>();
     EffectLayer *p_effectLayer = nullptr;

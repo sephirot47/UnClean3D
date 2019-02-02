@@ -25,7 +25,7 @@ void main()
     OutHeightRoughnessMetalness.r = mask * Height * 0.5 + 0.5;
     OutHeightRoughnessMetalness.g = mask * Roughness;
     OutHeightRoughnessMetalness.b = mask * Metalness;
-    OutHeightRoughnessMetalness.a = 1;;
+    OutHeightRoughnessMetalness.a = 1;
 }
 
 

@@ -89,6 +89,15 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
     }
 }
 
+void EffectLayerMask::SetBlendMode(EffectLayerMask::BlendMode blendMode)
+{
+    if (blendMode != GetBlendMode())
+    {
+        m_blendMode = blendMode;
+        Invalidate(true);
+    }
+}
+
 void EffectLayerMask::SetEffectLayer(EffectLayer *effectLayer)
 {
     p_effectLayer = effectLayer;
@@ -126,6 +135,15 @@ void EffectLayerMask::Fill()
     Invalidate();
 }
 
+void EffectLayerMask::SetVisible(bool visible)
+{
+    if (visible != GetVisible())
+    {
+        m_visible = visible;
+        Invalidate();
+    }
+}
+
 void EffectLayerMask::Invalidate(bool recursiveDown)
 {
     m_isValid = false;
@@ -146,6 +164,11 @@ void EffectLayerMask::Invalidate(bool recursiveDown)
 const String &EffectLayerMask::GetName() const
 {
     return m_name;
+}
+
+EffectLayerMask::BlendMode EffectLayerMask::GetBlendMode() const
+{
+    return m_blendMode;
 }
 
 EffectLayerMask::Type EffectLayerMask::GetType() const
@@ -183,4 +206,9 @@ void EffectLayerMask::Reflect()
 ControlPanel *EffectLayerMask::GetControlPanel() const
 {
     return GetEffectLayer()->GetControlPanel();
+}
+
+bool EffectLayerMask::GetVisible() const
+{
+    return m_visible;
 }

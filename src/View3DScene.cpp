@@ -209,6 +209,7 @@ void View3DScene::Update()
                     ->GetImplementation());
         brushTR->SetScale(maskBrush->GetBrushSize());
     }
+    p_maskBrushRend->SetEnabled(GetControlPanel()->GetMaskBrushEnabled());
 
     // Camera movement
     {
@@ -528,6 +529,7 @@ void View3DScene::MoveEffectLayer(EffectLayer *effectLayer, uint newIndex)
         mrInfo.effectLayers.Remove(effectLayer);
         mrInfo.effectLayers.Insert(effectLayer, newIndex);
     }
+    InvalidateAll();
 }
 
 void View3DScene::InvalidateAll()

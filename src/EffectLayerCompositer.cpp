@@ -123,7 +123,7 @@ void EffectLayerCompositer::CompositeLayers(
         m_framebuffer->SetAttachmentTexture(heightReadTex,
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-        GL::ClearColorBuffer(Color::Zero());
+        GL::ClearColorBuffer(Color(0.5f));
 
         // Copy albedo and normal textures
         GEngine::GetInstance()->CopyTexture(albedoOriginalTex, albedoReadTex);
@@ -158,7 +158,7 @@ void EffectLayerCompositer::CompositeLayers(
     // Bind ShaderProgram and set uniforms
     ShaderProgram *sp = m_compositeLayersSP.Get();
     sp->Bind();
-    for (uint i = 0; i < effectLayers.Size(); ++i)
+    for (int i = effectLayers.Size() - 1; i >= 0; --i)
     {
         if (!effectLayers[i]->GetVisible())
         {

@@ -11,6 +11,7 @@ namespace Bang
 class UILabel;
 class UIButton;
 class UIComboBox;
+class UIToolButton;
 class UIImageRenderer;
 };
 
@@ -42,10 +43,12 @@ public:
     UIEffectLayerRow *GetEffectLayerRow() const;
 
 private:
+    UIToolButton *p_visibleButton = nullptr;
     UIEffectLayers *p_uiEffectLayers = nullptr;
     UIEffectLayerRow *p_uiEffectLayerRow = nullptr;
     EffectLayerMask *p_effectLayerMask = nullptr;
 
+    UIComboBox *p_blendModeInput = nullptr;
     UIContextMenu *p_contextMenu = nullptr;
     UILabel *p_nameLabel = nullptr;
     UIComboBox *p_maskTypeInput = nullptr;
