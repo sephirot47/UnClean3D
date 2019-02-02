@@ -285,11 +285,15 @@ void ControlPanel::Update()
         }
     }
 
-    bool enableParams = false;
-    Array<EffectLayer *> selectedEffectLayers =
-        GetView3DScene()->GetSelectedEffectLayers();
-    if (selectedEffectLayers.Size() >= 1)
+    bool enableEffectParams = false;
+    bool enableMaskParams = false;
+    if (EffectLayer *selectedEffectLayer = GetSelectedEffectLayer())
     {
+        p_effectLayerParamsTitle->GetText()->SetContent("Effect Layer");
+        p_effectSerializableWidget->SetSerializable(selectedEffectLayer);
+        p_effectSerializableWidget->UpdateFromReference();
+        enableEffectParams = true;
+
         if (EffectLayerMask *selectedEffectLayerMask =
                 GetSelectedEffectLayerMask())
         {
@@ -300,25 +304,13 @@ void ControlPanel::Update()
                                                    impl->GetTypeName());
                 p_maskSerializableWidget->SetSerializable(impl);
                 p_maskSerializableWidget->UpdateFromReference();
-                enableParams = true;
+                enableMaskParams = true;
+                enableEffectParams = false;
             }
         }
     }
-
-    UIEffectLayerRow *selectedEffectRow = GetSelectedEffectLayerRow();
-    UIEffectLayerMaskRow *selectedMaskRow = GetSelectedEffectLayerMaskRow();
-    p_maskParamsGo->SetEnabled(enableParams && selectedEffectRow &&
-                               selectedMaskRow);
-    p_effectLayerParamsGo->SetEnabled(enableParams && selectedEffectRow &&
-                                      !selectedMaskRow);
-
-    if (enableParams)
-    {
-        if (Input::GetKeyDown(Key::C))
-        {
-            ClearSelectedMask();
-        }
-    }
+    p_maskParamsGo->SetEnabled(enableMaskParams);
+    p_effectLayerParamsGo->SetEnabled(enableEffectParams);
 
     MainScene::GetInstance()->SetSceneMode(
         SCAST<MainScene::SceneMode>(p_sceneModeComboBox->GetSelectedValue()));
@@ -384,26 +376,6 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
     sp->SetBool("WithLight", p_seeWithLightButton->GetOn());
     sp->SetBool("SeeMask",
                 GetSelectedEffectLayerMask() && p_seeMaskButton->GetOn());
-}
-
-void ControlPanel::FillSelectedMask()
-{
-    if (GetSelectedEffectLayerMask())
-    {
-        GetSelectedEffectLayerMask()->Fill();
-    }
-    GetSelectedEffectLayer()->MergeMasks();
-    GetView3DScene()->CompositeTextures();
-}
-
-void ControlPanel::ClearSelectedMask()
-{
-    if (GetSelectedEffectLayerMask())
-    {
-        GetSelectedEffectLayerMask()->Clear();
-    }
-    GetSelectedEffectLayer()->MergeMasks();
-    GetView3DScene()->CompositeTextures();
 }
 
 bool ControlPanel::GetMaskBrushEnabled() const

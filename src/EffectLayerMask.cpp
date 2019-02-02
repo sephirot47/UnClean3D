@@ -105,8 +105,8 @@ void EffectLayerMask::GenerateMask()
     {
         MeshRenderer *mr = GetEffectLayer()->GetMeshRenderer();
         GetMaskTexture()->ResizeConservingData(
-            GetEffectLayer()->GetEffectTexture()->GetWidth(),
-            GetEffectLayer()->GetEffectTexture()->GetHeight());
+            GetEffectLayer()->GetEffectColorTexture()->GetWidth(),
+            GetEffectLayer()->GetEffectColorTexture()->GetHeight());
         impl->GenerateEffectMaskTexture(GetMaskTexture(), mr);
     }
     m_isValid = true;

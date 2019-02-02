@@ -54,7 +54,8 @@ void EffectLayerMaskImplementationBrush::Reflect()
                           Invalidate();
                       },
                       [this]() { return m_strength; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
 
     ReflectVar<float>("Hardness",
                       [this](float hardness) {
@@ -62,7 +63,17 @@ void EffectLayerMaskImplementationBrush::Reflect()
                           Invalidate();
                       },
                       [this]() { return m_hardness; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+
+    ReflectVar<float>("Size",
+                      [this](float size) {
+                          m_size = size;
+                          Invalidate();
+                      },
+                      [this]() { return m_size; },
+                      BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(1.0f));
 
     ReflectVar<bool>("Depth aware",
                      [this](bool depthAware) {
@@ -77,15 +88,8 @@ void EffectLayerMaskImplementationBrush::Reflect()
                          Invalidate();
                      },
                      [this]() { return m_erasing; },
-                     BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
-
-    ReflectVar<float>("Size",
-                      [this](float size) {
-                          m_size = size;
-                          Invalidate();
-                      },
-                      [this]() { return m_size; },
-                      BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
+                     BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
+                         BANG_REFLECT_HINT_STEP_VALUE(0.1f));
 
     BANG_REFLECT_BUTTON(EffectLayerMaskImplementationBrush,
                         "Clear Mask",

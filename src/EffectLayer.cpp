@@ -43,13 +43,17 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_framebuffer = new Framebuffer();
 
     // Create some textures
-    m_effectTexture = Assets::Create<Texture2D>();
-    m_effectTexture.Get()->Fill(Color::Zero(), 1, 1);
-    m_effectTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+    m_effectColorTexture = Assets::Create<Texture2D>();
+    m_effectColorTexture.Get()->Fill(Color::Zero(), 1, 1);
+    m_effectColorTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+
+    m_effectMiscTexture = Assets::Create<Texture2D>();
+    m_effectMiscTexture.Get()->Fill(Color::Zero(), 1, 1);
+    m_effectMiscTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
     m_growAuxiliarTexture = Assets::Create<Texture2D>();
     m_growAuxiliarTexture.Get()->Fill(Color::Zero(), 1, 1);
-    m_effectTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+    m_growAuxiliarTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
     // Create mask textures
     m_mergedMaskTexture = Assets::Create<Texture2D>();
@@ -133,7 +137,8 @@ EffectLayer::~EffectLayer()
 void EffectLayer::GenerateEffectTexture()
 {
     Vector2i texSize = GetControlPanel()->GetTextureSize();
-    GetEffectTexture()->ResizeConservingData(texSize.x, texSize.y);
+    GetEffectColorTexture()->ResizeConservingData(texSize.x, texSize.y);
+    GetEffectMiscTexture()->ResizeConservingData(texSize.x, texSize.y);
 
     // Masks
     {
@@ -154,17 +159,26 @@ void EffectLayer::GenerateEffectTexture()
 
     GL::Disable(GL::Enablable::BLEND);
 
-    GL::SetViewport(
-        0, 0, GetEffectTexture()->GetWidth(), GetEffectTexture()->GetHeight());
+    GL::SetViewport(0,
+                    0,
+                    GetEffectColorTexture()->GetWidth(),
+                    GetEffectColorTexture()->GetHeight());
 
     m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(GetEffectTexture(),
+    m_framebuffer->SetAttachmentTexture(GetEffectColorTexture(),
                                         GL::Attachment::COLOR0);
-    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+    m_framebuffer->SetAttachmentTexture(GetEffectMiscTexture(),
+                                        GL::Attachment::COLOR1);
+    m_framebuffer->SetDrawBuffers(
+        {GL::Attachment::COLOR0, GL::Attachment::COLOR1});
 
     ShaderProgram *sp = m_generateEffectTextureSP.Get();
     sp->Bind();
     sp->SetTexture2D("MaskTexture", GetMergedMaskTexture());
+    sp->SetColor("Color", m_color);
+    sp->SetFloat("Height", m_height);
+    sp->SetFloat("Roughness", m_roughness);
+    sp->SetFloat("Metalness", m_metalness);
 
     GEngine::GetInstance()->RenderViewportPlane();
 
@@ -173,7 +187,7 @@ void EffectLayer::GenerateEffectTexture()
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 
-    GrowTextureBorders(GetEffectTexture());
+    GrowTextureBorders(GetEffectColorTexture());
 
     m_isValid = true;
 }
@@ -187,7 +201,7 @@ void EffectLayer::MergeMasks()
     GL::Enable(GL::Enablable::BLEND);
     GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
 
-    Vector2i size = GetEffectTexture()->GetSize();
+    Vector2i size = GetEffectColorTexture()->GetSize();
     GL::SetViewport(0, 0, size.x, size.y);
 
     GetMergedMaskTexture()->ResizeConservingData(size.x, size.y);
@@ -230,6 +244,12 @@ void EffectLayer::SetName(const String &name)
     m_name = name;
 }
 
+void EffectLayer::SetBlendMode(EffectLayer::BlendMode blendMode)
+{
+    m_blendMode = blendMode;
+    Invalidate();
+}
+
 EffectLayerMask *EffectLayer::AddNewMask()
 {
     EffectLayerMask *newMask = new EffectLayerMask();
@@ -261,6 +281,11 @@ Mesh *EffectLayer::GetMesh() const
     return p_meshRenderer ? p_meshRenderer->GetMesh() : nullptr;
 }
 
+EffectLayer::BlendMode EffectLayer::GetBlendMode() const
+{
+    return m_blendMode;
+}
+
 Mesh *EffectLayer::GetTextureMesh() const
 {
     return m_textureMesh.Get();
@@ -286,9 +311,14 @@ bool EffectLayer::IsValid() const
     return m_isValid;
 }
 
-Texture2D *EffectLayer::GetEffectTexture() const
+Texture2D *EffectLayer::GetEffectColorTexture() const
 {
-    return m_effectTexture.Get();
+    return m_effectColorTexture.Get();
+}
+
+Texture2D *EffectLayer::GetEffectMiscTexture() const
+{
+    return m_effectMiscTexture.Get();
 }
 
 const Array<EffectLayerMask *> &EffectLayer::GetMasks() const
@@ -305,7 +335,47 @@ void EffectLayer::Reflect()
 {
     Serializable::Reflect();
 
-    BANG_REFLECT_VAR_MEMBER(EffectLayer, "Visible", SetVisible, GetVisible);
+    ReflectVar<Color>("Color",
+                      [this](const Color &color) {
+                          m_color = color;
+                          Invalidate();
+                      },
+                      [this]() { return m_color; },
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+
+    ReflectVar<float>("Height",
+                      [this](float height) {
+                          m_height = height;
+                          Invalidate();
+                      },
+                      [this]() { return m_height; },
+                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+
+    ReflectVar<float>("Roughness",
+                      [this](float roughness) {
+                          m_roughness = roughness;
+                          Invalidate();
+                      },
+                      [this]() { return m_roughness; },
+                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+
+    ReflectVar<float>("Metalness",
+                      [this](float metalness) {
+                          m_metalness = metalness;
+                          Invalidate();
+                      },
+                      [this]() { return m_metalness; },
+                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayer,
+                                   "Visible",
+                                   SetVisible,
+                                   GetVisible,
+                                   BANG_REFLECT_HINT_SHOWN(false));
 }
 
 void EffectLayer::GrowTextureBorders(Texture2D *texture)
@@ -329,7 +399,7 @@ void EffectLayer::GrowTextureBorders(Texture2D *texture)
     m_framebuffer->SetAttachmentTexture(texture, GL::Attachment::COLOR0);
     m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-    GL::ClearColorBuffer(Color::Zero());
+    // GL::ClearColorBuffer(Color::Zero());
     GEngine::GetInstance()->RenderViewportPlane();
 
     GL::Pop(GL::Pushable::VIEWPORT);

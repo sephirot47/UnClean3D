@@ -181,8 +181,10 @@ void EffectLayerCompositer::CompositeLayers(
         {
             EffectLayer *effectLayer = effectLayers[i];
 
-            sp->SetTexture2D("EffectLayerTexture",
-                             effectLayer->GetEffectTexture());
+            sp->SetTexture2D("EffectLayerColorTexture",
+                             effectLayer->GetEffectColorTexture());
+            sp->SetTexture2D("EffectLayerMiscTexture",
+                             effectLayer->GetEffectMiscTexture());
             sp->SetTexture2D("EffectLayerMaskTexture",
                              effectLayer->GetMergedMaskTexture());
 
@@ -191,6 +193,8 @@ void EffectLayerCompositer::CompositeLayers(
             sp->SetTexture2D("PreviousHeightTexture", heightReadTex);
             sp->SetTexture2D("PreviousRoughnessTexture", roughnessReadTex);
             sp->SetTexture2D("PreviousMetalnessTexture", metalnessReadTex);
+
+            sp->SetInt("BlendMode", SCAST<int>(effectLayer->GetBlendMode()));
         }
 
         GEngine::GetInstance()->RenderViewportPlane();

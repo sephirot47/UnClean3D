@@ -64,6 +64,7 @@ private:
     Array<UIEffectLayerMaskRow *> p_maskRows;
 
     GameObject *p_addNewMaskRow = nullptr;
+    UIComboBox *p_blendModeInput = nullptr;
     UIToolButton *p_visibleButton = nullptr;
     UIButton *p_addNewMaskButton = nullptr;
     UIFocusable *p_focusable = nullptr;

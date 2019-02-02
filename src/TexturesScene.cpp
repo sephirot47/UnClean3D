@@ -116,7 +116,7 @@ void TexturesScene::Update()
         TextureContainer *effectLayerTexCont =
             m_effectLayerToTexCont.Get(effectLayer);
         effectLayerTexCont->GetImageRenderer()->SetImageTexture(
-            effectLayer->GetEffectTexture());
+            effectLayer->GetEffectColorTexture());
 
         TextureContainer *effectMaskTexCont =
             m_effectLayerToMaskTexCont.Get(effectLayer);

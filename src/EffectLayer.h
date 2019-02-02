@@ -26,6 +26,13 @@ class EffectLayer : public Serializable
 public:
     SERIALIZABLE(EffectLayer);
 
+    enum class BlendMode
+    {
+        ADD = 0,
+        SUBTRACT,
+        MULTIPLY
+    };
+
     EffectLayer(MeshRenderer *mr = nullptr);
     virtual ~EffectLayer() override;
 
@@ -36,6 +43,7 @@ public:
     void SetImplementation(EffectLayerMaskImplementation *impl);
     void SetVisible(bool visible);
     void SetName(const String &name);
+    void SetBlendMode(EffectLayer::BlendMode blendMode);
 
     EffectLayerMask *AddNewMask();
     void RemoveMask(EffectLayerMask *mask);
@@ -43,7 +51,9 @@ public:
 
     bool GetVisible() const;
     Mesh *GetMesh() const;
-    Texture2D *GetEffectTexture() const;
+    EffectLayer::BlendMode GetBlendMode() const;
+    Texture2D *GetEffectColorTexture() const;
+    Texture2D *GetEffectMiscTexture() const;
     const Array<EffectLayerMask *> &GetMasks() const;
     ControlPanel *GetControlPanel() const;
     Mesh *GetTextureMesh() const;
@@ -60,6 +70,12 @@ private:
     Array<EffectLayerMask *> m_masks;
     MeshRenderer *p_meshRenderer = nullptr;
 
+    Color m_color = Color::Red();
+    float m_height = 0.0f;
+    float m_roughness = 0.0f;
+    float m_metalness = 0.0f;
+    BlendMode m_blendMode = BlendMode::ADD;
+
     VBO *m_positionsVBO = nullptr;
     VBO *m_normalsVBO = nullptr;
     Framebuffer *m_framebuffer = nullptr;
@@ -70,7 +86,8 @@ private:
     AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_growTextureBordersSP;
 
-    AH<Texture2D> m_effectTexture;
+    AH<Texture2D> m_effectColorTexture;
+    AH<Texture2D> m_effectMiscTexture;
     AH<Texture2D> m_mergedMaskTexture;
     AH<Texture2D> m_growAuxiliarTexture;
 

@@ -7,15 +7,22 @@
 in vec2 B_FIn_AlbedoUv;
 
 uniform sampler2D MaskTexture;
+uniform vec4 Color;
+uniform float Height;
+uniform float Roughness;
+uniform float Metalness;
 
 layout(location = 0) out vec4 OutColor;
+layout(location = 1) out vec4 OutHeightRoughnessMetalness;
 
 void main()
 {
     vec2 uv = B_FIn_AlbedoUv;
 
     float mask = texture(MaskTexture, uv).r;
-    OutColor = vec4(mask * vec3(1), 1);
+
+    OutColor = vec4(mask * Color.rgb, 1);
+    OutHeightRoughnessMetalness = vec4(mask * vec3(Height, Roughness, Metalness), 1);
 }
 
 
