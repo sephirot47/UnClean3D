@@ -25,6 +25,7 @@ class SerializableInspectorWidget;
 
 class EffectLayer;
 class EffectLayerMask;
+class UIEffectLayerParameters;
 class UIEffectLayers;
 class UIEffectLayerRow;
 class UIEffectLayerMaskRow;
@@ -92,7 +93,7 @@ private:
     UILabel *p_effectLayerParamsTitle = nullptr;
 
     // SerializableWidget
-    SerializableInspectorWidget *p_effectSerializableWidget = nullptr;
+    UIEffectLayerParameters *p_effectParametersWidget = nullptr;
     SerializableInspectorWidget *p_maskSerializableWidget = nullptr;
 
     Path GetInitialDir() const;

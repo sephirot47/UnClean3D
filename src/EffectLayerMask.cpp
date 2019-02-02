@@ -126,17 +126,21 @@ void EffectLayerMask::Fill()
     Invalidate();
 }
 
-void EffectLayerMask::Invalidate()
+void EffectLayerMask::Invalidate(bool recursiveDown)
 {
     m_isValid = false;
     if (GetEffectLayer())
     {
         GetEffectLayer()->Invalidate();
     }
-}
 
-void EffectLayerMask::PaintMaskBrush()
-{
+    if (recursiveDown)
+    {
+        if (GetImplementation())
+        {
+            GetImplementation()->Invalidate();
+        }
+    }
 }
 
 const String &EffectLayerMask::GetName() const

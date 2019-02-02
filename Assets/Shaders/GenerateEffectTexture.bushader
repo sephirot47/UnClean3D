@@ -21,8 +21,11 @@ void main()
 
     float mask = texture(MaskTexture, uv).r;
 
-    OutColor = vec4(mask * Color.rgb, 1);
-    OutHeightRoughnessMetalness = vec4(mask * vec3(Height, Roughness, Metalness), 1);
+    OutColor = vec4(mask * Color.rgba);
+    OutHeightRoughnessMetalness.r = mask * Height * 0.5 + 0.5;
+    OutHeightRoughnessMetalness.g = mask * Roughness;
+    OutHeightRoughnessMetalness.b = mask * Metalness;
+    OutHeightRoughnessMetalness.a = 1;;
 }
 
 

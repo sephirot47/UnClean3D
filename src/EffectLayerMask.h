@@ -38,8 +38,7 @@ public:
     void GenerateMask();
     void Clear();
     void Fill();
-    void Invalidate();
-    void PaintMaskBrush();
+    void Invalidate(bool recursiveDown = false);
 
     const String &GetName() const;
     EffectLayerMask::Type GetType() const;

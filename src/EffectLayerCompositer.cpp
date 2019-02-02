@@ -194,7 +194,14 @@ void EffectLayerCompositer::CompositeLayers(
             sp->SetTexture2D("PreviousRoughnessTexture", roughnessReadTex);
             sp->SetTexture2D("PreviousMetalnessTexture", metalnessReadTex);
 
-            sp->SetInt("BlendMode", SCAST<int>(effectLayer->GetBlendMode()));
+            sp->SetInt("ColorBlendMode",
+                       SCAST<int>(effectLayer->GetColorBlendMode()));
+            sp->SetInt("HeightBlendMode",
+                       SCAST<int>(effectLayer->GetHeightBlendMode()));
+            sp->SetInt("RoughnessBlendMode",
+                       SCAST<int>(effectLayer->GetRoughnessBlendMode()));
+            sp->SetInt("MetalnessBlendMode",
+                       SCAST<int>(effectLayer->GetMetalnessBlendMode()));
         }
 
         GEngine::GetInstance()->RenderViewportPlane();

@@ -29,6 +29,7 @@ protected:
                                            MeshRenderer *meshRend) override;
 
 private:
+    float m_offset = 0.0f;
     float m_seed = 0.0f;
     float m_stainsSize = 4.0f;
     float m_grain = 2.5f;

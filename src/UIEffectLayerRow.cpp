@@ -88,19 +88,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(effectRow);
 
-        p_blendModeInput = GameObjectFactory::CreateUIComboBox();
-        p_blendModeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
-            this);
-        p_blendModeInput->AddItem("Add",
-                                  SCAST<int>(EffectLayer::BlendMode::ADD));
-        p_blendModeInput->AddItem("Subtract",
-                                  SCAST<int>(EffectLayer::BlendMode::SUBTRACT));
-        p_blendModeInput->AddItem("Multiply",
-                                  SCAST<int>(EffectLayer::BlendMode::MULTIPLY));
-        p_blendModeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayer::BlendMode::MULTIPLY));
-        p_blendModeInput->GetGameObject()->SetParent(effectRow);
-
         p_visibleButton = GameObjectFactory::CreateUIToolButton(
             "", EditorTextureFactory::GetEyeIcon());
         p_visibleButton->GetIcon()->SetTint(Color::Black());
@@ -249,8 +236,6 @@ void UIEffectLayerRow::Update()
 void UIEffectLayerRow::UpdateFromEffectLayer()
 {
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
-    p_blendModeInput->SetSelectionByValue(
-        SCAST<int>(GetEffectLayer()->GetBlendMode()));
 }
 
 UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow()
@@ -326,9 +311,4 @@ UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
 
 void UIEffectLayerRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
-    if (ee == p_blendModeInput)
-    {
-        GetEffectLayer()->SetBlendMode(SCAST<EffectLayer::BlendMode>(
-            p_blendModeInput->GetSelectedValue()));
-    }
 }

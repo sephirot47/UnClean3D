@@ -49,7 +49,15 @@ void EffectLayerMaskImplementationFractal::Reflect()
                           Invalidate();
                       },
                       [this]() { return m_amplitude; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 2.0f) +
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+    ReflectVar<float>("Offset",
+                      [this](float offset) {
+                          m_offset = offset;
+                          Invalidate();
+                      },
+                      [this]() { return m_offset; },
+                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
                           BANG_REFLECT_HINT_STEP_VALUE(0.1f));
     ReflectVar<float>("Stains size",
                       [this](float stainsSize) {
@@ -101,6 +109,7 @@ void EffectLayerMaskImplementationFractal::SetGenerateEffectUniforms(
     EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(sp, meshRend);
 
     sp->SetFloat("FractalOctaves", 8.0f);
+    sp->SetFloat("FractalOffset", m_offset);
     sp->SetFloat("FractalFrequency", (1.0f / m_stainsSize));
     sp->SetFloat("FractalFrequencyMultiply", m_grain);
     sp->SetFloat("FractalAmplitude", m_amplitude);

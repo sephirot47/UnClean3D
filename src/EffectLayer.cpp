@@ -175,10 +175,10 @@ void EffectLayer::GenerateEffectTexture()
     ShaderProgram *sp = m_generateEffectTextureSP.Get();
     sp->Bind();
     sp->SetTexture2D("MaskTexture", GetMergedMaskTexture());
-    sp->SetColor("Color", m_color);
-    sp->SetFloat("Height", m_height);
-    sp->SetFloat("Roughness", m_roughness);
-    sp->SetFloat("Metalness", m_metalness);
+    sp->SetColor("Color", GetColor());
+    sp->SetFloat("Height", GetHeight());
+    sp->SetFloat("Roughness", GetRoughness());
+    sp->SetFloat("Metalness", GetMetalness());
 
     GEngine::GetInstance()->RenderViewportPlane();
 
@@ -244,10 +244,76 @@ void EffectLayer::SetName(const String &name)
     m_name = name;
 }
 
-void EffectLayer::SetBlendMode(EffectLayer::BlendMode blendMode)
+void EffectLayer::SetColorBlendMode(EffectLayer::BlendMode blendMode)
 {
-    m_blendMode = blendMode;
-    Invalidate();
+    if (blendMode != GetColorBlendMode())
+    {
+        m_colorBlendMode = blendMode;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetHeightBlendMode(EffectLayer::BlendMode blendMode)
+{
+    if (blendMode != GetHeightBlendMode())
+    {
+        m_heightBlendMode = blendMode;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetRoughnessBlendMode(EffectLayer::BlendMode blendMode)
+{
+    if (blendMode != GetRoughnessBlendMode())
+    {
+        m_roughnessBlendMode = blendMode;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetMetalnessBlendMode(EffectLayer::BlendMode blendMode)
+{
+    if (blendMode != GetMetalnessBlendMode())
+    {
+        m_metalnessBlendMode = blendMode;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetColor(const Color &color)
+{
+    if (color != GetColor())
+    {
+        m_color = color;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetHeight(float height)
+{
+    if (height != GetHeight())
+    {
+        m_height = height;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetRoughness(float roughness)
+{
+    if (roughness != GetRoughness())
+    {
+        m_roughness = roughness;
+        Invalidate();
+    }
+}
+
+void EffectLayer::SetMetalness(float metalness)
+{
+    if (metalness != GetMetalness())
+    {
+        m_metalness = metalness;
+        Invalidate();
+    }
 }
 
 EffectLayerMask *EffectLayer::AddNewMask()
@@ -266,9 +332,16 @@ void EffectLayer::RemoveMask(EffectLayerMask *mask)
     Invalidate();
 }
 
-void EffectLayer::Invalidate()
+void EffectLayer::Invalidate(bool recursiveDown)
 {
     m_isValid = false;
+    if (recursiveDown)
+    {
+        for (EffectLayerMask *mask : GetMasks())
+        {
+            mask->Invalidate(recursiveDown);
+        }
+    }
 }
 
 bool EffectLayer::GetVisible() const
@@ -281,9 +354,44 @@ Mesh *EffectLayer::GetMesh() const
     return p_meshRenderer ? p_meshRenderer->GetMesh() : nullptr;
 }
 
-EffectLayer::BlendMode EffectLayer::GetBlendMode() const
+const Color &EffectLayer::GetColor() const
 {
-    return m_blendMode;
+    return m_color;
+}
+
+float EffectLayer::GetHeight() const
+{
+    return m_height;
+}
+
+float EffectLayer::GetRoughness() const
+{
+    return m_roughness;
+}
+
+float EffectLayer::GetMetalness() const
+{
+    return m_metalness;
+}
+
+EffectLayer::BlendMode EffectLayer::GetColorBlendMode() const
+{
+    return m_colorBlendMode;
+}
+
+EffectLayer::BlendMode EffectLayer::GetHeightBlendMode() const
+{
+    return m_heightBlendMode;
+}
+
+EffectLayer::BlendMode EffectLayer::GetRoughnessBlendMode() const
+{
+    return m_roughnessBlendMode;
+}
+
+EffectLayer::BlendMode EffectLayer::GetMetalnessBlendMode() const
+{
+    return m_metalnessBlendMode;
 }
 
 Mesh *EffectLayer::GetTextureMesh() const
@@ -336,40 +444,24 @@ void EffectLayer::Reflect()
     Serializable::Reflect();
 
     ReflectVar<Color>("Color",
-                      [this](const Color &color) {
-                          m_color = color;
-                          Invalidate();
-                      },
-                      [this]() { return m_color; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+                      [this](const Color &color) { SetColor(color); },
+                      [this]() { return GetColor(); },
+                      BANG_REFLECT_HINT_SHOWN(false));
 
     ReflectVar<float>("Height",
-                      [this](float height) {
-                          m_height = height;
-                          Invalidate();
-                      },
-                      [this]() { return m_height; },
-                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+                      [this](float height) { SetHeight(height); },
+                      [this]() { return GetHeight(); },
+                      BANG_REFLECT_HINT_SHOWN(false));
 
     ReflectVar<float>("Roughness",
-                      [this](float roughness) {
-                          m_roughness = roughness;
-                          Invalidate();
-                      },
-                      [this]() { return m_roughness; },
-                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+                      [this](float roughness) { SetRoughness(roughness); },
+                      [this]() { return GetRoughness(); },
+                      BANG_REFLECT_HINT_SHOWN(false));
 
     ReflectVar<float>("Metalness",
-                      [this](float metalness) {
-                          m_metalness = metalness;
-                          Invalidate();
-                      },
-                      [this]() { return m_metalness; },
-                      BANG_REFLECT_HINT_SLIDER(-1.0f, 1.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+                      [this](float metalness) { SetMetalness(metalness); },
+                      [this]() { return GetMetalness(); },
+                      BANG_REFLECT_HINT_SHOWN(false));
 
     BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayer,
                                    "Visible",

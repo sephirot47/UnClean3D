@@ -18,9 +18,14 @@ void main()
     vec2 uv = B_FIn_AlbedoUv;
     vec2 step = B_GetViewportStep() * 1.0;
 
-    float thisHeight  = texture2D(HeightfieldTexture, uv).r;
-    float rightHeight = texture2D(HeightfieldTexture, uv + step * vec2(1,0)).r;
-    float upHeight    = texture2D(HeightfieldTexture, uv + step * vec2(0,1)).r;
+    float heightIntensity = 10;
+    float thisHeight  = -texture2D(HeightfieldTexture, uv).r;
+    float rightHeight = -texture2D(HeightfieldTexture, uv + step * vec2(1,0)).r;
+    float upHeight    = -texture2D(HeightfieldTexture, uv + step * vec2(0,1)).r;
+    thisHeight  = thisHeight  * heightIntensity * 2 - 1;
+    rightHeight = rightHeight * heightIntensity * 2 - 1;
+    upHeight    = upHeight    * heightIntensity * 2 - 1;
+
 
     vec3 rightVector = (vec3(1, 0, (rightHeight-thisHeight)));
     vec3 upVector = (vec3(0, 1, (upHeight-thisHeight)));

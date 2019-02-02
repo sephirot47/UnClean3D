@@ -3,10 +3,12 @@
 
 #fragment
 
-const int BLEND_MODE_ADD = 0;
-const int BLEND_MODE_SUBTRACT = 1;
-const int BLEND_MODE_MULTIPLY = 2;
+const int BLEND_MODE_IGNORE = 1;
+const int BLEND_MODE_ADD = 1;
+const int BLEND_MODE_SUBTRACT = 2;
+const int BLEND_MODE_MULTIPLY = 3;
 
+uniform sampler2D EffectLayerMaskTexture;
 uniform sampler2D EffectLayerColorTexture;
 uniform sampler2D EffectLayerMiscTexture;
 
@@ -15,7 +17,10 @@ uniform sampler2D PreviousNormalTexture;
 uniform sampler2D PreviousHeightTexture;
 uniform sampler2D PreviousRoughnessTexture;
 uniform sampler2D PreviousMetalnessTexture;
-uniform int BlendMode;
+uniform int ColorBlendMode;
+uniform int HeightBlendMode;
+uniform int RoughnessBlendMode;
+uniform int MetalnessBlendMode;
 
 in vec2 B_FIn_AlbedoUv;
 
@@ -24,6 +29,29 @@ layout(location = 1) out vec4 OutNormal;
 layout(location = 2) out vec4 OutHeight;
 layout(location = 3) out vec4 OutRoughness;
 layout(location = 4) out vec4 OutMetalness;
+
+vec4 Blend(in int blendMode,
+           in vec4 oldValue,
+           in vec4 value,
+           in float alpha)
+{
+    vec4 newValue = oldValue;
+    switch (blendMode)
+    {
+        case BLEND_MODE_ADD:
+            newValue += value * alpha;
+        break;
+
+        case BLEND_MODE_SUBTRACT:
+            newValue -= value * alpha;
+        break;
+
+        case BLEND_MODE_MULTIPLY:
+            newValue = value * alpha;
+        break;
+    }
+    return newValue;
+}
 
 void main()
 {
@@ -42,33 +70,25 @@ void main()
     float outRoughness = previousRoughness;
     float outMetalness = previousMetalness;
 
+    float effectLayerMask      = texture2D(EffectLayerMaskTexture, uv).r;
     vec4 effectLayerColor      = texture2D(EffectLayerColorTexture, uv);
     vec4 effectLayerMisc       = texture2D(EffectLayerMiscTexture, uv);
     float effectLayerHeight    = effectLayerMisc.r;
     float effectLayerRoughness = effectLayerMisc.g;
     float effectLayerMetalness = effectLayerMisc.b;
-    switch (BlendMode)
+
+    if (effectLayerMask > 0)
     {
-        case BLEND_MODE_ADD:
-            outAlbedo.rgb += effectLayerColor.rgb;
-            outHeight     += effectLayerHeight;
-            outRoughness  += effectLayerRoughness;
-            outMetalness  += effectLayerMetalness;
-        break;
+        outAlbedo = Blend(ColorBlendMode, previousAlbedo,
+                          effectLayerColor, effectLayerColor.a);
+        outAlbedo.a = 1;
 
-        case BLEND_MODE_SUBTRACT:
-            outAlbedo.rgb -= effectLayerColor.rgb;
-            outHeight     -= effectLayerHeight;
-            outRoughness  -= effectLayerRoughness;
-            outMetalness  -= effectLayerMetalness;
-        break;
-
-        case BLEND_MODE_MULTIPLY:
-            outAlbedo.rgb *= effectLayerColor.rgb;
-            outHeight     *= effectLayerHeight;
-            outRoughness  *= effectLayerRoughness;
-            outMetalness  *= effectLayerMetalness;
-        break;
+        outHeight = Blend(HeightBlendMode, vec4(previousHeight),
+                           vec4(effectLayerHeight), 1).r;
+        outRoughness = Blend(RoughnessBlendMode, vec4(previousRoughness),
+                             vec4(effectLayerRoughness), 1).r;
+        outMetalness = Blend(MetalnessBlendMode, vec4(previousMetalness),
+                             vec4(effectLayerMetalness), 1).r;
     }
 
     OutAlbedo    = vec4(outAlbedo);

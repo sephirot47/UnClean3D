@@ -28,7 +28,8 @@ public:
 
     enum class BlendMode
     {
-        ADD = 0,
+        IGNORE,
+        ADD,
         SUBTRACT,
         MULTIPLY
     };
@@ -43,15 +44,29 @@ public:
     void SetImplementation(EffectLayerMaskImplementation *impl);
     void SetVisible(bool visible);
     void SetName(const String &name);
-    void SetBlendMode(EffectLayer::BlendMode blendMode);
+    void SetColorBlendMode(EffectLayer::BlendMode blendMode);
+    void SetHeightBlendMode(EffectLayer::BlendMode blendMode);
+    void SetRoughnessBlendMode(EffectLayer::BlendMode blendMode);
+    void SetMetalnessBlendMode(EffectLayer::BlendMode blendMode);
+    void SetColor(const Color &color);
+    void SetHeight(float height);
+    void SetRoughness(float roughness);
+    void SetMetalness(float metalness);
 
     EffectLayerMask *AddNewMask();
     void RemoveMask(EffectLayerMask *mask);
-    void Invalidate();
+    void Invalidate(bool recursiveDown = false);
 
     bool GetVisible() const;
     Mesh *GetMesh() const;
-    EffectLayer::BlendMode GetBlendMode() const;
+    const Color &GetColor() const;
+    float GetHeight() const;
+    float GetRoughness() const;
+    float GetMetalness() const;
+    EffectLayer::BlendMode GetColorBlendMode() const;
+    EffectLayer::BlendMode GetHeightBlendMode() const;
+    EffectLayer::BlendMode GetRoughnessBlendMode() const;
+    EffectLayer::BlendMode GetMetalnessBlendMode() const;
     Texture2D *GetEffectColorTexture() const;
     Texture2D *GetEffectMiscTexture() const;
     const Array<EffectLayerMask *> &GetMasks() const;
@@ -70,11 +85,14 @@ private:
     Array<EffectLayerMask *> m_masks;
     MeshRenderer *p_meshRenderer = nullptr;
 
-    Color m_color = Color::Red();
-    float m_height = 0.0f;
-    float m_roughness = 0.0f;
+    Color m_color = Color::Blue();
+    float m_height = -1.0f;
+    float m_roughness = 0.5f;
     float m_metalness = 0.0f;
-    BlendMode m_blendMode = BlendMode::ADD;
+    BlendMode m_colorBlendMode = BlendMode::MULTIPLY;
+    BlendMode m_heightBlendMode = BlendMode::ADD;
+    BlendMode m_roughnessBlendMode = BlendMode::MULTIPLY;
+    BlendMode m_metalnessBlendMode = BlendMode::IGNORE;
 
     VBO *m_positionsVBO = nullptr;
     VBO *m_normalsVBO = nullptr;

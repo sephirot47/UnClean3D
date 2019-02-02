@@ -535,7 +535,7 @@ void View3DScene::InvalidateAll()
     Array<EffectLayer *> effectLayers = GetAllEffectLayers();
     for (EffectLayer *effectLayer : effectLayers)
     {
-        effectLayer->Invalidate();
+        effectLayer->Invalidate(true);
     }
 }
 

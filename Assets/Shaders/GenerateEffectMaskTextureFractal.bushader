@@ -20,6 +20,7 @@ void main()
 #include "SimplexNoise3D.glsl"
 
 uniform float FractalSeed;
+uniform float FractalOffset;
 uniform float FractalOctaves;
 uniform float FractalFrequency;
 uniform float FractalFrequencyMultiply;
@@ -43,7 +44,8 @@ void main()
                                   FractalAmplitudeMultiply,
                                   FractalOctaves,
                                   FractalSeed);
-    noiseValue = clamp(noiseValue, 0.01, 1);
+    noiseValue += FractalOffset;
+    noiseValue = clamp(noiseValue, 0.0, 1);
 
     vec3 noise = vec3(noiseValue);
 

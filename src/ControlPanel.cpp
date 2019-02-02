@@ -27,6 +27,7 @@
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 #include "UIEffectLayerMaskRow.h"
+#include "UIEffectLayerParameters.h"
 #include "UIEffectLayerRow.h"
 #include "UIEffectLayers.h"
 #include "View3DScene.h"
@@ -151,14 +152,14 @@ ControlPanel::ControlPanel()
         CreateRow("", generalSettingsLabel->GetGameObject())->SetParent(this);
 
         p_baseRoughnessInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_baseRoughnessInput->SetValue(1.0f);
+        p_baseRoughnessInput->SetValue(0.5f);
         p_baseRoughnessInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
             ->SetParent(this);
 
         p_baseMetalnessInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_baseMetalnessInput->SetValue(0.0f);
+        p_baseMetalnessInput->SetValue(0.5f);
         p_baseMetalnessInput
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
@@ -214,12 +215,10 @@ ControlPanel::ControlPanel()
         CreateRow("", p_effectLayerParamsTitle->GetGameObject())
             ->SetParent(p_effectLayerParamsGo);
 
-        p_effectSerializableWidget = new SerializableInspectorWidget();
-        p_effectSerializableWidget->Init();
-        p_effectSerializableWidget->SetParent(p_effectLayerParamsGo);
+        p_effectParametersWidget = new UIEffectLayerParameters();
+        p_effectParametersWidget->SetParent(p_effectLayerParamsGo);
+
         p_effectLayerParamsGo->SetParent(this);
-        p_effectSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(
-            false);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(p_effectLayerParamsGo);
@@ -290,8 +289,7 @@ void ControlPanel::Update()
     if (EffectLayer *selectedEffectLayer = GetSelectedEffectLayer())
     {
         p_effectLayerParamsTitle->GetText()->SetContent("Effect Layer");
-        p_effectSerializableWidget->SetSerializable(selectedEffectLayer);
-        p_effectSerializableWidget->UpdateFromReference();
+        p_effectParametersWidget->SetEffectLayer(selectedEffectLayer);
         enableEffectParams = true;
 
         if (EffectLayerMask *selectedEffectLayerMask =
