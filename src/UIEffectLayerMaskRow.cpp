@@ -98,7 +98,7 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_maskTypeInput->AddItem("Brush",
                                  SCAST<int>(EffectLayerMask::Type::BRUSH));
         p_maskTypeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayerMask::Type::BRUSH));
+            SCAST<int>(EffectLayerMask::Type::FRACTAL));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
         p_removeButton = GameObjectFactory::CreateUIButton(

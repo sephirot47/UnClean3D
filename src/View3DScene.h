@@ -44,7 +44,6 @@ public:
 
     EffectLayer *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
-    void SetViewUniforms();
 
     void CompositeTextures();
     void ApplyControlPanelSettingsToModel();

@@ -41,7 +41,7 @@ void EffectLayerMaskImplementationGPU::ReloadShaders()
 }
 
 void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
-    Texture2D *effectTexture,
+    Texture2D *maskTexture,
     MeshRenderer *meshRend)
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
@@ -55,10 +55,10 @@ void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
 
     // Bind framebuffer and render to texture
     m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(effectTexture, GL::Attachment::COLOR0);
+    m_framebuffer->SetAttachmentTexture(maskTexture, GL::Attachment::COLOR0);
     m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-    Vector2i texSize = effectTexture->GetSize();
+    Vector2i texSize = maskTexture->GetSize();
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
     if (ShaderProgram *sp = GetGenerateEffectTextureShaderProgram())

@@ -78,18 +78,14 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
             case EffectLayerMask::Type::BRUSH:
                 m_implementation = new EffectLayerMaskImplementationBrush();
                 break;
+
+            default: ASSERT(false); break;
         }
 
         m_implementation->SetEffectLayerMask(this);
-    }
-}
-
-void EffectLayerMask::GenerateEffectMaskTexture() const
-{
-    if (EffectLayerMaskImplementation *impl = GetImplementation())
-    {
-        MeshRenderer *mr = GetEffectLayer()->GetMeshRenderer();
-        impl->GenerateEffectMaskTexture(GetMaskTexture(), mr);
+        m_implementation->Init();
+        Clear();
+        Invalidate();
     }
 }
 
@@ -105,6 +101,14 @@ void EffectLayerMask::SetName(const String &name)
 
 void EffectLayerMask::GenerateMask()
 {
+    if (EffectLayerMaskImplementation *impl = GetImplementation())
+    {
+        MeshRenderer *mr = GetEffectLayer()->GetMeshRenderer();
+        GetMaskTexture()->ResizeConservingData(
+            GetEffectLayer()->GetEffectTexture()->GetWidth(),
+            GetEffectLayer()->GetEffectTexture()->GetHeight());
+        impl->GenerateEffectMaskTexture(GetMaskTexture(), mr);
+    }
     m_isValid = true;
 }
 
@@ -125,7 +129,10 @@ void EffectLayerMask::Fill()
 void EffectLayerMask::Invalidate()
 {
     m_isValid = false;
-    GetEffectLayer()->Invalidate();
+    if (GetEffectLayer())
+    {
+        GetEffectLayer()->Invalidate();
+    }
 }
 
 void EffectLayerMask::PaintMaskBrush()

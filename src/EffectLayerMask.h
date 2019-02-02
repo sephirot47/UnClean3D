@@ -33,7 +33,6 @@ public:
     virtual void Update();
     void ReloadShaders();
     void SetType(EffectLayerMask::Type type);
-    void GenerateEffectMaskTexture() const;
     void SetEffectLayer(EffectLayer *effectLayer);
     void SetName(const String &name);
     void GenerateMask();

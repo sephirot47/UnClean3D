@@ -149,9 +149,6 @@ void View3DScene::Update()
         m_lastTimeTexturesValidated = Time::GetNow();
     }
 
-    // Stuff needed for later
-    ControlPanel *controlPanel = GetControlPanel();
-
     if (MainScene::GetInstance()->GetSceneMode() !=
         MainScene::SceneMode::VIEW3D)
     {
@@ -305,7 +302,17 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
     {
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
-        SetViewUniforms();
+
+        ShaderProgram *sp = m_view3DShaderProgram.Get();
+        sp->Bind();
+        if (GetControlPanel()->GetSelectedEffectLayerMask())
+        {
+            sp->SetTexture2D("SelectedMaskTexture",
+                             GetControlPanel()
+                                 ->GetSelectedEffectLayerMask()
+                                 ->GetMaskTexture());
+        }
+        GetControlPanel()->SetControlPanelUniforms(sp);
     }
 
     Scene::Render(rp, renderChildren);
@@ -454,7 +461,6 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
 
 void View3DScene::ApplyControlPanelSettingsToModel()
 {
-    ControlPanel *cpanel = GetControlPanel();
     for (const auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
@@ -468,7 +474,6 @@ void View3DScene::ApplyCompositeTexturesToModel()
     for (const auto &it : m_meshRendererToInfo)
     {
         MeshRenderer *mr = it.first;
-        const MeshRendererInfo &mrInfo = it.second;
         if (Material *mat = mr->GetMaterial())
         {
             EffectLayerCompositer *compositer = GetEffectLayerCompositer();
@@ -478,11 +483,6 @@ void View3DScene::ApplyCompositeTexturesToModel()
             mat->SetMetalnessTexture(compositer->GetFinalMetalnessTexture());
         }
     }
-}
-
-void View3DScene::SetViewUniforms()
-{
-    GetControlPanel()->SetControlPanelUniforms(m_view3DShaderProgram.Get());
 }
 
 void View3DScene::CompositeTextures()

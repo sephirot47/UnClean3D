@@ -286,14 +286,11 @@ void ControlPanel::Update()
         ExportModel();
     }
 
-    if (GetMaskBrushEnabled())
+    if (Input::GetKey(Key::LSHIFT))
     {
-        if (Input::GetKey(Key::LSHIFT))
+        if (Input::GetKeyDown(Key::M))
         {
-            if (Input::GetKeyDown(Key::M))
-            {
-                p_seeMaskButton->SetOn(!p_seeMaskButton->GetOn());
-            }
+            p_seeMaskButton->SetOn(!p_seeMaskButton->GetOn());
         }
     }
 
@@ -393,17 +390,9 @@ void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
 void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
 {
     sp->Bind();
-
     sp->SetBool("WithLight", p_seeWithLightButton->GetOn());
-    sp->SetBool("SeeMask", GetMaskBrushEnabled() && p_seeMaskButton->GetOn());
-
-    Array<EffectLayer *> effectLayers =
-        GetView3DScene()->GetSelectedEffectLayers();
-    if (effectLayers.Size() >= 1)
-    {
-        sp->SetTexture2D("MaskTexture",
-                         effectLayers.Front()->GetMergedMaskTexture());
-    }
+    sp->SetBool("SeeMask",
+                GetSelectedEffectLayerMask() && p_seeMaskButton->GetOn());
 }
 
 void ControlPanel::FillSelectedMask()

@@ -24,7 +24,7 @@ public:
     // EffectLayerImplementation
     virtual void Init() override;
     virtual void ReloadShaders() override;
-    void GenerateEffectMaskTexture(Texture2D *effectTexture,
+    void GenerateEffectMaskTexture(Texture2D *maskTexture,
                                    MeshRenderer *meshRend) override;
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 

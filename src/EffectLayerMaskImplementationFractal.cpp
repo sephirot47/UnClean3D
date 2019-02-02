@@ -32,6 +32,7 @@ using namespace Bang;
 EffectLayerMaskImplementationFractal::EffectLayerMaskImplementationFractal()
 {
     m_seed = Random::GetRange(0, 1000);
+    m_amplitude = Random::GetRange(0.0f, 2.0f);
 }
 
 EffectLayerMaskImplementationFractal::~EffectLayerMaskImplementationFractal()
@@ -48,21 +49,24 @@ void EffectLayerMaskImplementationFractal::Reflect()
                           Invalidate();
                       },
                       [this]() { return m_amplitude; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 2.0f));
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 2.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
     ReflectVar<float>("Stains size",
                       [this](float stainsSize) {
                           m_stainsSize = stainsSize;
                           Invalidate();
                       },
                       [this]() { return m_stainsSize; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 25.0f));
+                      BANG_REFLECT_HINT_SLIDER(0.0f, 25.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
     ReflectVar<float>("Grain",
                       [this](float grain) {
                           m_grain = grain;
                           Invalidate();
                       },
                       [this]() { return m_grain; },
-                      BANG_REFLECT_HINT_SLIDER(1.0f, 10.0f));
+                      BANG_REFLECT_HINT_SLIDER(1.0f, 10.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
     ReflectVar<float>("Seed",
                       [this](float seed) {
                           m_seed = seed;

@@ -18,7 +18,7 @@
 
 uniform bool SeeMask;
 uniform bool WithLight;
-uniform sampler2D MaskTexture;
+uniform sampler2D SelectedMaskTexture;
 
 in vec3 B_FIn_Position;
 in vec3 B_FIn_Normal;
@@ -84,7 +84,7 @@ void DefaultFragCommonMain(vec4 albedoColor)
     vec4 finalColor;
     if (SeeMask)
     {
-        float maskTexValue = texture(MaskTexture, B_FIn_AlbedoUv).r;
+        float maskTexValue = texture(SelectedMaskTexture, B_FIn_AlbedoUv).r;
         finalAlbedo.rgb  = finalColor.rgb = vec3(maskTexValue, 0, 0);
         receivesLighting = 0;
         pixelMetalness = 0;

@@ -137,21 +137,15 @@ void EffectLayer::GenerateEffectTexture()
 
     // Masks
     {
-        bool allMasksValid = true;
         for (EffectLayerMask *mask : GetMasks())
         {
             if (!mask->IsValid())
             {
-                allMasksValid = false;
                 mask->GenerateMask();
             }
         }
-
-        if (!allMasksValid)
-        {
-            MergeMasks();
-        }
     }
+    MergeMasks();
 
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
@@ -241,12 +235,15 @@ EffectLayerMask *EffectLayer::AddNewMask()
     EffectLayerMask *newMask = new EffectLayerMask();
     newMask->SetEffectLayer(this);
     m_masks.PushBack(newMask);
+    Invalidate();
     return newMask;
 }
 
 void EffectLayer::RemoveMask(EffectLayerMask *mask)
 {
+    delete mask;
     m_masks.Remove(mask);
+    Invalidate();
 }
 
 void EffectLayer::Invalidate()

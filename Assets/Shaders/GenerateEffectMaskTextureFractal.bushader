@@ -19,15 +19,12 @@ void main()
 #define BANG_FRAGMENT
 #include "SimplexNoise3D.glsl"
 
-uniform sampler2D DirtTexture;
-uniform float DirtSeed;
-uniform float DirtOctaves;
-uniform float DirtFrequency;
-uniform float DirtFrequencyMultiply;
-uniform float DirtAmplitude;
-uniform float DirtAmplitudeMultiply;
-uniform vec4 DirtOuterColor;
-uniform vec4 DirtInnerColor;
+uniform float FractalSeed;
+uniform float FractalOctaves;
+uniform float FractalFrequency;
+uniform float FractalFrequencyMultiply;
+uniform float FractalAmplitude;
+uniform float FractalAmplitudeMultiply;
 
 in vec3 inWorldPosition;
 
@@ -35,25 +32,22 @@ layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-    float frequency = DirtFrequency * 50;
-    float amplitude = DirtAmplitude;
+    float frequency = FractalFrequency * 50;
+    float amplitude = FractalAmplitude;
 
     vec3 worldPosition = inWorldPosition;
-    float noiseValue = snoiseFull(worldPosition,
+    float noiseValue = snoiseFull(inWorldPosition,
                                   frequency,
-                                  DirtFrequencyMultiply,
+                                  FractalFrequencyMultiply,
                                   amplitude,
-                                  DirtAmplitudeMultiply,
-                                  DirtOctaves,
-                                  DirtSeed);
+                                  FractalAmplitudeMultiply,
+                                  FractalOctaves,
+                                  FractalSeed);
     noiseValue = clamp(noiseValue, 0.01, 1);
+
     vec3 noise = vec3(noiseValue);
 
-    vec3 dirtOuterColor = DirtOuterColor.rgb;
-    vec3 dirtInnerColor = DirtInnerColor.rgb;
-    vec3 coloredNoise = mix(dirtOuterColor, dirtInnerColor, noise);
-
-    OutColor = vec4(coloredNoise, noiseValue);
+    OutColor = vec4(noise, noiseValue);
 }
 
 
