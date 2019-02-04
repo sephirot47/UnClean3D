@@ -38,6 +38,7 @@ void EffectLayerMaskImplementationGPU::ReloadShaders()
     {
         m_generateEffectTextureSP.Get()->ReImport();
     }
+    Invalidate();
 }
 
 void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
@@ -81,6 +82,8 @@ void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+
+    m_isValid = true;
 }
 
 bool EffectLayerMaskImplementationGPU::CanGenerateEffectMaskTextureInRealTime()

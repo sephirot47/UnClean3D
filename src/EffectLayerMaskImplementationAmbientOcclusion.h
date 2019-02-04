@@ -5,6 +5,7 @@
 #include "BangEditor/BangEditor.h"
 
 #include "EffectLayerMaskImplementationGPU.h"
+#include "MeshUniformGrid.h"
 
 using namespace Bang;
 
@@ -30,8 +31,16 @@ protected:
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:
-    uint PositionsTextureSize = 1024;
+    const uint PositionsTextureSize = 1024;
+    const uint UniformGridTextureSize = 1024;
+    const uint NumTrisPerCell = 100;
+
     AH<Texture2D> m_trianglePositionsTexture;
+    AH<Texture2D> m_uniformGridTexture;
+    MeshUniformGrid m_meshUniformGrid;
+
+    Texture2D *CreateTrianglePositionsTexture(MeshRenderer *mr);
+    Texture2D *CreateMeshUniformGridTexture(MeshRenderer *mr);
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONAMBIENTOCCLUSION_H

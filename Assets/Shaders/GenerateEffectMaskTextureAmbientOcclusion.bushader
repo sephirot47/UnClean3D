@@ -25,10 +25,31 @@ uniform mat4 SceneModelMatrix;
 uniform int NumTriangles;
 uniform sampler2D TrianglePositions;
 
+uniform sampler2D GridTexture;
+uniform int NumTrisPerCell;
+uniform int NumGridCells;
+uniform vec3 GridCellSize;
+uniform vec3 GridMinPoint;
+
 in vec3 inWorldPosition;
 in vec3 inWorldNormal;
 
 layout(location = 0) out vec4 OutColor;
+
+bool IntersectRayPlane(vec3 rayOrig,
+                       vec3 rayDir,
+                       vec3 planePoint,
+                       vec3 planeNormal,
+                       out float intersectionDist)
+{
+    float dotProd = dot(planeNormal, rayDir);
+    if (dotProd > 0.001f)
+    {
+        intersectionDist = dot(planePoint - rayOrig, planeNormal) / dotProd;
+        return intersectionDist >= 0.0f;
+    }
+    return false;
+}
 
 bool IntersectRayTriangle(vec3 rayOrig,
                           vec3 rayDir,
@@ -61,32 +82,6 @@ bool IntersectRayTriangle(vec3 rayOrig,
     return true;
 }
 
-vec4 GetTriangleData(int triId,
-                     int vertexId,
-                     ivec2 textureSize,
-                     vec2 texelSize,
-                     sampler2D Texture)
-{
-    int coord = triId * 3 + vertexId;
-    ivec2 texelPos = ivec2(coord % textureSize.x,
-                           coord / textureSize.x);
-    vec2 uvs = texelPos * texelSize;
-    return texture(Texture, uvs, 0).xyzw;
-}
-
-void GetTriangle(int triId,
-                 ivec2 posTextureSize,
-                 vec2 posTexelSize,
-                 inout vec3 triPoints[3])
-{
-    for (int i = 0; i < 3; ++i)
-    {
-        triPoints[i] = GetTriangleData(triId, i,
-                                       posTextureSize, posTexelSize,
-                                       TrianglePositions).xyz;
-    }
-}
-
 float rand(vec3 co)
 {
     return fract(sin(dot(co.xyz, vec3(12.9898, 78.233, 32.123))) * 43758.5453);
@@ -104,35 +99,67 @@ void main()
     ivec2 posTextureSize = textureSize(TrianglePositions, 0);
     vec2 posTexelSize = (1.0 / posTextureSize);
 
-    float totalRays = 8;
+    ivec2 gridTextureSize = textureSize(GridTexture, 0);
+    vec2 gridTexelSize = (1.0 / gridTextureSize);
+
+    float totalRays = 100;
     float intersectedRays = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
-        for (int triId = 0; triId < NumTriangles; ++triId)
+        bool foundIntersection = false;
+
+        vec3 rayDirection = rand3(worldPosition * (iRay + 100));
+        vec3 rayOrigin = worldPosition + worldNormal * 0.0001f;
+        rayDirection = rayDirection * 2 - 1;
+        rayDirection = normalize(rayDirection);
+        rayDirection *= sign(dot(rayDirection, worldNormal));
+
+        vec3 gridWorldPos = (rayOrigin.xyz - GridMinPoint.xyz);
+        ivec3 gridCoordXYZ = ivec3(floor(gridWorldPos.xyz / GridCellSize.xyz));
+        int originCellCoord = int(NumGridCells * NumGridCells * gridCoordXYZ.z +
+                                  NumGridCells * gridCoordXYZ.y +
+                                  gridCoordXYZ.x);
+        originCellCoord *= NumTrisPerCell;
+
+        for (int i = 0; i < NumTrisPerCell; ++i)
         {
-            vec3 triPoints[3];
-            GetTriangle(triId, posTextureSize, posTexelSize, triPoints);
+            int cellTriCoord = originCellCoord + i;
+            vec2 cellTriTexCoord = vec2(cellTriCoord % gridTextureSize.x,
+                                        cellTriCoord / gridTextureSize.x);
+            vec2 cellTriUvs = cellTriTexCoord * gridTexelSize;
 
-            vec3 rayOrigin = worldPosition + worldNormal * 0.0001f;
-            vec3 rayDirection = rand3(worldPosition * (iRay + 100));
-            rayDirection = rayDirection * 2 - 1;
-            rayDirection = normalize(rayDirection);
-            if (dot(rayDirection, worldNormal) < 0)
+            vec4 gridTextureColor = texture(GridTexture, cellTriUvs);
+            if (gridTextureColor.a >= 0.5)
             {
-                rayDirection *= -1;
-            }
+                int triId = int(255 * 255 * 255 * gridTextureColor.r +
+                                255 * 255 * gridTextureColor.g +
+                                255 * gridTextureColor.b);
+            // for (int triId = 0; triId < NumTriangles; ++triId)
+            {
+                    vec3 triPoints[3];
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        int triCoord = triId * 3 + i;
+                        ivec2 triTexCoord = ivec2(triCoord % posTextureSize.x,
+                                                  triCoord / posTextureSize.x);
+                        vec2 triTexUvs = triTexCoord * posTexelSize;
+                        triPoints[i] = texture(TrianglePositions, triTexUvs, 0).xyz;
+                    }
 
-            if (IntersectRayTriangle(rayOrigin, rayDirection,
-                                     triPoints[0], triPoints[1], triPoints[2],
-                                     0.01))
-            {
-                ++intersectedRays;
-                break;
+                    if (IntersectRayTriangle(rayOrigin, rayDirection,
+                                             triPoints[0], triPoints[1], triPoints[2],
+                                             0.05))
+                    {
+                        ++intersectedRays;
+                        foundIntersection = true;
+                        break;
+                    }
+                }
             }
         }
     }
 
-    float ambientOcclusion = 1.0f - (intersectedRays / totalRays);
+    float ambientOcclusion = (intersectedRays / totalRays);
     OutColor = vec4(vec3(ambientOcclusion), 1);
 }
 

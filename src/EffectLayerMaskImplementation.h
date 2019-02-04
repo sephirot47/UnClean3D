@@ -35,10 +35,14 @@ public:
     EffectLayerMask *GetEffectLayerMask() const;
 
     virtual void Update();
+    bool IsValid() const;
 
     // Serializable
     virtual void Reflect() override;
     void Invalidate();
+
+protected:
+    bool m_isValid = false;
 
 private:
     EffectLayerMask *p_effectLayerMask = nullptr;

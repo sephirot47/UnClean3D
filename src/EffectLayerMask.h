@@ -45,8 +45,8 @@ public:
     void SetEffectLayer(EffectLayer *effectLayer);
     void SetName(const String &name);
     void GenerateMask();
-    void Clear();
-    void Fill();
+    void ClearMask();
+    void FillMask();
     void SetVisible(bool visible);
     void Invalidate(bool recursiveDown = false);
 
@@ -56,6 +56,7 @@ public:
     Texture2D *GetMaskTexture() const;
     EffectLayer *GetEffectLayer() const;
     EffectLayerMaskImplementation *GetImplementation() const;
+    bool CanGenerateEffectMaskTextureInRealTime() const;
     ControlPanel *GetControlPanel() const;
     bool GetVisible() const;
     bool IsValid() const;
@@ -70,7 +71,6 @@ private:
     EffectLayerMaskImplementation *m_implementation = nullptr;
     EffectLayerMask::Type m_type = Undef<EffectLayerMask::Type>();
     EffectLayer *p_effectLayer = nullptr;
-    bool m_isValid = false;
 
     Framebuffer *m_framebuffer = nullptr;
     AH<Texture2D> m_maskTexture;

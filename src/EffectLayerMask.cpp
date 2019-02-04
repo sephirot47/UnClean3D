@@ -26,8 +26,6 @@ EffectLayerMask::EffectLayerMask()
     m_maskTexture.Get()->Fill(Color::Zero(), 1, 1);
 
     m_framebuffer = new Framebuffer();
-
-    SetType(EffectLayerMask::Type::FRACTAL);
 }
 
 EffectLayerMask::~EffectLayerMask()
@@ -82,9 +80,9 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
             default: ASSERT(false); break;
         }
 
-        m_implementation->SetEffectLayerMask(this);
-        m_implementation->Init();
-        Clear();
+        GetImplementation()->SetEffectLayerMask(this);
+        GetImplementation()->Init();
+        ClearMask();
         Invalidate();
     }
 }
@@ -118,17 +116,16 @@ void EffectLayerMask::GenerateMask()
             GetEffectLayer()->GetEffectColorTexture()->GetHeight());
         impl->GenerateEffectMaskTexture(GetMaskTexture(), mr);
     }
-    m_isValid = true;
 }
 
-void EffectLayerMask::Clear()
+void EffectLayerMask::ClearMask()
 {
     GEngine *ge = GEngine::GetInstance();
     ge->FillTexture(GetMaskTexture(), Color::Zero());
     Invalidate();
 }
 
-void EffectLayerMask::Fill()
+void EffectLayerMask::FillMask()
 {
     GEngine *ge = GEngine::GetInstance();
     ge->FillTexture(GetMaskTexture(), Color::One());
@@ -146,7 +143,6 @@ void EffectLayerMask::SetVisible(bool visible)
 
 void EffectLayerMask::Invalidate(bool recursiveDown)
 {
-    m_isValid = false;
     if (GetEffectLayer())
     {
         GetEffectLayer()->Invalidate();
@@ -191,9 +187,16 @@ EffectLayerMaskImplementation *EffectLayerMask::GetImplementation() const
     return m_implementation;
 }
 
+bool EffectLayerMask::CanGenerateEffectMaskTextureInRealTime() const
+{
+    return GetImplementation()
+               ? GetImplementation()->CanGenerateEffectMaskTextureInRealTime()
+               : false;
+}
+
 bool EffectLayerMask::IsValid() const
 {
-    return m_isValid;
+    return GetImplementation() ? GetImplementation()->IsValid() : true;
 }
 
 void EffectLayerMask::Reflect()

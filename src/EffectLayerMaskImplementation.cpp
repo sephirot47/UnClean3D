@@ -19,6 +19,7 @@ EffectLayerMaskImplementation::~EffectLayerMaskImplementation()
 
 void EffectLayerMaskImplementation::Init()
 {
+    m_isValid = !CanGenerateEffectMaskTextureInRealTime();
 }
 
 void EffectLayerMaskImplementation::ReloadShaders()
@@ -40,19 +41,27 @@ void EffectLayerMaskImplementation::Update()
 {
 }
 
+bool EffectLayerMaskImplementation::IsValid() const
+{
+    return m_isValid;
+}
+
 void EffectLayerMaskImplementation::Reflect()
 {
     Serializable::Reflect();
 
     if (!CanGenerateEffectMaskTextureInRealTime())
     {
-        BANG_REFLECT_BUTTON(EffectLayerMaskImplementation,
-                            "Generate",
-                            [this]() { GetEffectLayerMask()->Invalidate(); });
+        BANG_REFLECT_BUTTON(
+            EffectLayerMaskImplementation, "Generate", [this]() {
+                GetEffectLayerMask()->Invalidate();
+                GetEffectLayerMask()->GenerateMask();
+            });
     }
 }
 
 void EffectLayerMaskImplementation::Invalidate()
 {
+    m_isValid = false;
     GetEffectLayerMask()->Invalidate();
 }

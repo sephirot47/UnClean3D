@@ -93,10 +93,10 @@ void EffectLayerMaskImplementationBrush::Reflect()
 
     BANG_REFLECT_BUTTON(EffectLayerMaskImplementationBrush,
                         "Clear Mask",
-                        [this]() { GetEffectLayerMask()->Clear(); });
+                        [this]() { GetEffectLayerMask()->ClearMask(); });
     BANG_REFLECT_BUTTON(EffectLayerMaskImplementationBrush,
                         "Fill Mask",
-                        [this]() { GetEffectLayerMask()->Fill(); });
+                        [this]() { GetEffectLayerMask()->FillMask(); });
 }
 
 EffectLayerMask::Type

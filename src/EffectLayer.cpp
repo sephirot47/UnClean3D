@@ -149,7 +149,8 @@ void EffectLayer::GenerateEffectTexture()
     {
         for (EffectLayerMask *mask : GetMasks())
         {
-            if (!mask->IsValid())
+            if (!mask->IsValid() &&
+                mask->CanGenerateEffectMaskTextureInRealTime())
             {
                 mask->GenerateMask();
             }
