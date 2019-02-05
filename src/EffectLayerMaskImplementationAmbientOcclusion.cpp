@@ -8,6 +8,8 @@
 #include "Bang/ShaderProgram.h"
 #include "Bang/Transform.h"
 
+#include "View3DScene.h"
+
 using namespace Bang;
 
 EffectLayerMaskImplementationAmbientOcclusion::
@@ -69,13 +71,15 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 
     Mesh *mesh = mr->GetMesh();
 
+    const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
+
     sp->SetInt("NumTrisPerCell", NumTrisPerCell);
-    sp->SetVector3("GridMinPoint", m_meshUniformGrid.GetGridAABox().GetMin());
+    sp->SetVector3("GridMinPoint", meshUniformGrid.GetGridAABox().GetMin());
     sp->SetInt("NumTriangles", mesh->GetNumTriangles());
     sp->SetTexture2D("TrianglePositions", m_trianglePositionsTexture.Get());
     sp->SetTexture2D("GridTexture", m_uniformGridTexture.Get());
-    sp->SetInt("NumGridCells", m_meshUniformGrid.GetNumCells());
-    sp->SetVector3("GridCellSize", m_meshUniformGrid.GetCellSize());
+    sp->SetInt("NumGridCells", meshUniformGrid.GetNumCells());
+    sp->SetVector3("GridCellSize", meshUniformGrid.GetCellSize());
 }
 
 bool EffectLayerMaskImplementationAmbientOcclusion::
@@ -120,20 +124,20 @@ Texture2D *
 EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
     MeshRenderer *mr)
 {
-    m_meshUniformGrid.Create(mr);
+    const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
 
     Array<Color> gridTextureData(UniformGridTextureSize *
                                  UniformGridTextureSize);
-    for (int x = 0; x < m_meshUniformGrid.GetNumCells(); ++x)
+    for (int x = 0; x < meshUniformGrid.GetNumCells(); ++x)
     {
-        for (int y = 0; y < m_meshUniformGrid.GetNumCells(); ++y)
+        for (int y = 0; y < meshUniformGrid.GetNumCells(); ++y)
         {
-            for (int z = 0; z < m_meshUniformGrid.GetNumCells(); ++z)
+            for (int z = 0; z < meshUniformGrid.GetNumCells(); ++z)
             {
                 uint baseCoord =
-                    m_meshUniformGrid.GetCellCoord(x, y, z) * NumTrisPerCell;
+                    meshUniformGrid.GetCellCoord(x, y, z) * NumTrisPerCell;
                 const MeshUniformGrid::Cell &cell =
-                    m_meshUniformGrid.GetCell(x, y, z);
+                    meshUniformGrid.GetCell(x, y, z);
                 Color pixelColor;
                 for (int i = 0; i < NumTrisPerCell; ++i)
                 {
@@ -164,4 +168,10 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
                                      GL::DataType::FLOAT);
 
     return m_uniformGridTexture.Get();
+}
+
+const MeshUniformGrid &
+EffectLayerMaskImplementationAmbientOcclusion::GetMeshUniformGrid() const
+{
+    return MainScene::GetInstance()->GetView3DScene()->GetMeshUniformGrid();
 }

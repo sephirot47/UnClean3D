@@ -372,6 +372,8 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
+            m_meshUniformGrid.Create(mr);
+
             Material *mat = mr->GetMaterial();
 
             // Create default textures if they do not exist
@@ -606,6 +608,11 @@ Array<EffectLayerMask *> View3DScene::GetSelectedEffectLayerMasks() const
 EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
 {
     return m_effectLayerCompositer;
+}
+
+const MeshUniformGrid &View3DScene::GetMeshUniformGrid() const
+{
+    return m_meshUniformGrid;
 }
 
 Model *View3DScene::GetCurrentModel() const

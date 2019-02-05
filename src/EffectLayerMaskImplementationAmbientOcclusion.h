@@ -33,14 +33,14 @@ protected:
 private:
     const uint PositionsTextureSize = 1024;
     const uint UniformGridTextureSize = 1024;
-    const uint NumTrisPerCell = 100;
+    const uint NumTrisPerCell = 10;
 
     AH<Texture2D> m_trianglePositionsTexture;
     AH<Texture2D> m_uniformGridTexture;
-    MeshUniformGrid m_meshUniformGrid;
 
     Texture2D *CreateTrianglePositionsTexture(MeshRenderer *mr);
     Texture2D *CreateMeshUniformGridTexture(MeshRenderer *mr);
+    const MeshUniformGrid &GetMeshUniformGrid() const;
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONAMBIENTOCCLUSION_H

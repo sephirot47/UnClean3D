@@ -13,6 +13,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayer.h"
+#include "MeshUniformGrid.h"
 
 namespace Bang
 {
@@ -59,6 +60,7 @@ public:
     Array<EffectLayer *> GetSelectedEffectLayers() const;
     Array<EffectLayerMask *> GetSelectedEffectLayerMasks() const;
     EffectLayerCompositer *GetEffectLayerCompositer() const;
+    const MeshUniformGrid &GetMeshUniformGrid() const;
     Model *GetCurrentModel() const;
 
 private:
@@ -71,6 +73,7 @@ private:
         Array<EffectLayer *> effectLayers;
     };
 
+    MeshUniformGrid m_meshUniformGrid;
     Time m_lastTimeTexturesValidated = Time::Zero();
     LineRenderer *p_maskBrushRend = nullptr;
 
