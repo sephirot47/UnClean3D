@@ -36,60 +36,42 @@ in vec3 inWorldNormal;
 
 layout(location = 0) out vec4 OutColor;
 
-float IntersectRayPlaneDist(vec3 rayOrig,
-                            vec3 rayDir,
-                            vec3 planePoint,
-                            vec3 planeNormal)
+float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
 {
     float dotProd = dot(planeNormal, rayDir);
     return dot(planePoint - rayOrig, planeNormal) / dotProd;
 }
-bool IntersectRayPlane(vec3 rayOrig,
-                       vec3 rayDir,
-                       vec3 planePoint,
-                       vec3 planeNormal,
-                       out float intersectionDist)
+float IntersectRayTriangle(vec3 rayOrig, vec3 rayDir, vec3 triPoints[3])
 {
-    float dotProd = dot(planeNormal, rayDir);
-    if (dotProd > 0.001f)
-    {
-        intersectionDist = dot(planePoint - rayOrig, planeNormal) / dotProd;
-        return intersectionDist >= 0.0f;
-    }
-    return false;
-}
+    const float INF = 1e12;
+    const float Epsilon = 1e-8;
 
-bool IntersectRayTriangle(vec3 rayOrig,
-                          vec3 rayDir,
-                          vec3 triP0,
-                          vec3 triP1,
-                          vec3 triP2,
-                          float maxDist)
-{
-    vec3 v10 = (triP1 - triP0);
-    vec3 v20 = (triP2 - triP0);
+    vec3 v10 = (triPoints[1] - triPoints[0]);
+    vec3 v20 = (triPoints[2] - triPoints[0]);
 
     vec3 h = cross(rayDir, v20);
     float a = dot(v10, h);
 
-    float Epsilon = 1e-8;
-    if (a > -Epsilon && a < Epsilon) { return false; }
+    if (a > -Epsilon && a < Epsilon) { return INF; }
 
     float f = 1.0 / a;
-    vec3 s = (rayOrig - triP0);
+    vec3 s = (rayOrig - triPoints[0]);
     float u = f * dot(s, h);
-    if (u < 0.0 || u > 1.0) { return false; }
+    if (u < 0.0 || u > 1.0) { return INF; }
 
     vec3 q = cross(s, v10);
     float v = f * dot(rayDir, q);
-    if (v < 0.0 || u + v > 1.0) { return false; }
+    if (v < 0.0 || u + v > 1.0) { return INF; }
 
     float t = (f * dot(v20, q));
-    if (t > maxDist || t < Epsilon) { return false; }
+    if (t < Epsilon) { return INF; }
 
-    return true;
+    return t;
 }
-
+float dot2(vec3 x)
+{
+    return dot(x, x);
+}
 float rand(vec3 co)
 {
     return fract(sin(dot(co.xyz, vec3(12.9898, 78.233, 32.123))) * 43758.5453);
@@ -110,32 +92,28 @@ void main()
     vec2 gridTextureSize = vec2(textureSize(GridTexture, 0));
     vec2 gridTexelSize = (1.0 / gridTextureSize);
 
-    float totalRays = 20;
-    float maxDistance = 0.01;
-    float intersectedRays = 0;
+    float totalRays = 30;
+    float maxDistance = 0.02;
+    float intersectedRaysAO = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
-        vec3 rayDirection = rand3(worldPosition * (iRay + 100));
-        rayDirection += vec3(0.01);
-        rayDirection = normalize(normalize(rayDirection) * 2 - 1);
+        vec3 rayDirection = rand3(worldPosition * (iRay + 100)) + vec3(0.001);
+        rayDirection = normalize(rayDirection * 2 - 1);
         rayDirection *= sign(dot(rayDirection, worldNormal));
 
-        vec3 rayOrigin = worldPosition + worldNormal * 0.001f;
+        vec3 rayCurrentOrigin = worldPosition + worldNormal * 0.001f;
         vec3 rayDirectionSign = sign(rayDirection);
 
-        vec3 gridCoordXYZ;
-        {
-            vec3 gridWorldPos = (rayOrigin.xyz - GridMinPoint.xyz);
-            gridCoordXYZ = floor(gridWorldPos.xyz / GridCellSize.xyz);
-        }
+        vec3 gridWorldPos = (rayCurrentOrigin.xyz - GridMinPoint.xyz);
+        vec3 gridCoordXYZ = floor(gridWorldPos.xyz / GridCellSize.xyz);
 
         bool insideGrid = true;
-        float walkedDistance = 0.0f;
-        while (insideGrid && walkedDistance <= maxDistance)
+        float currentMaxDistance = maxDistance;
+        while (insideGrid && currentMaxDistance > 0)
         {
-            int originCellCoord = int(NumGridCells * NumGridCells * gridCoordXYZ.z +
-                                      NumGridCells * gridCoordXYZ.y +
-                                      gridCoordXYZ.x);
+            int originCellCoord = int(int(NumGridCells * NumGridCells * gridCoordXYZ.z) +
+                                      int(NumGridCells * gridCoordXYZ.y) +
+                                      int(gridCoordXYZ.x));
             originCellCoord *= NumTrisPerCell;
 
             bool foundIntersection = false;
@@ -145,57 +123,57 @@ void main()
                 vec2 cellTriTexCoord = vec2(mod(cellTriCoord, gridTextureSize.x),
                                             cellTriCoord / gridTextureSize.x);
                 vec2 cellTriUvs = cellTriTexCoord * gridTexelSize;
-                // cellTriUvs += (0.5f * gridTexelSize);
 
-                vec4 gridTextureColor = texture(GridTexture, cellTriUvs);
-                if (gridTextureColor.a >= 0.5)
+                vec4 gridTextureColor = texture(GridTexture, cellTriUvs, 0);
+                bool isValidTriangle = (gridTextureColor.a >= 0.9);
+                if (isValidTriangle)
                 {
-                    int triId = int(255 * 255 * 255 * gridTextureColor.r +
-                                    255 * 255 * gridTextureColor.g +
-                                    255 * gridTextureColor.b);
+                    int triId = int(gridTextureColor.r);
                     vec3 triPoints[3];
-                    for (int i = 0; i < 3; ++i)
+                    for (int vi = 0; vi < 3; ++vi)
                     {
-                        int triCoord = triId * 3 + i;
+                        int triCoord = triId * 3 + vi;
                         vec2 triTexCoord = vec2(mod(triCoord, posTextureSize.x),
                                                 triCoord / posTextureSize.x);
                         vec2 triTexUvs = triTexCoord * posTexelSize;
-                        triPoints[i] = texture(TrianglePositions, triTexUvs, 0).xyz;
+                        triPoints[vi] = texture(TrianglePositions, triTexUvs, 0).xyz;
                     }
 
-                    if (IntersectRayTriangle(rayOrigin, rayDirection,
-                                             triPoints[0], triPoints[1], triPoints[2],
-                                             maxDistance))
+                    float intersectionDist =
+                        IntersectRayTriangle(rayCurrentOrigin, rayDirection, triPoints);
+                    if (intersectionDist < currentMaxDistance)
                     {
-                        ++intersectedRays;
+                        float distFactor = (intersectionDist / currentMaxDistance);
+                        intersectedRaysAO += (1.0f - distFactor) / totalRays;
                         foundIntersection = true;
                         break;
                     }
                 }
                 else
                 {
-                    break;
+                    break; // The triangles in this cell are finished
                 }
             }
 
             if (foundIntersection)
             {
-                // break;
+                break;
             }
 
+            // Find which is the next grid cell we need to go to
+            vec3 gridStepXYZ;
             vec3 cellMin = GridMinPoint + (gridCoordXYZ * GridCellSize);
             vec3 cellMax = cellMin + GridCellSize;
             vec3 cellCenter = cellMin + GridCellSize * 0.5f;
-            vec3 gridStepXYZ;
             {
                 float intersectionDistPlaneX, intersectionDistPlaneY, intersectionDistPlaneZ;
                 {
-                    vec3 planeXPoint = cellCenter + vec3(1,0,0) * 0.5f * GridCellSize * rayDirectionSign.x;
-                    vec3 planeYPoint = cellCenter + vec3(0,1,0) * 0.5f * GridCellSize * rayDirectionSign.y;
-                    vec3 planeZPoint = cellCenter + vec3(0,0,1) * 0.5f * GridCellSize * rayDirectionSign.z;
-                    intersectionDistPlaneX = abs(IntersectRayPlaneDist(rayOrigin, rayDirection, planeXPoint, vec3(1,0,0)));
-                    intersectionDistPlaneY = abs(IntersectRayPlaneDist(rayOrigin, rayDirection, planeYPoint, vec3(0,1,0)));
-                    intersectionDistPlaneZ = abs(IntersectRayPlaneDist(rayOrigin, rayDirection, planeZPoint, vec3(0,0,1)));
+                    vec3 planeXPoint = cellCenter + vec3(1,0,0) * 0.5f * GridCellSize.x * rayDirectionSign.x;
+                    vec3 planeYPoint = cellCenter + vec3(0,1,0) * 0.5f * GridCellSize.y * rayDirectionSign.y;
+                    vec3 planeZPoint = cellCenter + vec3(0,0,1) * 0.5f * GridCellSize.z * rayDirectionSign.z;
+                    intersectionDistPlaneX = (IntersectRayPlaneDist(rayCurrentOrigin, rayDirection, planeXPoint, vec3(1,0,0)));
+                    intersectionDistPlaneY = (IntersectRayPlaneDist(rayCurrentOrigin, rayDirection, planeYPoint, vec3(0,1,0)));
+                    intersectionDistPlaneZ = (IntersectRayPlaneDist(rayCurrentOrigin, rayDirection, planeZPoint, vec3(0,0,1)));
                 }
 
                 float minIntersectionDist;
@@ -216,19 +194,19 @@ void main()
                     minIntersectionDist = intersectionDistPlaneZ;
                     gridStepXYZ = vec3(0,0,1) * rayDirectionSign.z;
                 }
-                rayOrigin += rayDirection * minIntersectionDist + rayDirection * 0.01f;
+
+                currentMaxDistance -= minIntersectionDist;
+                rayCurrentOrigin += rayDirection * minIntersectionDist;
             }
 
-            // Advance in grid
+            // Advance in grid and update whether we are inside
             gridCoordXYZ += gridStepXYZ;
-
             insideGrid = (all(greaterThanEqual(gridCoordXYZ, vec3(0))) &&
                           all(lessThan(gridCoordXYZ, vec3(NumGridCells))));
-            walkedDistance = distance(worldPosition, cellCenter) - length(GridCellSize);
         }
     }
 
-    float ambientOcclusion = (intersectedRays / totalRays);
+    float ambientOcclusion = (intersectedRaysAO / (totalRays * maxDistance));
     OutColor = vec4(vec3(ambientOcclusion), 1);
 }
 

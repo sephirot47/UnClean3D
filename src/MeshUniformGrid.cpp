@@ -31,7 +31,7 @@ void MeshUniformGrid::Create(MeshRenderer *mr)
         mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
     m_gridAABox = mesh->GetAABBox();
     m_gridAABox = localToWorldMatrix * GetGridAABox();
-    const Vector3 padding = GetGridAABox().GetSize() * 0.01f;
+    const Vector3 padding = GetGridAABox().GetSize() * 0.1f;
     m_gridAABox.SetMin(GetGridAABox().GetMin() - padding);
     m_gridAABox.SetMax(GetGridAABox().GetMax() + padding);
 
@@ -50,10 +50,9 @@ void MeshUniformGrid::Create(MeshRenderer *mr)
                 const auto &GCS = m_gridCellSize;
 
                 AABox cellBox;
-                const Vector3 cellPadding = GCS * 0.2f;
-                cellBox.SetMin(GetGridAABox().GetMin() + xyz * GCS -
-                               cellPadding);
-                cellBox.SetMax(cellBox.GetMin() + GCS + cellPadding);
+                const Vector3 cellPad = GCS * 0.0f;
+                cellBox.SetMin(GetGridAABox().GetMin() + xyz * GCS - cellPad);
+                cellBox.SetMax(cellBox.GetMin() + GCS + cellPad);
 
                 Cell &cell = GetCell_(x, y, z);
                 for (TriId triId = 0; triId < meshNumTris; ++triId)

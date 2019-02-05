@@ -26,7 +26,7 @@ EffectLayerMaskImplementationAmbientOcclusion::
     m_uniformGridTexture = Assets::Create<Texture2D>();
     m_uniformGridTexture.Get()->CreateEmpty(UniformGridTextureSize,
                                             UniformGridTextureSize);
-    m_uniformGridTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+    m_uniformGridTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
     m_uniformGridTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
     m_uniformGridTexture.Get()->Fill(
         Color::White(), UniformGridTextureSize, UniformGridTextureSize);
@@ -66,8 +66,12 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 {
     EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(sp, mr);
 
-    CreateTrianglePositionsTexture(mr);
-    CreateMeshUniformGridTexture(mr);
+    if (!m_generatedTextures)
+    {
+        CreateTrianglePositionsTexture(mr);
+        CreateMeshUniformGridTexture(mr);
+        m_generatedTextures = true;
+    }
 
     Mesh *mesh = mr->GetMesh();
 
@@ -115,7 +119,6 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
         PositionsTextureSize,
         GL::ColorComp::RGBA,
         GL::DataType::FLOAT);
-
     return m_trianglePositionsTexture.Get();
 }
 
@@ -141,21 +144,22 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
                 Color pixelColor;
                 for (int i = 0; i < NumTrisPerCell; ++i)
                 {
+                    bool triExists = (i < cell.triangleIds.Size());
                     if (i < cell.triangleIds.Size())
                     {
-                        constexpr int C = 255;
-                        constexpr float CF = SCAST<float>(C);
                         int triId = cell.triangleIds[i];
-                        pixelColor.r = ((triId / (C * C)) % C) / CF;
-                        pixelColor.g = ((triId / (C)) % C) / CF;
-                        pixelColor.b = ((triId / (1)) % C) / CF;
-                        pixelColor.a = 1.0f;
+                        pixelColor.r = triId;
                     }
-                    else
-                    {
-                        pixelColor.a = 0.0f;
-                    }
+                    pixelColor.a = triExists ? 1.0f : 0.0f;
                     gridTextureData[baseCoord + i] = pixelColor;
+                }
+
+                if (cell.triangleIds.Size() >= NumTrisPerCell)
+                {
+                    Debug_Warn("Need more triangles per cell. This cell needs "
+                               << cell.triangleIds.Size()
+                               << " triangle slots, but have only "
+                               << NumTrisPerCell);
                 }
             }
         }
@@ -166,7 +170,6 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
                                      UniformGridTextureSize,
                                      GL::ColorComp::RGBA,
                                      GL::DataType::FLOAT);
-
     return m_uniformGridTexture.Get();
 }
 
