@@ -18,7 +18,7 @@ EffectLayerMaskImplementationAmbientOcclusion::
     m_trianglePositionsTexture = Assets::Create<Texture2D>();
     m_trianglePositionsTexture.Get()->CreateEmpty(PositionsTextureSize,
                                                   PositionsTextureSize);
-    m_trianglePositionsTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
+    m_trianglePositionsTexture.Get()->SetFormat(GL::ColorFormat::RGB32F);
     m_trianglePositionsTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
     m_trianglePositionsTexture.Get()->Fill(
         Color::White(), PositionsTextureSize, PositionsTextureSize);
@@ -26,7 +26,7 @@ EffectLayerMaskImplementationAmbientOcclusion::
     m_uniformGridTexture = Assets::Create<Texture2D>();
     m_uniformGridTexture.Get()->CreateEmpty(UniformGridTextureSize,
                                             UniformGridTextureSize);
-    m_uniformGridTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
+    m_uniformGridTexture.Get()->SetFormat(GL::ColorFormat::RG32F);
     m_uniformGridTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
     m_uniformGridTexture.Get()->Fill(
         Color::White(), UniformGridTextureSize, UniformGridTextureSize);
@@ -99,7 +99,7 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
     Mesh *mesh = mr->GetMesh();
     const Matrix4 &localToWorldMatrix =
         mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
-    Array<Vector4> positionsTextureData(PositionsTextureSize *
+    Array<Vector3> positionsTextureData(PositionsTextureSize *
                                         PositionsTextureSize);
     for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
     {
@@ -109,7 +109,7 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
         for (uint i = 0; i < 3; ++i)
         {
             uint coord = (triId * 3 + i);
-            positionsTextureData[coord] = Vector4(tri.GetPoint(i), 1);
+            positionsTextureData[coord] = Vector3(tri.GetPoint(i));
         }
     }
 
@@ -117,7 +117,7 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
         RCAST<Byte *>(positionsTextureData.Data()),
         PositionsTextureSize,
         PositionsTextureSize,
-        GL::ColorComp::RGBA,
+        GL::ColorComp::RGB,
         GL::DataType::FLOAT);
     return m_trianglePositionsTexture.Get();
 }
@@ -129,8 +129,8 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
 {
     const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
 
-    Array<Color> gridTextureData(UniformGridTextureSize *
-                                 UniformGridTextureSize);
+    Array<Vector2> gridTextureData(UniformGridTextureSize *
+                                   UniformGridTextureSize);
     for (int x = 0; x < meshUniformGrid.GetNumCells(); ++x)
     {
         for (int y = 0; y < meshUniformGrid.GetNumCells(); ++y)
@@ -141,17 +141,17 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
                     meshUniformGrid.GetCellCoord(x, y, z) * NumTrisPerCell;
                 const MeshUniformGrid::Cell &cell =
                     meshUniformGrid.GetCell(x, y, z);
-                Color pixelColor;
+
+                Vector2 pixelRG;
                 for (int i = 0; i < NumTrisPerCell; ++i)
                 {
                     bool triExists = (i < cell.triangleIds.Size());
-                    if (i < cell.triangleIds.Size())
+                    if (triExists)
                     {
-                        int triId = cell.triangleIds[i];
-                        pixelColor.r = triId;
+                        pixelRG.x = cell.triangleIds[i];
                     }
-                    pixelColor.a = triExists ? 1.0f : 0.0f;
-                    gridTextureData[baseCoord + i] = pixelColor;
+                    pixelRG.y = triExists ? 1.0f : 0.0f;
+                    gridTextureData[baseCoord + i] = pixelRG;
                 }
 
                 if (cell.triangleIds.Size() >= NumTrisPerCell)
@@ -168,7 +168,7 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
     m_uniformGridTexture.Get()->Fill(RCAST<Byte *>(gridTextureData.Data()),
                                      UniformGridTextureSize,
                                      UniformGridTextureSize,
-                                     GL::ColorComp::RGBA,
+                                     GL::ColorComp::RG,
                                      GL::DataType::FLOAT);
     return m_uniformGridTexture.Get();
 }

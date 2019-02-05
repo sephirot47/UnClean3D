@@ -123,11 +123,11 @@ void main()
             bool foundIntersection = false;
             for (int i = 0; i < NumTrisPerCell; ++i)
             {
-                vec4 gridTextureColor = GetTextureData(GridTexture, originCellCoord + i);
-                bool isValidTriangle = (gridTextureColor.a >= 0.9);
+                vec2 gridTextureData = GetTextureData(GridTexture, originCellCoord + i).xy;
+                bool isValidTriangle = (gridTextureData.g >= 0.9);
                 if (isValidTriangle)
                 {
-                    int triId = int(gridTextureColor.r);
+                    int triId = int(gridTextureData.r);
                     vec3 triPoints[3];
                     for (int vi = 0; vi < 3; ++vi)
                     {
