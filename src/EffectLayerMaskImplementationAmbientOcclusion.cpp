@@ -77,7 +77,6 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 
     const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
 
-    sp->SetInt("NumTrisPerCell", NumTrisPerCell);
     sp->SetVector3("GridMinPoint", meshUniformGrid.GetGridAABox().GetMin());
     sp->SetInt("NumTriangles", mesh->GetNumTriangles());
     sp->SetTexture2D("TrianglePositions", m_trianglePositionsTexture.Get());
@@ -122,44 +121,65 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
     return m_trianglePositionsTexture.Get();
 }
 
-#include "Bang/Random.h"
 Texture2D *
 EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
     MeshRenderer *mr)
 {
     const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
 
-    Array<Vector2> gridTextureData(UniformGridTextureSize *
-                                   UniformGridTextureSize);
-    for (int x = 0; x < meshUniformGrid.GetNumCells(); ++x)
+    const int TotalTexSize = UniformGridTextureSize * UniformGridTextureSize;
+    Array<Vector2> gridTextureData(TotalTexSize);
+
+    const int NC = meshUniformGrid.GetNumCells();
+
+    int triangleListBegin = NC * NC * NC;
+    int currentTexCoord = 0;
+    int triangleListSize = 0;
+    for (int z = 0; z < NC; ++z)
     {
-        for (int y = 0; y < meshUniformGrid.GetNumCells(); ++y)
+        for (int y = 0; y < NC; ++y)
         {
-            for (int z = 0; z < meshUniformGrid.GetNumCells(); ++z)
+            for (int x = 0; x < NC; ++x)
             {
-                uint baseCoord =
-                    meshUniformGrid.GetCellCoord(x, y, z) * NumTrisPerCell;
                 const MeshUniformGrid::Cell &cell =
                     meshUniformGrid.GetCell(x, y, z);
+                const uint numCellTriangles = cell.triangleIds.Size();
 
-                Vector2 pixelRG;
-                for (int i = 0; i < NumTrisPerCell; ++i)
+                gridTextureData[currentTexCoord] = Vector2(
+                    triangleListBegin + triangleListSize,
+                    triangleListBegin + triangleListSize + numCellTriangles);
+                triangleListSize += numCellTriangles;
+
+                ++currentTexCoord;
+            }
+        }
+    }
+
+    for (int z = 0; z < NC; ++z)
+    {
+        for (int y = 0; y < NC; ++y)
+        {
+            for (int x = 0; x < NC; ++x)
+            {
+                if (currentTexCoord < TotalTexSize)
                 {
-                    bool triExists = (i < cell.triangleIds.Size());
-                    if (triExists)
+                    const MeshUniformGrid::Cell &cell =
+                        meshUniformGrid.GetCell(x, y, z);
+
+                    Vector2 pixelRG;
+                    for (uint i = 0; i < cell.triangleIds.Size(); ++i)
                     {
                         pixelRG.x = cell.triangleIds[i];
+                        gridTextureData[currentTexCoord] = pixelRG;
+                        ++currentTexCoord;
                     }
-                    pixelRG.y = triExists ? 1.0f : 0.0f;
-                    gridTextureData[baseCoord + i] = pixelRG;
                 }
-
-                if (cell.triangleIds.Size() >= NumTrisPerCell)
+                else
                 {
-                    Debug_Warn("Need more triangles per cell. This cell needs "
-                               << cell.triangleIds.Size()
-                               << " triangle slots, but have only "
-                               << NumTrisPerCell);
+                    Debug_Error("Not enough texture size to represent the "
+                                "uniform grid");
+                    ASSERT(false);
+                    exit(1);
                 }
             }
         }

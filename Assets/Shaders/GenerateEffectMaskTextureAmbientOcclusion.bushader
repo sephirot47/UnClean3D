@@ -26,7 +26,6 @@ uniform int NumTriangles;
 uniform sampler2D TrianglePositions;
 
 uniform sampler2D GridTexture;
-uniform int NumTrisPerCell;
 uniform int NumGridCells;
 uniform vec3 GridCellSize;
 uniform vec3 GridMinPoint;
@@ -96,8 +95,8 @@ void main()
     vec3 worldPosition = inWorldPosition;
     vec3 worldNormal = normalize(inWorldNormal);
 
-    float totalRays = 30;
-    float maxDistance = 0.02;
+    float totalRays = 15;
+    float maxDistance = 0.03;
     float intersectedRaysAO = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
@@ -115,36 +114,33 @@ void main()
         float currentMaxDistance = maxDistance;
         while (insideGrid && currentMaxDistance > 0)
         {
-            int originCellCoord = int(NumGridCells * NumGridCells * gridCoordXYZ.z +
-                                      NumGridCells * gridCoordXYZ.y +
-                                      gridCoordXYZ.x) *
-                                  NumTrisPerCell;
+            int NC = NumGridCells;
+            int cellCoord = int(dot(vec3(NC * NC, NC, 1), gridCoordXYZ.zyx));
+            // int cellCoord = int(NC * NC * gridCoordXYZ.z + NC * gridCoordXYZ.y + gridCoordXYZ.x);
+            ivec2 cellTexCoordTriangleListBeginEnd = ivec2(GetTextureData(GridTexture, cellCoord).xy);
 
             bool foundIntersection = false;
-            for (int i = 0; i < NumTrisPerCell; ++i)
+            for (int texCoordi = cellTexCoordTriangleListBeginEnd[0];
+                 texCoordi <= cellTexCoordTriangleListBeginEnd[1];
+                 ++texCoordi)
             {
-                vec2 gridTextureData = GetTextureData(GridTexture, originCellCoord + i).xy;
-                bool isValidTriangle = (gridTextureData.g >= 0.9);
-                if (isValidTriangle)
+                vec2 gridTextureData = GetTextureData(GridTexture, texCoordi).xy;
+                int triId = int(gridTextureData.r);
+                vec3 triPoints[3];
+                for (int vi = 0; vi < 3; ++vi)
                 {
-                    int triId = int(gridTextureData.r);
-                    vec3 triPoints[3];
-                    for (int vi = 0; vi < 3; ++vi)
-                    {
-                        triPoints[vi] = GetTextureData(TrianglePositions, triId * 3 + vi).xyz;
-                    }
-
-                    float intersectionDist =
-                        IntersectRayTriangle(rayCurrentOrigin, rayDirection, triPoints);
-                    if (intersectionDist < currentMaxDistance)
-                    {
-                        float distFactor = (intersectionDist / currentMaxDistance);
-                        intersectedRaysAO += (1.0f - distFactor) / totalRays;
-                        foundIntersection = true;
-                        break;
-                    }
+                    triPoints[vi] = GetTextureData(TrianglePositions, triId * 3 + vi).xyz;
                 }
-                else { break; } // The triangles in this cell are finished
+
+                float intersectionDist =
+                    IntersectRayTriangle(rayCurrentOrigin, rayDirection, triPoints);
+                if (intersectionDist < currentMaxDistance)
+                {
+                    float distFactor = (intersectionDist / currentMaxDistance);
+                    intersectedRaysAO += (1.0f - distFactor) / totalRays;
+                    foundIntersection = true;
+                    break;
+                }
             }
             if (foundIntersection) { break; }
 

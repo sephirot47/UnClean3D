@@ -33,7 +33,6 @@ protected:
 private:
     const uint PositionsTextureSize = 1024;
     const uint UniformGridTextureSize = 2048;
-    const uint NumTrisPerCell = 50;
     bool m_generatedTextures = false;
 
     AH<Texture2D> m_trianglePositionsTexture;
