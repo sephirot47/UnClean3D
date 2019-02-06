@@ -17,6 +17,10 @@ public:
     EffectLayerMaskImplementationBlur();
     virtual ~EffectLayerMaskImplementationBlur() override;
 
+    void SetBlurRadius(int blurRadius);
+
+    int GetBlurRadius() const;
+
     // Serializable
     virtual void Reflect() override;
 
@@ -35,6 +39,8 @@ protected:
         MeshRenderer *meshRend) override;
 
 private:
+    int m_blurRadius = 3;
+
     AH<Texture2D> m_blurTexture0;
     AH<Texture2D> m_blurTexture1;
 };

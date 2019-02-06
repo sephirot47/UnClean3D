@@ -35,6 +35,14 @@ vec4 Blend(in int blendMode,
            in float alpha)
 {
     vec4 newValue = oldValue;
+
+    if (forColor)
+    {
+        float alphaImportance = 5.0f;
+        alpha *= alphaImportance;
+        alpha = clamp(alpha, 0, 1);
+    }
+
     switch (blendMode)
     {
         case BLEND_MODE_ADD:

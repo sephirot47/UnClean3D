@@ -26,9 +26,29 @@ EffectLayerMaskImplementationBlur::~EffectLayerMaskImplementationBlur()
 {
 }
 
+void EffectLayerMaskImplementationBlur::SetBlurRadius(int blurRadius)
+{
+    if (blurRadius != GetBlurRadius())
+    {
+        m_blurRadius = blurRadius;
+        Invalidate();
+    }
+}
+
+int EffectLayerMaskImplementationBlur::GetBlurRadius() const
+{
+    return m_blurRadius;
+}
+
 void EffectLayerMaskImplementationBlur::Reflect()
 {
     EffectLayerMaskImplementation::Reflect();
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
+                                   "Blur radius",
+                                   SetBlurRadius,
+                                   GetBlurRadius,
+                                   BANG_REFLECT_HINT_SLIDER(0.0f, 10.0f));
 }
 
 EffectLayerMask::Type
@@ -78,13 +98,13 @@ void EffectLayerMaskImplementationBlur::
 {
     GEngine *ge = GEngine::GetInstance();
 
-    if (GetEffectLayerMask()->GetVisible())
+    if (GetEffectLayerMask()->GetVisible() && GetBlurRadius() > 0)
     {
         ge->BlurTexture(mergedMaskTextureUntilNow,
                         m_blurTexture0.Get(),
                         m_blurTexture1.Get(),
-                        3.0f,
-                        BlurType::KAWASE);
+                        GetBlurRadius(),
+                        BlurType::GAUSSIAN);
         ge->CopyTexture(m_blurTexture1.Get(), mergedMaskTextureUntilNow);
     }
     else
