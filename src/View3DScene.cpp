@@ -353,8 +353,8 @@ void View3DScene::OnModelChanged(Model *newModel)
                 delete effectLayer;
             }
         }
-        m_meshRendererToInfo.Clear();
     }
+    m_meshRendererToInfo.Clear();
 
     if (newModel)
     {

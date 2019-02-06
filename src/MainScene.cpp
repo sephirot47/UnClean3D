@@ -49,10 +49,11 @@ void MainScene::Start()
 {
     if (!IsStarted())
     {
+        Path projAssets = Paths::GetProjectAssetsDir();
         Path modelPath;
-        modelPath = Path("/home/sephirot47/Downloads/MyTable/MyTable.dae");
-        // modelPath =
-        //     Paths::GetProjectAssetsDir().Append("Character/Character.dae");
+        // modelPath = projAssets.Append("cube.dae");
+        modelPath = projAssets.Append("MyTable/MyTable.dae");
+        // modelPath = projAssets.Append("Character/Character.dae");
         GetControlPanel()->OpenModel(modelPath);
     }
 

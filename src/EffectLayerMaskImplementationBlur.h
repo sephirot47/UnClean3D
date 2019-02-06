@@ -41,6 +41,7 @@ protected:
 private:
     int m_blurRadius = 3;
 
+    AH<ShaderProgram> m_blurShaderProgram;
     AH<Texture2D> m_blurTexture0;
     AH<Texture2D> m_blurTexture1;
 };

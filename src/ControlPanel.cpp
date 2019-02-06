@@ -455,7 +455,7 @@ void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
 
 Path ControlPanel::GetInitialDir() const
 {
-    return EditorPaths::GetExecutableDir();
+    return EditorPaths::GetExecutableDir().GetDirectory().Append("Assets");
 }
 
 Path ControlPanel::GetOpenModelPath() const
