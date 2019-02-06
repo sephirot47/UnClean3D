@@ -35,38 +35,18 @@ void MeshUniformGrid::Create(MeshRenderer *mr)
     m_gridAABox.SetMin(GetGridAABox().GetMin() - padding);
     m_gridAABox.SetMax(GetGridAABox().GetMax() + padding);
 
-    m_gridNumCells = 20;
+    m_gridNumCells = 50;
     m_gridCellSize = (GetGridAABox().GetSize() / SCAST<float>(m_gridNumCells));
     m_grid.Resize(m_gridNumCells * m_gridNumCells * m_gridNumCells);
 
     const uint meshNumTris = mesh->GetNumTriangles();
-    for (uint x = 0; x < m_gridNumCells; ++x)
+
+    Array<Mesh::TriangleId> allTriIds;
+    for (Mesh::TriangleId triId = 0; triId < meshNumTris; ++triId)
     {
-        for (uint y = 0; y < m_gridNumCells; ++y)
-        {
-            for (uint z = 0; z < m_gridNumCells; ++z)
-            {
-                const Vector3 xyz(x, y, z);
-                const auto &GCS = m_gridCellSize;
-
-                AABox cellBox;
-                const Vector3 cellPad = GCS * 0.0f;
-                cellBox.SetMin(GetGridAABox().GetMin() + xyz * GCS - cellPad);
-                cellBox.SetMax(cellBox.GetMin() + GCS + cellPad);
-
-                Cell &cell = GetCell_(x, y, z);
-                for (TriId triId = 0; triId < meshNumTris; ++triId)
-                {
-                    Triangle triangle = mesh->GetTriangle(triId);
-                    triangle = localToWorldMatrix * triangle;
-                    if (Geometry::IntersectAABoxTriangle(cellBox, triangle))
-                    {
-                        cell.triangleIds.PushBack(triId);
-                    }
-                }
-            }
-        }
+        allTriIds.PushBack(triId);
     }
+    Fill(Vector3i::Zero(), Vector3i(m_gridNumCells), mr, allTriIds);
 }
 
 uint MeshUniformGrid::GetNumCells() const
@@ -77,6 +57,28 @@ uint MeshUniformGrid::GetNumCells() const
 uint MeshUniformGrid::GetCellCoord(uint x, uint y, uint z) const
 {
     return z * m_gridNumCells * m_gridNumCells + y * m_gridNumCells + x;
+}
+
+AABox MeshUniformGrid::GetCellBox(uint x, uint y, uint z) const
+{
+    return GetCellBox(x, y, z, Vector3i::One());
+}
+
+AABox MeshUniformGrid::GetCellBox(uint x,
+                                  uint y,
+                                  uint z,
+                                  const Vector3i &rangeSize) const
+{
+    const Vector3 xyz(x, y, z);
+    const Vector3 normalSize = m_gridCellSize;
+    const Vector3 paddedSize = normalSize * 0.1f;
+
+    AABox cellBox;
+    cellBox.SetMin(GetGridAABox().GetMin() + xyz * normalSize - paddedSize);
+    cellBox.SetMax(cellBox.GetMin() + Vector3(rangeSize) * normalSize +
+                   paddedSize * 2.0f);
+
+    return cellBox;
 }
 
 const MeshUniformGrid::Cell &MeshUniformGrid::GetCell(uint x,
@@ -94,6 +96,84 @@ const Vector3 &MeshUniformGrid::GetCellSize() const
 const AABox &MeshUniformGrid::GetGridAABox() const
 {
     return m_gridAABox;
+}
+
+void MeshUniformGrid::Fill(const Vector3i &rangeBegin,
+                           const Vector3i &rangeSize,
+                           MeshRenderer *mr,
+                           const Array<Mesh::TriangleId> &triangleIds)
+{
+    Mesh *mesh = mr->GetMesh();
+    const Matrix4 &localToWorldMatrix =
+        mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
+
+    if (rangeSize <= Vector3i::One())
+    {
+        Cell &cell = GetCell_(rangeBegin.x, rangeBegin.y, rangeBegin.z);
+        AABox cellBox = GetCellBox(rangeBegin.x, rangeBegin.y, rangeBegin.z);
+        for (Mesh::TriangleId triId : triangleIds)
+        {
+            Triangle triangle = mesh->GetTriangle(triId);
+            triangle = localToWorldMatrix * triangle;
+            if (Geometry::IntersectAABoxTriangle(cellBox, triangle))
+            {
+                cell.triangleIds.PushBack(triId);
+            }
+        }
+    }
+    else
+    {
+        for (int x = 0; x <= 1; ++x)
+        {
+            for (int y = 0; y <= 1; ++y)
+            {
+                for (int z = 0; z <= 1; ++z)
+                {
+                    const Vector3i xyz(x, y, z);
+                    const Vector3i subCellRangeSize =
+                        (rangeSize + Vector3i::One()) / 2;
+                    const Vector3i subCellRangeBegin =
+                        rangeBegin + xyz * (subCellRangeSize);
+
+                    AABox subCellBox = GetCellBox(subCellRangeBegin.x,
+                                                  subCellRangeBegin.y,
+                                                  subCellRangeBegin.z,
+                                                  subCellRangeSize);
+                    Cell subCell = CreateCell(subCellBox, mr, triangleIds);
+
+                    if (subCell.triangleIds.Size() >= 1)
+                    {
+                        Fill(subCellRangeBegin,
+                             subCellRangeSize,
+                             mr,
+                             subCell.triangleIds);
+                    }
+                }
+            }
+        }
+    }
+}
+
+MeshUniformGrid::Cell MeshUniformGrid::CreateCell(
+    const AABox &box,
+    MeshRenderer *mr,
+    const Array<Mesh::TriangleId> &triangleIds)
+{
+    Mesh *mesh = mr->GetMesh();
+    const Matrix4 &localToWorldMatrix =
+        mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
+
+    Cell cell;
+    for (Mesh::TriangleId triId : triangleIds)
+    {
+        Triangle triangle = mesh->GetTriangle(triId);
+        triangle = localToWorldMatrix * triangle;
+        if (Geometry::IntersectAABoxTriangle(box, triangle))
+        {
+            cell.triangleIds.PushBack(triId);
+        }
+    }
+    return cell;
 }
 
 MeshUniformGrid::Cell &MeshUniformGrid::GetCell_(uint x, uint y, uint z)
