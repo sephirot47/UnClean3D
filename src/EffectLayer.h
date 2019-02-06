@@ -38,7 +38,7 @@ public:
     virtual ~EffectLayer() override;
 
     virtual void GenerateEffectTexture();
-    void MergeMasks();
+    void MergeMasks(MeshRenderer *mr);
     void ReloadShaders();
 
     void SetImplementation(EffectLayerMaskImplementation *impl);

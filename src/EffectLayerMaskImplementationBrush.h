@@ -25,7 +25,7 @@ public:
     virtual void Reflect() override;
 
 protected:
-    // EffectLayer
+    // EffectLayerMaskImplementation
     virtual EffectLayerMask::Type GetEffectLayerMaskType() const override;
     virtual String GetTypeName() const override;
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;

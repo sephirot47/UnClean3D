@@ -32,7 +32,8 @@ public:
     {
         FRACTAL,
         AMBIENT_OCCLUSION,
-        BRUSH
+        BRUSH,
+        BLUR
     };
 
     EffectLayerMask();

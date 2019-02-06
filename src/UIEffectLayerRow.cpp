@@ -250,9 +250,9 @@ UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow()
         new UIEffectLayerMaskRow(this, layerMask);
     newMaskRow->SetUIEffectLayerRow(this);
     newMaskRow->SetEffectLayerMask(layerMask);
-    p_maskRowsList->AddItem(newMaskRow);
+    p_maskRowsList->AddItem(newMaskRow, 0);
     p_maskRowsList->SetSelection(newMaskRow);
-    p_maskRows.PushBack(newMaskRow);
+    p_maskRows.PushFront(newMaskRow);
 
     return newMaskRow;
 }

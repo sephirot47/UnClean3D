@@ -156,7 +156,7 @@ void EffectLayer::GenerateEffectTexture()
             }
         }
     }
-    MergeMasks();
+    MergeMasks(GetMeshRenderer());
 
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
@@ -198,7 +198,7 @@ void EffectLayer::GenerateEffectTexture()
     m_isValid = true;
 }
 
-void EffectLayer::MergeMasks()
+void EffectLayer::MergeMasks(MeshRenderer *mr)
 {
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::BLEND_STATES);
@@ -220,34 +220,52 @@ void EffectLayer::MergeMasks()
     for (int i = GetMasks().Size() - 1; i >= 0; --i)
     {
         EffectLayerMask *mask = GetMasks()[i];
-        if (!mask->GetVisible())
+
+        EffectLayerMaskImplementation *impl = mask->GetImplementation();
+        if (impl)
         {
-            continue;
+            impl->GenerateEffectMaskTextureOnCompositeBefore(
+                GetMergedMaskTexture(), mr);
         }
 
-        switch (mask->GetBlendMode())
+        if (mask->GetVisible())
         {
-            case EffectLayerMask::BlendMode::IGNORE: continue; break;
+            if (impl->CompositeThisMask())
+            {
+                switch (mask->GetBlendMode())
+                {
+                    case EffectLayerMask::BlendMode::IGNORE: continue; break;
 
-            case EffectLayerMask::BlendMode::ADD:
-                GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
-                GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
-                break;
+                    case EffectLayerMask::BlendMode::ADD:
+                        GL::BlendFunc(GL::BlendFactor::ONE,
+                                      GL::BlendFactor::ONE);
+                        GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
+                        break;
 
-            case EffectLayerMask::BlendMode::MULTIPLY:
-                GL::BlendFunc(GL::BlendFactor::ZERO,
-                              GL::BlendFactor::SRC_COLOR);
-                GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
-                break;
+                    case EffectLayerMask::BlendMode::MULTIPLY:
+                        GL::BlendFunc(GL::BlendFactor::ZERO,
+                                      GL::BlendFactor::SRC_COLOR);
+                        GL::BlendEquation(GL::BlendEquationE::FUNC_ADD);
+                        break;
 
-            case EffectLayerMask::BlendMode::SUBTRACT:
-                GL::BlendFunc(GL::BlendFactor::ONE, GL::BlendFactor::ONE);
-                GL::BlendEquation(GL::BlendEquationE::FUNC_REVERSE_SUBTRACT);
-                break;
+                    case EffectLayerMask::BlendMode::SUBTRACT:
+                        GL::BlendFunc(GL::BlendFactor::ONE,
+                                      GL::BlendFactor::ONE);
+                        GL::BlendEquation(
+                            GL::BlendEquationE::FUNC_REVERSE_SUBTRACT);
+                        break;
+                }
+
+                mask->GetMaskTexture()->ResizeConservingData(size.x, size.y);
+                GEngine::GetInstance()->RenderTexture(mask->GetMaskTexture());
+            }
         }
 
-        mask->GetMaskTexture()->ResizeConservingData(size.x, size.y);
-        GEngine::GetInstance()->RenderTexture(mask->GetMaskTexture());
+        if (impl)
+        {
+            impl->GenerateEffectMaskTextureOnCompositeAfter(
+                GetMergedMaskTexture(), mr);
+        }
     }
 
     GL::Pop(GL::Pushable::VIEWPORT);
@@ -352,7 +370,7 @@ EffectLayerMask *EffectLayer::AddNewMask()
 {
     EffectLayerMask *newMask = new EffectLayerMask();
     newMask->SetEffectLayer(this);
-    m_masks.PushBack(newMask);
+    m_masks.PushFront(newMask);
     Invalidate();
     return newMask;
 }

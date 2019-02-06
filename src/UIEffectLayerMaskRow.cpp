@@ -99,6 +99,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
             SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
         p_maskTypeInput->AddItem("Brush",
                                  SCAST<int>(EffectLayerMask::Type::BRUSH));
+        p_maskTypeInput->AddItem("Blur",
+                                 SCAST<int>(EffectLayerMask::Type::BLUR));
         p_maskTypeInput->SetSelectionByValue(
             SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);

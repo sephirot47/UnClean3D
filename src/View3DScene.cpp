@@ -308,10 +308,11 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
         sp->Bind();
         if (GetControlPanel()->GetSelectedEffectLayerMask())
         {
-            sp->SetTexture2D("SelectedMaskTexture",
+            sp->SetTexture2D("MaskTextureToSee",
                              GetControlPanel()
                                  ->GetSelectedEffectLayerMask()
-                                 ->GetMaskTexture());
+                                 ->GetImplementation()
+                                 ->GetMaskTextureToSee());
         }
         GetControlPanel()->SetControlPanelUniforms(sp);
     }

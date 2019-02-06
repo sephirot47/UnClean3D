@@ -32,6 +32,30 @@ void EffectLayerMaskImplementation::SetEffectLayerMask(
     p_effectLayerMask = effectLayerMask;
 }
 
+void EffectLayerMaskImplementation::GenerateEffectMaskTextureOnCompositeBefore(
+    Texture2D *mergedMaskTextureUntilNow,
+    MeshRenderer *meshRend)
+{
+    BANG_UNUSED_2(mergedMaskTextureUntilNow, meshRend);
+}
+
+void EffectLayerMaskImplementation::GenerateEffectMaskTextureOnCompositeAfter(
+    Texture2D *mergedMaskTextureUntilNow,
+    MeshRenderer *meshRend)
+{
+    BANG_UNUSED_2(mergedMaskTextureUntilNow, meshRend);
+}
+
+Texture2D *EffectLayerMaskImplementation::GetMaskTextureToSee() const
+{
+    return GetEffectLayerMask()->GetMaskTexture();
+}
+
+bool EffectLayerMaskImplementation::CompositeThisMask() const
+{
+    return true;
+}
+
 EffectLayerMask *EffectLayerMaskImplementation::GetEffectLayerMask() const
 {
     return p_effectLayerMask;

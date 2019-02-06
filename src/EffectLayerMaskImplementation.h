@@ -29,7 +29,15 @@ public:
     void SetEffectLayerMask(EffectLayerMask *effectLayerMask);
     virtual void GenerateEffectMaskTexture(Texture2D *effectTexture,
                                            MeshRenderer *meshRend) = 0;
+    virtual void GenerateEffectMaskTextureOnCompositeBefore(
+        Texture2D *mergedMaskTextureUntilNow,
+        MeshRenderer *meshRend);
+    virtual void GenerateEffectMaskTextureOnCompositeAfter(
+        Texture2D *mergedMaskTextureUntilNow,
+        MeshRenderer *meshRend);
     virtual EffectLayerMask::Type GetEffectLayerMaskType() const = 0;
+    virtual Texture2D *GetMaskTextureToSee() const;
+    virtual bool CompositeThisMask() const;
 
     virtual String GetTypeName() const = 0;
     EffectLayerMask *GetEffectLayerMask() const;

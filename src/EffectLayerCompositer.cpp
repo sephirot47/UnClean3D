@@ -155,7 +155,8 @@ void EffectLayerCompositer::CompositeLayers(
     sp->Bind();
     for (int i = effectLayers.Size() - 1; i >= 0; --i)
     {
-        if (!effectLayers[i]->GetVisible())
+        EffectLayer *effectLayer = effectLayers[i];
+        if (!effectLayer->GetVisible())
         {
             continue;
         }
@@ -172,8 +173,6 @@ void EffectLayerCompositer::CompositeLayers(
 
         // Set uniforms
         {
-            EffectLayer *effectLayer = effectLayers[i];
-
             sp->SetTexture2D("EffectLayerColorTexture",
                              effectLayer->GetEffectColorTexture());
             sp->SetTexture2D("EffectLayerMiscTexture",

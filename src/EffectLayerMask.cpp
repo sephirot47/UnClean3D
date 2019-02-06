@@ -14,6 +14,7 @@
 #include "ControlPanel.h"
 #include "EffectLayer.h"
 #include "EffectLayerMaskImplementationAmbientOcclusion.h"
+#include "EffectLayerMaskImplementationBlur.h"
 #include "EffectLayerMaskImplementationBrush.h"
 #include "EffectLayerMaskImplementationFractal.h"
 #include "View3DScene.h"
@@ -75,6 +76,10 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
 
             case EffectLayerMask::Type::BRUSH:
                 m_implementation = new EffectLayerMaskImplementationBrush();
+                break;
+
+            case EffectLayerMask::Type::BLUR:
+                m_implementation = new EffectLayerMaskImplementationBlur();
                 break;
 
             default: ASSERT(false); break;
