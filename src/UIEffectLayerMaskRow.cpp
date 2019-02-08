@@ -103,7 +103,7 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
                                  SCAST<int>(EffectLayerMask::Type::BLUR));
 
         p_maskTypeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayerMask::Type::FRACTAL));
+            SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
         p_blendModeInput = GameObjectFactory::CreateUIComboBox();

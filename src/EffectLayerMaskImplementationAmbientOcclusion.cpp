@@ -15,14 +15,7 @@ using namespace Bang;
 EffectLayerMaskImplementationAmbientOcclusion::
     EffectLayerMaskImplementationAmbientOcclusion()
 {
-    m_trianglePositionsTexture = Assets::Create<Texture2D>();
-    m_trianglePositionsTexture.Get()->CreateEmpty(PositionsTextureSize,
-                                                  PositionsTextureSize);
-    m_trianglePositionsTexture.Get()->SetFormat(GL::ColorFormat::RGB32F);
-    m_trianglePositionsTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
-    m_trianglePositionsTexture.Get()->Fill(
-        Color::White(), PositionsTextureSize, PositionsTextureSize);
-
+    m_trianglePositionsGLSLArray.SetFormat(GL::ColorFormat::RGB32F);
     m_uniformGridGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 
@@ -62,7 +55,7 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 
     if (!m_generatedTextureArrays)
     {
-        CreateTrianglePositionsTexture(mr);
+        FillTrianglePositionsGLSLArray(mr);
         FillMeshUniformGridGLSLArray();
         m_generatedTextureArrays = true;
     }
@@ -73,8 +66,8 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 
     sp->SetVector3("GridMinPoint", meshUniformGrid.GetGridAABox().GetMin());
     sp->SetInt("NumTriangles", mesh->GetNumTriangles());
-    sp->SetTexture2D("TrianglePositions", m_trianglePositionsTexture.Get());
-    sp->SetTexture2D("GridTexture", m_uniformGridGLSLArray.GetArrayTexture());
+    m_uniformGridGLSLArray.Bind("UniformMeshGrid", sp);
+    m_trianglePositionsGLSLArray.Bind("TrianglePositions", sp);
     sp->SetInt("NumGridCells", meshUniformGrid.GetNumCells());
     sp->SetVector3("GridCellSize", meshUniformGrid.GetCellSize());
 }
@@ -85,34 +78,27 @@ bool EffectLayerMaskImplementationAmbientOcclusion::
     return false;
 }
 
-Texture2D *
-EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
-    MeshRenderer *mr)
+void EffectLayerMaskImplementationAmbientOcclusion::
+    FillTrianglePositionsGLSLArray(MeshRenderer *mr)
 {
+    Array<Array<Vector4>> allTrianglePositionsArray;
+
     Mesh *mesh = mr->GetMesh();
     const Matrix4 &localToWorldMatrix =
         mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
-    Array<Vector3> positionsTextureData(PositionsTextureSize *
-                                        PositionsTextureSize);
     for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
     {
         Triangle tri = mesh->GetTriangle(triId);
         tri = localToWorldMatrix * tri;
 
+        Array<Vector4> thisTrianglePositions;
         for (uint i = 0; i < 3; ++i)
         {
-            uint coord = (triId * 3 + i);
-            positionsTextureData[coord] = Vector3(tri.GetPoint(i));
+            thisTrianglePositions.PushBack(Vector4(tri.GetPoint(i), 0));
         }
+        allTrianglePositionsArray.PushBack(thisTrianglePositions);
     }
-
-    m_trianglePositionsTexture.Get()->Fill(
-        RCAST<Byte *>(positionsTextureData.Data()),
-        PositionsTextureSize,
-        PositionsTextureSize,
-        GL::ColorComp::RGB,
-        GL::DataType::FLOAT);
-    return m_trianglePositionsTexture.Get();
+    m_trianglePositionsGLSLArray.Fill(allTrianglePositionsArray);
 }
 
 void EffectLayerMaskImplementationAmbientOcclusion::

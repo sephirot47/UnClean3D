@@ -1,11 +1,14 @@
+#include "ArrayOfArrays.glsl"
+
 uniform mat4 SceneModelMatrix;
 uniform int NumTriangles;
-uniform sampler2D TrianglePositions;
 
-uniform sampler2D GridTexture;
 uniform int NumGridCells;
 uniform vec3 GridCellSize;
 uniform vec3 GridMinPoint;
+
+ARRAY_OF_ARRAYS(UniformMeshGrid)
+ARRAY_OF_ARRAYS(TrianglePositions)
 
 float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
 {
@@ -71,20 +74,15 @@ bool RayCast(in vec3 rayOrigin,
     while (insideGrid && currentMaxDistance > 0)
     {
         int NC = NumGridCells;
-        int cellCoord = int(dot(vec3(NC * NC, NC, 1), gridCoordXYZ.zyx));
-        // int cellCoord = int(NC * NC * gridCoordXYZ.z + NC * gridCoordXYZ.y + gridCoordXYZ.x);
-        ivec2 cellTexCoordTriangleListBeginEnd = ivec2(GetTextureData(GridTexture, cellCoord).xy);
-
-        for (int texCoordi = cellTexCoordTriangleListBeginEnd[0];
-             texCoordi <= cellTexCoordTriangleListBeginEnd[1];
-             ++texCoordi)
+        int cellIndex = int(dot(vec3(NC * NC, NC, 1), gridCoordXYZ.zyx));
+        int numTriIdsInCell = GetUniformMeshGridArraySize(cellIndex);
+        for (int i = 0; i < numTriIdsInCell; ++i)
         {
-            vec2 gridTextureData = GetTextureData(GridTexture, texCoordi).xy;
-            int triId = int(gridTextureData.r);
+            int triId = int(GetUniformMeshGridElement(cellIndex, i).x);
             vec3 triPoints[3];
             for (int vi = 0; vi < 3; ++vi)
             {
-                triPoints[vi] = GetTextureData(TrianglePositions, triId * 3 + vi).xyz;
+                triPoints[vi] = GetTrianglePositionsElement(triId, vi).xyz;
             }
 
             IntersectRayTriangle(rayOrigin, rayDirection, triPoints, hitDistance, hitBaryCoords);

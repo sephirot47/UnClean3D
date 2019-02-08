@@ -56,8 +56,7 @@ void main()
         int triId;
         float hitDistance;
         vec3 triBaryCoords;
-        if (RayCast(rayOrigin, rayDirection, maxDistance,
-                    hitDistance, triId, triBaryCoords))
+        if (RayCast(rayOrigin, rayDirection, maxDistance, hitDistance, triId, triBaryCoords))
         {
             float distFactor = (hitDistance / maxDistance);
             intersectedRaysAO += (1.0f - distFactor);

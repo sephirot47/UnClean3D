@@ -35,10 +35,10 @@ private:
     const uint PositionsTextureSize = 1024;
     bool m_generatedTextureArrays = false;
 
-    AH<Texture2D> m_trianglePositionsTexture;
+    GLSLArrayOfArrays m_trianglePositionsGLSLArray;
     GLSLArrayOfArrays m_uniformGridGLSLArray;
 
-    Texture2D *CreateTrianglePositionsTexture(MeshRenderer *mr);
+    void FillTrianglePositionsGLSLArray(MeshRenderer *mr);
     void FillMeshUniformGridGLSLArray();
     const MeshUniformGrid &GetMeshUniformGrid() const;
 };

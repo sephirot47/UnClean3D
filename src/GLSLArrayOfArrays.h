@@ -23,6 +23,7 @@ public:
 
 private:
     const int TexSize = 2048;
+    uint m_numOuterArrays = 0;
     AH<Texture2D> m_arrayTexture;
 };
 

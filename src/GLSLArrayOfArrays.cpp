@@ -44,6 +44,7 @@ void GLSLArrayOfArrays::Fill(const Array<Array<Vector4>> &array)
         ++currentTexCoord;
         totalInnerArraysSize += innerArraySize;
     }
+    m_numOuterArrays = array.Size();
 
     for (const Array<Vector4> &innerArray : array)
     {
@@ -81,6 +82,7 @@ void GLSLArrayOfArrays::Bind(const String &arrayName, ShaderProgram *sp)
     ASSERT(sp && GL::IsBound(sp));
 
     sp->SetTexture2D(arrayName, GetArrayTexture());
+    sp->SetInt(arrayName + "_HeaderSize", m_numOuterArrays);
     sp->SetVector2(arrayName + "_Size", Vector2(TexSize));
     sp->SetVector2(arrayName + "_TexelUvSize", Vector2(1.0f / TexSize));
 }
