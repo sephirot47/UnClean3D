@@ -220,13 +220,10 @@ void EffectLayerMaskImplementationBrush::PaintMaskBrush()
     m_framebuffer->SetAttachmentTexture(maskTexture, GL::Attachment::COLOR0);
     m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-    GL::Render(
-        GetEffectLayerMask()->GetEffectLayer()->GetTextureMesh()->GetVAO(),
-        GL::Primitive::TRIANGLES,
-        GetEffectLayerMask()
-            ->GetEffectLayer()
-            ->GetTextureMesh()
-            ->GetNumVerticesIds());
+    EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();
+    GL::Render(effectLayer->GetTextureMesh()->GetVAO(),
+               GL::Primitive::TRIANGLES,
+               effectLayer->GetTextureMesh()->GetNumVerticesIds());
 
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::CULL_FACE);

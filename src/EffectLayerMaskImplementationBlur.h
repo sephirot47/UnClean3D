@@ -5,6 +5,7 @@
 #include "BangEditor/BangEditor.h"
 
 #include "EffectLayerMaskImplementationGPU.h"
+#include "GLSLArrayOfArrays.h"
 
 using namespace Bang;
 
@@ -31,6 +32,7 @@ protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
                                            MeshRenderer *meshRend) override;
+    virtual void ReloadShaders() override;
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
     virtual Texture2D *GetMaskTextureToSee() const override;
     virtual bool CompositeThisMask() const override;
@@ -40,6 +42,12 @@ protected:
 
 private:
     int m_blurRadius = 3;
+    bool m_generatedTextureArrays = false;
+    GLSLArrayOfArrays m_triangleUvsGLSLArray;
+    GLSLArrayOfArrays m_trianglePositionsGLSLArray;
+    GLSLArrayOfArrays m_oneRingNeighborhoodsGLSLArray;
+
+    void FillGLSLArrays(MeshRenderer *mr);
 
     AH<ShaderProgram> m_blurShaderProgram;
     AH<Texture2D> m_blurTexture0;

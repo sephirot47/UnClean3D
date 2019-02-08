@@ -32,7 +32,6 @@ protected:
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:
-    const uint PositionsTextureSize = 1024;
     bool m_generatedTextureArrays = false;
 
     GLSLArrayOfArrays m_trianglePositionsGLSLArray;

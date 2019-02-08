@@ -86,7 +86,7 @@ void DefaultFragCommonMain(vec4 albedoColor)
     {
         float maskTexValue = texture(MaskTextureToSee, B_FIn_AlbedoUv).r;
         finalAlbedo.rgb  = finalColor.rgb = vec3(maskTexValue, 0, 0);
-        // finalAlbedo.rgb  = finalColor.rgb = texture(MaskTextureToSee, B_FIn_AlbedoUv).rgb;
+        finalAlbedo.rgb  = finalColor.rgb = texture(MaskTextureToSee, B_FIn_AlbedoUv).rgb;
         receivesLighting = 0;
         pixelMetalness = 0;
         pixelRoughness = 1;

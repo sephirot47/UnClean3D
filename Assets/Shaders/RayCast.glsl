@@ -48,15 +48,6 @@ void IntersectRayTriangle(in vec3 rayOrig,
     if (hitDistance < Epsilon) { hitDistance = INF; return; }
 }
 
-vec4 GetTextureData(sampler2D dataTexture, int index)
-{
-    vec2 textureSize = vec2(textureSize(dataTexture, 0));
-    vec2 texelSize = (1.0 / textureSize);
-    vec2 texCoord = vec2(mod(index, textureSize.x), index / textureSize.x);
-    vec2 uvs = texCoord * texelSize;
-    return texture(dataTexture, uvs, 0);
-}
-
 bool RayCast(in vec3 rayOrigin,
              in vec3 rayDirection,
              in float maxDistance,

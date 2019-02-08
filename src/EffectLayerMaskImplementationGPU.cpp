@@ -68,13 +68,10 @@ void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
         SetGenerateEffectUniforms(sp, meshRend);
 
         GL::ClearColorBuffer(Color::Zero());
-        GL::Render(
-            GetEffectLayerMask()->GetEffectLayer()->GetTextureMesh()->GetVAO(),
-            GL::Primitive::TRIANGLES,
-            GetEffectLayerMask()
-                ->GetEffectLayer()
-                ->GetTextureMesh()
-                ->GetNumVerticesIds());
+        EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();
+        GL::Render(effectLayer->GetTextureMesh()->GetVAO(),
+                   GL::Primitive::TRIANGLES,
+                   effectLayer->GetTextureMesh()->GetNumVerticesIds());
     }
 
     GL::Pop(GL::Pushable::VIEWPORT);

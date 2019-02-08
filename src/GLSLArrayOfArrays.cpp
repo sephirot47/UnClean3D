@@ -79,8 +79,6 @@ Texture2D *GLSLArrayOfArrays::GetArrayTexture() const
 
 void GLSLArrayOfArrays::Bind(const String &arrayName, ShaderProgram *sp)
 {
-    ASSERT(sp && GL::IsBound(sp));
-
     sp->SetTexture2D(arrayName, GetArrayTexture());
     sp->SetInt(arrayName + "_HeaderSize", m_numOuterArrays);
     sp->SetVector2(arrayName + "_Size", Vector2(TexSize));
