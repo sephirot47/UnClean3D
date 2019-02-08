@@ -5,6 +5,7 @@
 #include "BangEditor/BangEditor.h"
 
 #include "EffectLayerMaskImplementationGPU.h"
+#include "GLSLArrayOfArrays.h"
 #include "MeshUniformGrid.h"
 
 using namespace Bang;
@@ -32,14 +33,13 @@ protected:
 
 private:
     const uint PositionsTextureSize = 1024;
-    const uint UniformGridTextureSize = 2048;
-    bool m_generatedTextures = false;
+    bool m_generatedTextureArrays = false;
 
     AH<Texture2D> m_trianglePositionsTexture;
-    AH<Texture2D> m_uniformGridTexture;
+    GLSLArrayOfArrays m_uniformGridGLSLArray;
 
     Texture2D *CreateTrianglePositionsTexture(MeshRenderer *mr);
-    Texture2D *CreateMeshUniformGridTexture(MeshRenderer *mr);
+    void FillMeshUniformGridGLSLArray();
     const MeshUniformGrid &GetMeshUniformGrid() const;
 };
 

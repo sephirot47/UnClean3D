@@ -23,13 +23,7 @@ EffectLayerMaskImplementationAmbientOcclusion::
     m_trianglePositionsTexture.Get()->Fill(
         Color::White(), PositionsTextureSize, PositionsTextureSize);
 
-    m_uniformGridTexture = Assets::Create<Texture2D>();
-    m_uniformGridTexture.Get()->CreateEmpty(UniformGridTextureSize,
-                                            UniformGridTextureSize);
-    m_uniformGridTexture.Get()->SetFormat(GL::ColorFormat::RG32F);
-    m_uniformGridTexture.Get()->SetFilterMode(GL::FilterMode::NEAREST);
-    m_uniformGridTexture.Get()->Fill(
-        Color::White(), UniformGridTextureSize, UniformGridTextureSize);
+    m_uniformGridGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 
 EffectLayerMaskImplementationAmbientOcclusion::
@@ -66,11 +60,11 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 {
     EffectLayerMaskImplementationGPU::SetGenerateEffectUniforms(sp, mr);
 
-    if (!m_generatedTextures)
+    if (!m_generatedTextureArrays)
     {
         CreateTrianglePositionsTexture(mr);
-        CreateMeshUniformGridTexture(mr);
-        m_generatedTextures = true;
+        FillMeshUniformGridGLSLArray();
+        m_generatedTextureArrays = true;
     }
 
     Mesh *mesh = mr->GetMesh();
@@ -80,7 +74,7 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
     sp->SetVector3("GridMinPoint", meshUniformGrid.GetGridAABox().GetMin());
     sp->SetInt("NumTriangles", mesh->GetNumTriangles());
     sp->SetTexture2D("TrianglePositions", m_trianglePositionsTexture.Get());
-    sp->SetTexture2D("GridTexture", m_uniformGridTexture.Get());
+    sp->SetTexture2D("GridTexture", m_uniformGridGLSLArray.GetArrayTexture());
     sp->SetInt("NumGridCells", meshUniformGrid.GetNumCells());
     sp->SetVector3("GridCellSize", meshUniformGrid.GetCellSize());
 }
@@ -121,20 +115,14 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateTrianglePositionsTexture(
     return m_trianglePositionsTexture.Get();
 }
 
-Texture2D *
-EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
-    MeshRenderer *mr)
+void EffectLayerMaskImplementationAmbientOcclusion::
+    FillMeshUniformGridGLSLArray()
 {
     const MeshUniformGrid &meshUniformGrid = GetMeshUniformGrid();
 
-    const int TotalTexSize = UniformGridTextureSize * UniformGridTextureSize;
-    Array<Vector2> gridTextureData(TotalTexSize);
-
+    Array<Array<Vector4>> gridArray;
     const int NC = meshUniformGrid.GetNumCells();
 
-    int triangleListBegin = NC * NC * NC;
-    int currentTexCoord = 0;
-    int triangleListSize = 0;
     for (int z = 0; z < NC; ++z)
     {
         for (int y = 0; y < NC; ++y)
@@ -143,54 +131,18 @@ EffectLayerMaskImplementationAmbientOcclusion::CreateMeshUniformGridTexture(
             {
                 const MeshUniformGrid::Cell &cell =
                     meshUniformGrid.GetCell(x, y, z);
-                const uint numCellTriangles = cell.triangleIds.Size();
 
-                gridTextureData[currentTexCoord] = Vector2(
-                    triangleListBegin + triangleListSize,
-                    triangleListBegin + triangleListSize + numCellTriangles);
-                triangleListSize += numCellTriangles;
-
-                ++currentTexCoord;
+                Array<Vector4> triIdsInThisCell;
+                for (uint i = 0; i < cell.triangleIds.Size(); ++i)
+                {
+                    Vector4 element = Vector4(cell.triangleIds[i], 0, 0, 0);
+                    triIdsInThisCell.PushBack(element);
+                }
+                gridArray.PushBack(triIdsInThisCell);
             }
         }
     }
-
-    for (int z = 0; z < NC; ++z)
-    {
-        for (int y = 0; y < NC; ++y)
-        {
-            for (int x = 0; x < NC; ++x)
-            {
-                if (currentTexCoord < TotalTexSize)
-                {
-                    const MeshUniformGrid::Cell &cell =
-                        meshUniformGrid.GetCell(x, y, z);
-
-                    Vector2 pixelRG;
-                    for (uint i = 0; i < cell.triangleIds.Size(); ++i)
-                    {
-                        pixelRG.x = cell.triangleIds[i];
-                        gridTextureData[currentTexCoord] = pixelRG;
-                        ++currentTexCoord;
-                    }
-                }
-                else
-                {
-                    Debug_Error("Not enough texture size to represent the "
-                                "uniform grid");
-                    ASSERT(false);
-                    exit(1);
-                }
-            }
-        }
-    }
-
-    m_uniformGridTexture.Get()->Fill(RCAST<Byte *>(gridTextureData.Data()),
-                                     UniformGridTextureSize,
-                                     UniformGridTextureSize,
-                                     GL::ColorComp::RG,
-                                     GL::DataType::FLOAT);
-    return m_uniformGridTexture.Get();
+    m_uniformGridGLSLArray.Fill(gridArray);
 }
 
 const MeshUniformGrid &

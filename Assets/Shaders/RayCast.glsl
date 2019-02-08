@@ -54,7 +54,7 @@ vec4 GetTextureData(sampler2D dataTexture, int index)
     return texture(dataTexture, uvs, 0);
 }
 
-void RayCast(in vec3 rayOrigin,
+bool RayCast(in vec3 rayOrigin,
              in vec3 rayDirection,
              in float maxDistance,
              out float hitDistance,
@@ -92,7 +92,7 @@ void RayCast(in vec3 rayOrigin,
             {
                 hitDistance += (maxDistance - currentMaxDistance);
                 hitTriId = triId;
-                return;
+                return true;
             }
         }
 
@@ -136,4 +136,6 @@ void RayCast(in vec3 rayOrigin,
         insideGrid = (all(greaterThanEqual(gridCoordXYZ, vec3(0))) &&
                       all(lessThan(gridCoordXYZ, vec3(NumGridCells))));
     }
+
+    return false;
 }
