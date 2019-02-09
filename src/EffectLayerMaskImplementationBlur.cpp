@@ -30,6 +30,7 @@ EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
             "GenerateEffectMaskTextureBlur.bushader")));
 
     m_triangleUvsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
+    m_trianglePositionsGLSLArray.SetFormat(GL::ColorFormat::RGB32F);
     m_oneRingNeighborhoodsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 

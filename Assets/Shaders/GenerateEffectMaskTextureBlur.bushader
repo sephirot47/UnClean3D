@@ -31,6 +31,84 @@ ARRAY_OF_ARRAYS(OneRingNeighborhoods)
 
 uniform sampler2D TextureToBlur;
 
+float side(vec2 p1, vec2 p2, vec2 p3)
+{
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+vec3 GetProjectedPoint(vec3 point, vec3 planePoint, vec3 planeNormal)
+{
+    float dist = dot(point - planePoint, planeNormal);
+    return point - (planeNormal * dist);
+}
+
+float GetTriangleArea(vec2 p0, vec2 p1, vec2 p2)
+{
+    return abs(p0.x * (p1.y - p2.y) + p1.x * (p2.y - p0.y) + p2.x * (p0.y - p1.y)) * 0.5f;
+}
+float GetTriangleArea(vec3 p0, vec3 p1, vec3 p2)
+{
+    return length(cross((p1 - p0), (p2 - p0))) * 0.5f;
+}
+
+vec3 GetBarycentricCoordinates(vec3 point, vec3 triP0, vec3 triP1, vec3 triP2)
+{
+    vec3 v0 = triP1 - triP0;
+    vec3 v1 = triP2 - triP0;
+    vec3 triNormal = normalize(cross(v0, v1));
+    vec3 projPoint = GetProjectedPoint(point, triP0, triNormal);
+
+    vec3 v2 = projPoint - triP0;
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+
+    vec3 baryCoords;
+    baryCoords.y = (d11 * d20 - d01 * d21) / denom;
+    baryCoords.z = (d00 * d21 - d01 * d20) / denom;
+    baryCoords.x = 1.0f - baryCoords.y - baryCoords.z;
+    return baryCoords;
+}
+
+vec3 GetBarycentricCoordinates(vec2 point, vec2 triP0, vec2 triP1, vec2 triP2)
+{
+    vec2 v0 = triP1 - triP0;
+    vec2 v1 = triP2 - triP0;
+
+    vec2 v2 = point - triP0;
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+
+    vec3 baryCoords;
+    baryCoords.y = (d11 * d20 - d01 * d21) / denom;
+    baryCoords.z = (d00 * d21 - d01 * d20) / denom;
+    baryCoords.x = 1.0f - baryCoords.y - baryCoords.z;
+    return baryCoords;
+}
+
+bool PointInTriangle(vec2 point, vec2 triP0, vec2 triP1, vec2 triP2)
+{
+    float d1 = side(point, triP0, triP1);
+    float d2 = side(point, triP1, triP2);
+    float d3 = side(point, triP2, triP0);
+    bool anyLeft  = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool anyRight = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    return !(anyLeft && anyRight);
+}
+
+float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
+{
+    float dotProd = dot(planeNormal, rayDir);
+    return dot(planePoint - rayOrig, planeNormal) / dotProd;
+}
+
 vec3[3] GetTrianglePoints(int triId)
 {
     vec3 triPoints[3];
@@ -49,43 +127,179 @@ layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-    vec3 worldPosition = inWorldPosition;
-
+    vec3 thisWorldPosition = inWorldPosition;
     int thisTriId = inTriId;
     vec2 thisUv = inUv;
 
+    vec3[3] thisTriWorldPosition = GetTrianglePoints(thisTriId);
+    vec3 thisTriXVector = normalize(thisTriWorldPosition[1] - thisTriWorldPosition[0]);
+    vec3 thisTriNormal = normalize(
+                cross(thisTriXVector, thisTriWorldPosition[2] - thisTriWorldPosition[0]));
+    vec3 thisTriYVector = cross(thisTriXVector, thisTriNormal);
+
     vec2 texelSize = (1.0f / textureSize(TextureToBlur, 0).xy);
 
-    int BlurRadius = 6;
+    int BlurRadius = 5;
+    float BlurStepSize = 0.005f;
     vec4 accumulatedColor = vec4(0);
+    bool allSamplesInside = true;
+    int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
     for (int y = -BlurRadius; y <= BlurRadius; ++y)
     {
         for (int x = -BlurRadius; x <= BlurRadius; ++x)
         {
-            vec2 texelOffset = vec2(x, y) * texelSize;
-            accumulatedColor += texture(TextureToBlur, thisUv + texelOffset);
+            vec2 sampleXYOffset = vec2(x,y) * BlurStepSize;
+            vec3 sampleWorldOffset = thisTriXVector * sampleXYOffset.x +
+                                     thisTriYVector * sampleXYOffset.y;
+            vec3 sampleWorldPosition = thisWorldPosition + sampleWorldOffset;
+
+            vec4 sampleColor;
+            {
+                // vec3 sampleBarycentricCoordsInThisTri =
+                //     GetBarycentricCoordinates(sampleUv, thisTriUvs[0],
+                //                               thisTriUvs[1], thisTriUvs[2]);
+                // vec3 sampleWorldPositionInThisTri =
+                //     sampleBarycentricCoordsInThisTri[0] * thisTriWorldPosition[0] +
+                //     sampleBarycentricCoordsInThisTri[1] * thisTriWorldPosition[1] +
+                //     sampleBarycentricCoordsInThisTri[2] * thisTriWorldPosition[2];
+
+                for (int i = 0; i < 1; ++i) // numNeighbors+1; ++i) // Neighbors or this triId
+                {
+                    int neighborTriId = thisTriId;
+                            // (i == 0 ? thisTriId :
+                        // int(GetOneRingNeighborhoodsElement(thisTriId, i-1).x));
+
+                    vec3[3] nTriWorldPosition = GetTrianglePoints(neighborTriId);
+                    vec3 sampleBarycentricCoordsInNTri =
+                       GetBarycentricCoordinates(sampleWorldPosition, nTriWorldPosition[0],
+                                                 nTriWorldPosition[1], nTriWorldPosition[2]);
+                    // OutColor = vec4(sampleBarycentricCoordsInNTri, 1); return;
+
+                    // vec3 nTriNormal = normalize(
+                    //                     cross(nTriWorldPosition[1] - nTriWorldPosition[0],
+                    //                           nTriWorldPosition[2] - nTriWorldPosition[0]));
+
+                    const float Eps = 1e-5f;
+                    bool isInsideNeighborTriangle =
+                        (sampleBarycentricCoordsInNTri[0] >=  -Eps &&
+                         sampleBarycentricCoordsInNTri[0] <= 1+Eps &&
+                         sampleBarycentricCoordsInNTri[1] >=  -Eps &&
+                         sampleBarycentricCoordsInNTri[1] <= 1+Eps &&
+                         sampleBarycentricCoordsInNTri[2] >=  -Eps &&
+                         sampleBarycentricCoordsInNTri[2] <= 1+Eps);
+
+                    if (neighborTriId == thisTriId)
+                    {
+                        if (!isInsideNeighborTriangle)
+                        {
+                            OutColor = vec4(1,0,0,1);
+                            return;
+                        }
+                    }
+                    /*
+                    if (isInsideNeighborTriangle)
+                    {
+                        if (neighborTriId == thisTriId)
+                        {
+                            OutColor = vec4(0,1,0,1);
+                            return;
+                        }
+                        else
+                        {
+                            allSamplesInside = false;
+                            break;
+                        }
+                    }
+                    */
+
+                    /*
+                    vec2[3] nTriUvs;
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        nTriUvs[j] = GetTriangleUvsElement(thisTriId, j).xy;
+                        nTriUvs[j].y = 1.0 - nTriUvs[j].y;
+                    }
+
+                    vec3 sampleBarycentricCoordsInNTri =
+                           GetBarycentricCoordinates(sampleUv, thisTriUvs[0],
+                                                     thisTriUvs[1], thisTriUvs[2]);
+
+                    vec3 nTriWorldPosition[3] = GetTrianglePoints(neighborTriId);
+                    vec3 nTriNormal = normalize(
+                                        cross(nTriWorldPosition[1] - nTriWorldPosition[0],
+                                              nTriWorldPosition[2] - nTriWorldPosition[0]));
+
+                    vec3 barycentricCoordsInNTri =
+                            GetBarycentricCoordinates(sampleWorldPositionInThisTri,
+                                                      nTriWorldPosition[0],
+                                                      nTriWorldPosition[1],
+                                                      nTriWorldPosition[2]);
+                    const float Eps = 0.1f;
+                    bool isInsideNeighborTriangle =
+                        (barycentricCoordsInNTri[0] >=  -Eps &&
+                         barycentricCoordsInNTri[0] <= 1+Eps &&
+                         barycentricCoordsInNTri[1] >=  -Eps &&
+                         barycentricCoordsInNTri[1] <= 1+Eps &&
+                         barycentricCoordsInNTri[2] >=  -Eps &&
+                         barycentricCoordsInNTri[2] <= 1+Eps);
+
+                    // if (isInsideNeighborTriangle)
+                    // {
+                    //     OutColor = vec4(nTriNormal, 1);
+                    //     return;
+                    // }
+                    /*
+                    vec3 sampleBarycentricCoords =
+                        GetBarycentricCoordinates(sampleUv, thisTriUvs[0],
+                                                  thisTriUvs[1], thisTriUvs[2]);
+                    sampleColor = vec4(barycentricCoords, 1);
+                    vec3 sampleWorldPosition = barycentricCoords * ;
+
+                    float intersectionDist =
+                            IntersectRayPlaneDist(thisUv, uvOffsetDir,
+                                                  nTriPoints[0], nTriNormal);
+                    if (intersectionDist >= 0 && intersectionDist <= uvOffsetLength)
+                    {
+                        sampleColor = vec4(0,1,0,1);
+                        break;
+                    }
+                    else
+                    {
+                        sampleColor = vec4(1,0,0,1);
+                    }
+                    */
+                }
+                // sampleColor = vec4(sampleWorldPosition, 1);
+                /*
+                */
+            }
+            // accumulatedColor += sampleColor;
         }
     }
+
+    OutColor = vec4(0,1,0,1);
+    return;
+    OutColor = vec4(1,1,1,1); return;
+    /*
+
+    OutColor = (allSamplesInside ? vec4(0,1,0,1) : vec4(1,0,0,1)); // nTriNormal, 1);
+    return;
+
+    OutColor = vec4(1,1,1,1);
+    return;
 
     float kernelSize = (BlurRadius * 2 + 1);
     vec4 meanColor = (accumulatedColor / (kernelSize * kernelSize));
     meanColor.a = 1.0f;
 
-    /*
-    int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
-    for (int i = 0; i < numNeighbors; ++i)
-    {
-        int neighborTriId = int(GetOneRingNeighborhoodsElement(thisTriId, i).x);
-        vec3 neighborTriPoints[3] = GetTrianglePoints(neighborTriId);
-    }
 
-    vec2 otherTriUvs = GetTriangleUvsElement(4, 1).xy;
+    vec2 otherthisTriUvs = GetTriangleUvsElement(4, 1).xy;
     OutColor = vec4(vec3(worldPosition), 1);
     OutColor = vec4(inUv, 0, 1);
     // OutColor = vec4(vec3(float(numNeighbors)/15.0f), 1);
-    */
 
     OutColor = meanColor;
+    */
 }
 
 
