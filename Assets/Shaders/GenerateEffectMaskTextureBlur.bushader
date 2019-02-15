@@ -139,13 +139,6 @@ void main()
                 cross(thisTriXVector, thisTriWorldPosition[2] - thisTriWorldPosition[0]));
     vec3 thisTriYVector = normalize(cross(thisTriXVector, thisTriNormal));
 
-    vec3 thisTriEdge01 = (thisTriWorldPosition[1] - thisTriWorldPosition[0]);
-    vec3 thisTriEdge12 = (thisTriWorldPosition[2] - thisTriWorldPosition[1]);
-    vec3 thisTriEdge20 = (thisTriWorldPosition[0] - thisTriWorldPosition[2]);
-    vec3 thisTriEdge01Norm = normalize(thisTriEdge01);
-    vec3 thisTriEdge12Norm = normalize(thisTriEdge12);
-    vec3 thisTriEdge20Norm = normalize(thisTriEdge20);
-
     vec4 accumulatedColor = vec4(0);
     float totalWeight = 0.0f;
     int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
@@ -186,60 +179,48 @@ void main()
                     bool isInsideNeighborTriangleAfterProjected = true;
                     if (neighborTriId != thisTriId)
                     {
-                        isInsideNeighborTriangleAfterProjected = false;
-
+                        vec3 triNormalsMean = normalize(thisTriNormal + nTriNormal);
                         vec3 sampleWorldOffsetDir = (sampleWorldOffset / sampleWorldOffsetLength);
 
-                        vec3 triNormalsMean = normalize(thisTriNormal + nTriNormal);
-                        vec3 thisTriEdge01PlaneNormal = normalize( cross(thisTriEdge01Norm, triNormalsMean) );
-                        vec3 thisTriEdge12PlaneNormal = normalize( cross(thisTriEdge12Norm, triNormalsMean) );
-                        vec3 thisTriEdge20PlaneNormal = normalize( cross(thisTriEdge20Norm, triNormalsMean) );
-
-                        float minEdgePlaneIntersectionDistance = INF;
-
-                        float distToEdgePlane01 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
-                                                                        thisTriWorldPosition[0], thisTriEdge01PlaneNormal);
-                        float distToEdgePlane12 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
-                                                                        thisTriWorldPosition[1], thisTriEdge12PlaneNormal);
-                        float distToEdgePlane20 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
-                                                                        thisTriWorldPosition[2], thisTriEdge20PlaneNormal);
-
-                        if (distToEdgePlane01 < minEdgePlaneIntersectionDistance)
+                        isInsideNeighborTriangleAfterProjected = false;
+                        for (int j = 0; j < 3; ++j)
                         {
-                            minEdgePlaneIntersectionDistance = distToEdgePlane01;
-                        }
-                        else if (distToEdgePlane12 < minEdgePlaneIntersectionDistance)
-                        {
-                            minEdgePlaneIntersectionDistance = distToEdgePlane12;
-                        }
-                        else if (distToEdgePlane20 < minEdgePlaneIntersectionDistance)
-                        {
-                            minEdgePlaneIntersectionDistance = distToEdgePlane20;
-                        }
 
-                        if (minEdgePlaneIntersectionDistance < INF)
-                        {
-                            vec3 projectionRayDir = -triNormalsMean;
-                            float projectionDist =
-                                IntersectRayPlaneDist(sampleWorldPosition,
-                                                      projectionRayDir,
-                                                      nTriWorldPosition[0],
-                                                      nTriNormal);
-                            isInsideNeighborTriangleAfterProjected =
-                                (projectionDist >= -Epsilon);
-                            if (isInsideNeighborTriangleAfterProjected)
+                            vec3 thisTriEdge = (thisTriWorldPosition[(j+1)%3] - thisTriWorldPosition[j]);
+                            vec3 thisTriEdgeNorm = normalize(thisTriEdge);
+
+                            vec3 thisTriEdgePlaneNormal = normalize( cross(thisTriEdgeNorm, triNormalsMean) );
+
+                            float distToEdgePlane =
+                                IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
+                                                      thisTriWorldPosition[0], thisTriEdgePlaneNormal);
+
+                            if (distToEdgePlane < INF)
                             {
-                                vec3 projectedSampleWorldPositionInNeighborTriPlane =
-                                        sampleWorldPosition + projectionRayDir * projectionDist;
-
-                                sampleWorldPosition = projectedSampleWorldPositionInNeighborTriPlane;
-
-                                sampleBarycentricCoordsInNTri =
-                                   GetBarycentricCoordinates(sampleWorldPosition,
-                                                             nTriWorldPosition);
-
+                                vec3 projectionRayDir = -triNormalsMean;
+                                float projectionDist =
+                                    IntersectRayPlaneDist(sampleWorldPosition,
+                                                          projectionRayDir,
+                                                          nTriWorldPosition[0],
+                                                          nTriNormal);
                                 isInsideNeighborTriangleAfterProjected =
-                                    PointInTriangle(sampleBarycentricCoordsInNTri);
+                                    (projectionDist >= -Epsilon);
+                                if (isInsideNeighborTriangleAfterProjected)
+                                {
+                                    vec3 projectedSampleWorldPositionInNeighborTriPlane =
+                                            sampleWorldPosition + projectionRayDir * projectionDist;
+
+                                    sampleWorldPosition = projectedSampleWorldPositionInNeighborTriPlane;
+
+                                    sampleBarycentricCoordsInNTri =
+                                       GetBarycentricCoordinates(sampleWorldPosition,
+                                                                 nTriWorldPosition);
+
+                                    isInsideNeighborTriangleAfterProjected =
+                                        PointInTriangle(sampleBarycentricCoordsInNTri);
+
+                                    break;
+                                }
                             }
                         }
                     }
