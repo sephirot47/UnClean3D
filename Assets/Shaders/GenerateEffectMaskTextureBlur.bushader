@@ -135,47 +135,163 @@ void main()
     vec3 thisTriXVector = normalize(thisTriWorldPosition[1] - thisTriWorldPosition[0]);
     vec3 thisTriNormal = normalize(
                 cross(thisTriXVector, thisTriWorldPosition[2] - thisTriWorldPosition[0]));
-    vec3 thisTriYVector = cross(thisTriXVector, thisTriNormal);
+    vec3 thisTriYVector = normalize(cross(thisTriXVector, thisTriNormal));
 
     vec2 texelSize = (1.0f / textureSize(TextureToBlur, 0).xy);
 
-    int BlurRadius = 5;
-    float BlurStepSize = 0.02f;
+    vec3 thisTriEdge01 = (thisTriWorldPosition[1] - thisTriWorldPosition[0]);
+    vec3 thisTriEdge12 = (thisTriWorldPosition[2] - thisTriWorldPosition[1]);
+    vec3 thisTriEdge20 = (thisTriWorldPosition[0] - thisTriWorldPosition[2]);
+    vec3 thisTriEdge01Norm = normalize(thisTriEdge01);
+    vec3 thisTriEdge12Norm = normalize(thisTriEdge12);
+    vec3 thisTriEdge20Norm = normalize(thisTriEdge20);
+
+    // OutColor = vec4(thisWorldPosition.xyz, 1); return;
+
+    int BlurRadius = 20;
+    float BlurStepSize = 0.01f;
     vec4 accumulatedColor = vec4(0);
-    bool allSamplesInside = true;
+    float totalWeight = 0.0f;
     int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
     for (int y = -BlurRadius; y <= BlurRadius; ++y)
     {
         for (int x = -BlurRadius; x <= BlurRadius; ++x)
         {
-            vec2 sampleXYOffset = vec2(x,y) * BlurStepSize;
+            // int x = 1;
+            // int y = 0;
+            // thisTriXVector = vec3(1,0,0);
+            // thisTriYVector = vec3(0,0,1);
+
+            bool insideSomeTriangle = true;
+            vec2 xy = vec2(x,y);
+            if (length(xy) >= BlurRadius)
+            {
+                continue;
+            }
+
+            vec2 sampleXYOffset = xy * BlurStepSize;
             vec3 sampleWorldOffset = thisTriXVector * sampleXYOffset.x +
                                      thisTriYVector * sampleXYOffset.y;
             vec3 sampleWorldPosition = thisWorldPosition + sampleWorldOffset;
+            float weight = 1.0f; // min(1.0f / length(sampleXYOffset), 5.0f);
 
-            vec4 sampleColor;
+            // OutColor = vec4(sampleWorldPosition.xyz, 1); return;
+
+            vec4 sampleColor = vec4(0);
             {
-                for (int i = 0; i < numNeighbors+1; ++i) // Neighbors or this triId
+                for (int i = 0; i < (numNeighbors + 1); ++i) // Neighbors or this triId
                 {
                     int neighborTriId = (i == 0 ? thisTriId :
                           int(GetOneRingNeighborhoodsElement(thisTriId, i-1).x));
 
                     vec3[3] nTriWorldPosition = GetTrianglePoints(neighborTriId);
                     vec3 sampleBarycentricCoordsInNTri =
-                       GetBarycentricCoordinates(sampleWorldPosition, nTriWorldPosition[0],
-                                                 nTriWorldPosition[1], nTriWorldPosition[2]);
+                       GetBarycentricCoordinates(sampleWorldPosition,
+                                                 nTriWorldPosition[0],
+                                                 nTriWorldPosition[1],
+                                                 nTriWorldPosition[2]);
 
-                    const float Eps = 1e-5f;
                     bool isInsideNeighborTriangle =
-                        (sampleBarycentricCoordsInNTri[0] >=  -Eps &&
-                         sampleBarycentricCoordsInNTri[0] <= 1+Eps &&
-                         sampleBarycentricCoordsInNTri[1] >=  -Eps &&
-                         sampleBarycentricCoordsInNTri[1] <= 1+Eps &&
-                         sampleBarycentricCoordsInNTri[2] >=  -Eps &&
-                         sampleBarycentricCoordsInNTri[2] <= 1+Eps);
+                        (sampleBarycentricCoordsInNTri[0] >= 0 &&
+                         sampleBarycentricCoordsInNTri[0] <= 1 &&
+                         sampleBarycentricCoordsInNTri[1] >= 0 &&
+                         sampleBarycentricCoordsInNTri[1] <= 1 &&
+                         sampleBarycentricCoordsInNTri[2] >= 0 &&
+                         sampleBarycentricCoordsInNTri[2] <= 1);
 
                     if (isInsideNeighborTriangle)
                     {
+                        // Modify sample world position so that it follows the surface
+                        vec3 nTriEdge01 = (nTriWorldPosition[1] - nTriWorldPosition[0]);
+                        vec3 nTriEdge02 = (nTriWorldPosition[2] - nTriWorldPosition[0]);
+                        vec3 nTriNormal = normalize(cross(nTriEdge01, nTriEdge02));
+
+                        if (neighborTriId != thisTriId) // && (dot(thisTriNormal, nTriNormal) < 0.9f))
+                        {
+                            float sampleWorldOffsetLength = length(sampleWorldOffset);
+                            vec3 sampleWorldOffsetDir = (sampleWorldOffset / sampleWorldOffsetLength);
+
+                            vec3 triNormsMean = (thisTriNormal + nTriNormal) * 0.5f;
+                            vec3 thisTriEdge01PlaneNorm = cross(thisTriEdge01Norm, thisTriNormal); // triNormsMean); // sampleWorldOffsetDir; // cross(sampleWorldOffsetDir, normalize(thisTriNormal + nTriNormal)); // cross(thisTriNormal, sampleWorldOffsetDir); // thisTriEdge01Norm);
+                            vec3 thisTriEdge12PlaneNorm = cross(thisTriEdge12Norm, thisTriNormal); // triNormsMean); // sampleWorldOffsetDir; // cross(sampleWorldOffsetDir, normalize(thisTriNormal + nTriNormal)); // cross(thisTriNormal, sampleWorldOffsetDir); // thisTriEdge12Norm);
+                            vec3 thisTriEdge20PlaneNorm = cross(thisTriEdge20Norm, thisTriNormal); // triNormsMean); // sampleWorldOffsetDir; // cross(sampleWorldOffsetDir, normalize(thisTriNormal + nTriNormal)); // cross(thisTriNormal, sampleWorldOffsetDir); // thisTriEdge20Norm);
+
+                            // if (length(thisTriEdge01) < 0.00001f || length(thisTriEdge12) < 0.00001f || length(thisTriEdge20) < 0.00001f) { OutColor=vec4(0,1,1,1); return; }
+
+                            const float INF = 1e9;
+                            vec3 intersectedEdgePlanePoint;
+                            float minEdgePlaneIntersectionDistance = INF;
+
+                            float distToEdgePlane01 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
+                                                                            thisTriWorldPosition[0], thisTriEdge01PlaneNorm);
+                            float distToEdgePlane12 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
+                                                                            thisTriWorldPosition[1], thisTriEdge12PlaneNorm);
+                            float distToEdgePlane20 = IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
+                                                                            thisTriWorldPosition[2], thisTriEdge20PlaneNorm);
+
+                            // if (distToEdgePlane01 < 0 && distToEdgePlane12 < 0 && distToEdgePlane20 < 0) { OutColor=vec4(0,0,1,1); return; }
+
+                            // distToEdgePlane01 = abs(distToEdgePlane01);
+                            // distToEdgePlane12 = abs(distToEdgePlane12);
+                            // distToEdgePlane20 = abs(distToEdgePlane20);
+
+                            if (distToEdgePlane01 < 0) { distToEdgePlane01 = INF; }
+                            if (distToEdgePlane12 < 0) { distToEdgePlane12 = INF; }
+                            if (distToEdgePlane20 < 0) { distToEdgePlane20 = INF; }
+
+                            if (distToEdgePlane01 < minEdgePlaneIntersectionDistance)
+                            {
+                                intersectedEdgePlanePoint = thisTriWorldPosition[0];
+                                minEdgePlaneIntersectionDistance = distToEdgePlane01;
+                            }
+                            if (distToEdgePlane12 < minEdgePlaneIntersectionDistance)
+                            {
+                                intersectedEdgePlanePoint = thisTriWorldPosition[1];
+                                minEdgePlaneIntersectionDistance = distToEdgePlane12;
+                            }
+                            if (distToEdgePlane20 < minEdgePlaneIntersectionDistance)
+                            {
+                                intersectedEdgePlanePoint = thisTriWorldPosition[2];
+                                minEdgePlaneIntersectionDistance = distToEdgePlane20;
+                            }
+
+                            // OutColor = vec4(thisTriEdge01PlaneNorm, 1); return;
+                            // OutColor = vec4(vec3(minEdgePlaneIntersectionDistance), 1); return;
+
+                            if (minEdgePlaneIntersectionDistance < INF)
+                            {
+                                vec3 sampleWorldPositionOffsetedUntilEdge =
+                                        thisWorldPosition + sampleWorldOffsetDir * minEdgePlaneIntersectionDistance;
+                                float offsetDistBeyondEdge = (sampleWorldOffsetLength - minEdgePlaneIntersectionDistance);
+                                vec3 projectedSampleWorldPositionInNeighborTriPlane =
+                                        GetProjectedPoint(sampleWorldPosition,
+                                                          intersectedEdgePlanePoint,
+                                                          nTriNormal);
+                                vec3 followNeighborTriSurfaceDir =
+                                        normalize(projectedSampleWorldPositionInNeighborTriPlane -
+                                                  thisWorldPosition);
+                                sampleWorldPosition =
+                                        sampleWorldPositionOffsetedUntilEdge +
+                                        offsetDistBeyondEdge * followNeighborTriSurfaceDir;
+                                // sampleWorldPosition = projectedSampleWorldPositionInNeighborTriPlane;
+
+                                sampleBarycentricCoordsInNTri =
+                                   GetBarycentricCoordinates(sampleWorldPosition,
+                                                             nTriWorldPosition[0],
+                                                             nTriWorldPosition[1],
+                                                             nTriWorldPosition[2]);
+                                // OutColor = vec4(1);
+                                // return;
+                                /*
+                                */
+                            }
+                            else
+                            {
+                                OutColor = vec4(1);
+                                // return;
+                            }
+                        }
+
                         vec2[3] nTriUvs;
                         for (int j = 0; j < 3; ++j)
                         {
@@ -188,17 +304,19 @@ void main()
                              sampleBarycentricCoordsInNTri[1] * nTriUvs[1] +
                              sampleBarycentricCoordsInNTri[2] * nTriUvs[2];
 
+                        totalWeight += weight;
                         sampleColor = texture(TextureToBlur, sampleUvsInNTri);
                         break;
                     }
                 }
             }
-            accumulatedColor += sampleColor;
+            accumulatedColor += sampleColor * weight;
         }
     }
+    // OutColor = vec4(0,0,0,1); return;
 
     float kernelSize = (BlurRadius * 2 + 1);
-    vec4 meanColor = (accumulatedColor / (kernelSize * kernelSize));
+    vec4 meanColor = (accumulatedColor / totalWeight);
     meanColor.a = 1.0f;
     OutColor = meanColor;
 }
