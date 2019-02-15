@@ -44,7 +44,7 @@ protected:
 
 private:
     int m_blurRadius = 3;
-    float m_blurStepResolution = 0.01f;
+    float m_blurStepResolution = 30.0f;
     bool m_generatedTextureArrays = false;
     GLSLArrayOfArrays m_triangleUvsGLSLArray;
     GLSLArrayOfArrays m_trianglePositionsGLSLArray;
