@@ -153,12 +153,14 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
     m_trianglePositionsGLSLArray.Fill(trianglePositionsArray);
 
     Array<Array<Vector4>> triangleUvsArray;
+    const auto &uvsPool = mesh->GetUvsPool();
+    const auto &triVertIds = mesh->GetTrianglesVertexIds();
     for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
     {
         Array<Vector4> triUvs;
-        triUvs.PushBack(Vector4(mesh->GetUvsPool()[triId * 3 + 0], 0, 0));
-        triUvs.PushBack(Vector4(mesh->GetUvsPool()[triId * 3 + 1], 0, 0));
-        triUvs.PushBack(Vector4(mesh->GetUvsPool()[triId * 3 + 2], 0, 0));
+        triUvs.PushBack(Vector4(uvsPool[triVertIds[triId * 3 + 0]], 0, 0));
+        triUvs.PushBack(Vector4(uvsPool[triVertIds[triId * 3 + 1]], 0, 0));
+        triUvs.PushBack(Vector4(uvsPool[triVertIds[triId * 3 + 2]], 0, 0));
 
         triangleUvsArray.PushBack(triUvs);
     }

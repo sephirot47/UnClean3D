@@ -97,6 +97,29 @@ bool PointInTriangle(vec3 point, vec3 triP0, vec3 triP1, vec3 triP2)
     return PointInTriangle(baryCoords);
 }
 
+bool IsDegenerateTriangle(vec3[3] trianglePoints)
+{
+    vec3 tp0 = trianglePoints[0];
+    vec3 tp1 = trianglePoints[1];
+    vec3 tp2 = trianglePoints[2];
+
+    float area = GetTriangleArea(tp0, tp1, tp2);
+    if (area <= 1e-5)
+    {
+        return true;
+    }
+
+    float minLength = 1e-5;
+    if (distance(tp0, tp1) < minLength ||
+        distance(tp0, tp2) < minLength ||
+        distance(tp2, tp1) < minLength)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool PointInTriangle(vec3 point, vec3[3] trianglePoints)
 {
     vec3 baryCoords = GetBarycentricCoordinates(point, trianglePoints[0],
@@ -150,21 +173,22 @@ void main()
     vec4 accumulatedColor = vec4(0);
     float totalWeight = 0.0f;
     int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
-    for (float y = -BlurRadius; y <= BlurRadius; ++y)
+    float BR = BlurRadius;
+    for (float y = -BR; y <= BR; ++y)
     {
-        for (float x = -BlurRadius; x <= BlurRadius; ++x)
+        for (float x = -BR; x <= BR; ++x)
         {
             bool insideSomeTriangle = true;
             vec2 xy = vec2(x,y);
             float offsetXYLength = length(xy);
-            if (offsetXYLength >= BlurRadius)
+            if (offsetXYLength > BlurRadius)
             {
                 continue;
             }
 
             vec2 sampleXYOffset = xy * BlurStep;
-            vec3 sampleWorldOffset = thisTriXVector * sampleXYOffset.x +
-                                     thisTriYVector * sampleXYOffset.y;
+            vec3 sampleWorldOffset = (thisTriXVector * sampleXYOffset.x) +
+                                     (thisTriYVector * sampleXYOffset.y);
             vec3 sampleWorldPosition = thisWorldPosition + sampleWorldOffset;
             float sampleWorldOffsetLength = length(sampleWorldOffset);
 
@@ -173,6 +197,10 @@ void main()
                 int neighborTriId = (i == 0 ? thisTriId :
                       int(GetOneRingNeighborhoodsElement(thisTriId, i-1).x));
                 vec3[3] nTriWorldPosition = GetTrianglePoints(neighborTriId);
+                if (IsDegenerateTriangle(nTriWorldPosition))
+                {
+                    continue;
+                }
 
                 bool isInsideNeighborTriangleAfterProjected = false;
                 if (neighborTriId != thisTriId)
@@ -180,11 +208,14 @@ void main()
                     vec3 nTriEdge01 = (nTriWorldPosition[1] - nTriWorldPosition[0]);
                     vec3 nTriEdge02 = (nTriWorldPosition[2] - nTriWorldPosition[0]);
                     vec3 nTriNormal = normalize(cross(nTriEdge01, nTriEdge02));
+                    if (dot(thisTriNormal, nTriNormal) < -0.9f)
+                    {
+                        continue;
+                    }
 
                     // Modify sample world position so that it follows the surface
                     vec3 triNormalsMean = normalize(thisTriNormal + nTriNormal);
                     vec3 sampleWorldOffsetDir = (sampleWorldOffset / sampleWorldOffsetLength);
-
                     for (int j = 0; j < 3; ++j)
                     {
                         vec3 thisTriEdgeNorm = thisTriEdgesNorm[j];
@@ -248,6 +279,7 @@ void main()
                     float weight = exp(-sampleWorldOffsetLength * 1.0);
                     totalWeight += weight;
                     accumulatedColor += weight * sampleColor;
+                    break; // This break makes it much faster, but fail in some cases...
                 }
             }
         }
