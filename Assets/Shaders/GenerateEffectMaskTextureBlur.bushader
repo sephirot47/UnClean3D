@@ -164,10 +164,27 @@ void main()
     // OutColor = vec4(thisWorldPosition.xyz, 1); return;
 
     int BlurRadius = 10;
-    float BlurStepSize = 0.03f;
+    float BlurStepSize = 0.02f;
     vec4 accumulatedColor = vec4(0);
     float totalWeight = 0.0f;
     int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
+
+    /*
+    {
+        OutColor = vec4(1,0,0,1);
+        for (int i = 0; i < (numNeighbors + 1); ++i) // Neighbors or this triId
+        {
+            int neighborTriId = (i == 0 ? thisTriId :
+                  int(GetOneRingNeighborhoodsElement(thisTriId, i-1).x));
+            if (neighborTriId == 12)
+            {
+                OutColor = vec4(0,1,0,1);
+            }
+        }
+    }
+    return;
+    */
+
     for (int y = -BlurRadius; y <= BlurRadius; ++y)
     {
         for (int x = -BlurRadius; x <= BlurRadius; ++x)
@@ -184,7 +201,6 @@ void main()
             vec3 sampleWorldOffset = thisTriXVector * sampleXYOffset.x +
                                      thisTriYVector * sampleXYOffset.y;
             vec3 sampleWorldPosition = thisWorldPosition + sampleWorldOffset;
-            float weight = 1.0f; // min(1.0f / xyLength, 5.0f);
 
             // OutColor = vec4(sampleWorldPosition.xyz, 1); return;
 
@@ -203,7 +219,7 @@ void main()
                                                  nTriWorldPosition[2]);
 
                     bool isInsideNeighborTriangle =
-                                PointInTriangle(sampleBarycentricCoordsInNTri);
+                                true; // PointInTriangle(sampleBarycentricCoordsInNTri);
                     if (isInsideNeighborTriangle)
                     {
                         // Modify sample world position so that it follows the surface
@@ -242,35 +258,36 @@ void main()
                             // distToEdgePlane01 = abs(distToEdgePlane01);
                             // distToEdgePlane12 = abs(distToEdgePlane12);
                             // distToEdgePlane20 = abs(distToEdgePlane20);
-
-                            if (distToEdgePlane01 < 0) { distToEdgePlane01 = INF; }
-                            if (distToEdgePlane12 < 0) { distToEdgePlane12 = INF; }
-                            if (distToEdgePlane20 < 0) { distToEdgePlane20 = INF; }
+                            //
+                            // if (distToEdgePlane01 < 0) { distToEdgePlane01 = INF; }
+                            // if (distToEdgePlane12 < 0) { distToEdgePlane12 = INF; }
+                            // if (distToEdgePlane20 < 0) { distToEdgePlane20 = INF; }
 
                             if (distToEdgePlane01 < minEdgePlaneIntersectionDistance)
                             {
-                                intersectedEdgePlanePoint = thisTriWorldPosition[0];
+                                intersectedEdgePlanePoint = thisWorldPosition + sampleWorldOffsetDir * distToEdgePlane01;
                                 intersectedEdgePlaneNormal = thisTriEdge01PlaneNormal;
                                 minEdgePlaneIntersectionDistance = distToEdgePlane01;
                             }
                             if (distToEdgePlane12 < minEdgePlaneIntersectionDistance)
                             {
-                                intersectedEdgePlanePoint = thisTriWorldPosition[1];
+                                intersectedEdgePlanePoint = thisWorldPosition + sampleWorldOffsetDir * distToEdgePlane12;
                                 intersectedEdgePlaneNormal = thisTriEdge12PlaneNormal;
                                 minEdgePlaneIntersectionDistance = distToEdgePlane12;
                             }
                             if (distToEdgePlane20 < minEdgePlaneIntersectionDistance)
                             {
-                                intersectedEdgePlanePoint = thisTriWorldPosition[2];
+                                intersectedEdgePlanePoint = thisWorldPosition + sampleWorldOffsetDir * distToEdgePlane20;
                                 intersectedEdgePlaneNormal = thisTriEdge20PlaneNormal;
                                 minEdgePlaneIntersectionDistance = distToEdgePlane20;
                             }
 
-                            if (minEdgePlaneIntersectionDistance < INF)
+                            if (minEdgePlaneIntersectionDistance < INF) // sampleWorldOffsetLength)
                             {
+                                vec3 projectionRayDir = -triNormalsMean;
                                 float projectionDist =
                                         IntersectRayPlaneDist(sampleWorldPosition,
-                                                              -triNormalsMean,
+                                                              projectionRayDir,
                                                               nTriWorldPosition[0],
                                                               nTriNormal);
                                 isInsideNeighborTriangleAfterProjected =
@@ -278,13 +295,7 @@ void main()
                                 if (isInsideNeighborTriangleAfterProjected)
                                 {
                                     vec3 projectedSampleWorldPositionInNeighborTriPlane =
-                                            sampleWorldPosition - triNormalsMean * projectionDist;
-
-                                    isInsideNeighborTriangleAfterProjected =
-                                        PointInTriangle(projectedSampleWorldPositionInNeighborTriPlane,
-                                                        nTriWorldPosition[0],
-                                                        nTriWorldPosition[1],
-                                                        nTriWorldPosition[2]);
+                                            sampleWorldPosition + projectionRayDir * projectionDist;
 
                                     sampleWorldPosition = projectedSampleWorldPositionInNeighborTriPlane;
 
@@ -293,6 +304,9 @@ void main()
                                                                  nTriWorldPosition[0],
                                                                  nTriWorldPosition[1],
                                                                  nTriWorldPosition[2]);
+
+                                    isInsideNeighborTriangleAfterProjected =
+                                        PointInTriangle(sampleBarycentricCoordsInNTri);
                                 }
                             }
                         }
@@ -303,21 +317,23 @@ void main()
                             for (int j = 0; j < 3; ++j)
                             {
                                 nTriUvs[j] = GetTriangleUvsElement(neighborTriId, j).xy;
-                                nTriUvs[j].y = 1.0 - nTriUvs[j].y;
                             }
 
                             vec2 sampleUvsInNTri =
                                  sampleBarycentricCoordsInNTri[0] * nTriUvs[0] +
                                  sampleBarycentricCoordsInNTri[1] * nTriUvs[1] +
                                  sampleBarycentricCoordsInNTri[2] * nTriUvs[2];
+                            sampleUvsInNTri.y = 1.0 - sampleUvsInNTri.y;
+
+                            vec4 sampleColor = texture(TextureToBlur, sampleUvsInNTri);
+                            float weight = 1.0f; // min(1.0f / xyLength, 5.0f);
                             totalWeight += weight;
-                            sampleColor = texture(TextureToBlur, sampleUvsInNTri);
-                            break;
+                            accumulatedColor += weight * sampleColor;
+                            // break;
                         }
                     }
                 }
             }
-            accumulatedColor += sampleColor * weight;
         }
     }
     // OutColor = vec4(0,0,0,1); return;
