@@ -19,8 +19,10 @@ public:
     virtual ~EffectLayerMaskImplementationBlur() override;
 
     void SetBlurRadius(int blurRadius);
+    void SetBlurStepResolution(float blurStepResolution);
 
     int GetBlurRadius() const;
+    float GetBlurStepResolution() const;
 
     // Serializable
     virtual void Reflect() override;
@@ -42,6 +44,7 @@ protected:
 
 private:
     int m_blurRadius = 3;
+    float m_blurStepResolution = 0.01f;
     bool m_generatedTextureArrays = false;
     GLSLArrayOfArrays m_triangleUvsGLSLArray;
     GLSLArrayOfArrays m_trianglePositionsGLSLArray;

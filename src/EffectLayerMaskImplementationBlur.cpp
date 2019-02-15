@@ -47,9 +47,24 @@ void EffectLayerMaskImplementationBlur::SetBlurRadius(int blurRadius)
     }
 }
 
+void EffectLayerMaskImplementationBlur::SetBlurStepResolution(
+    float blurStepResolution)
+{
+    if (blurStepResolution != GetBlurStepResolution())
+    {
+        m_blurStepResolution = blurStepResolution;
+        Invalidate();
+    }
+}
+
 int EffectLayerMaskImplementationBlur::GetBlurRadius() const
 {
     return m_blurRadius;
+}
+
+float EffectLayerMaskImplementationBlur::GetBlurStepResolution() const
+{
+    return m_blurStepResolution;
 }
 
 void EffectLayerMaskImplementationBlur::Reflect()
@@ -60,7 +75,13 @@ void EffectLayerMaskImplementationBlur::Reflect()
                                    "Blur radius",
                                    SetBlurRadius,
                                    GetBlurRadius,
-                                   BANG_REFLECT_HINT_SLIDER(0.0f, 10.0f));
+                                   BANG_REFLECT_HINT_SLIDER(0.0f, 5.0f));
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
+                                   "Blur step resolution",
+                                   SetBlurStepResolution,
+                                   GetBlurStepResolution,
+                                   BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
 }
 
 EffectLayerMask::Type
@@ -152,7 +173,8 @@ bool EffectLayerMaskImplementationBlur::CanGenerateEffectMaskTextureInRealTime()
 
 Texture2D *EffectLayerMaskImplementationBlur::GetMaskTextureToSee() const
 {
-    return m_blurTexture0.Get();
+    return GetEffectLayerMask()->GetVisible() ? m_blurTexture0.Get()
+                                              : m_blurTexture1.Get();
 }
 
 bool EffectLayerMaskImplementationBlur::CompositeThisMask() const
@@ -173,7 +195,9 @@ void EffectLayerMaskImplementationBlur::
         m_generatedTextureArrays = true;
     }
 
-    if (GetEffectLayerMask()->GetVisible() && GetBlurRadius() > 0)
+    bool needsToBlur =
+        (GetEffectLayerMask()->GetVisible() && GetBlurRadius() > 0);
+    if (needsToBlur)
     {
         GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
         GL::Push(GL::Pushable::SHADER_PROGRAM);
@@ -197,6 +221,8 @@ void EffectLayerMaskImplementationBlur::
         ShaderProgram *sp = m_blurShaderProgram.Get();
         sp->Bind();
         SetGenerateEffectUniforms(sp, mr);
+        sp->SetFloat("BlurRadius", GetBlurRadius());
+        sp->SetFloat("BlurStep", (1.0f / GetBlurStepResolution()));
         sp->SetTexture2D("TextureToBlur", mergedMaskTextureUntilNow);
         m_triangleUvsGLSLArray.Bind("TriangleUvs", sp);
         m_trianglePositionsGLSLArray.Bind("TrianglePositions", sp);
@@ -226,6 +252,7 @@ void EffectLayerMaskImplementationBlur::
     }
     else
     {
+        m_blurTexture1.Get()->Resize(mergedMaskTextureUntilNow->GetSize());
         ge->CopyTexture(mergedMaskTextureUntilNow, m_blurTexture1.Get());
     }
 }
