@@ -25,6 +25,7 @@ public:
 
     virtual void Init();
     virtual void ReloadShaders();
+    virtual bool GetIsPostProcessEffectLayer() const;
     virtual bool CanGenerateEffectMaskTextureInRealTime() const = 0;
     void SetEffectLayerMask(EffectLayerMask *effectLayerMask);
     virtual void GenerateEffectMaskTexture(Texture2D *effectTexture,

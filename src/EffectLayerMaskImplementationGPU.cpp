@@ -45,6 +45,11 @@ void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
     Texture2D *maskTexture,
     MeshRenderer *meshRend)
 {
+    if (GetIsPostProcessEffectLayer())
+    {
+        return;
+    }
+
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
     GL::Push(GL::Pushable::BLEND_STATES);

@@ -13,7 +13,7 @@
 
 #include "ControlPanel.h"
 #include "EffectLayer.h"
-#include "MeshUniformGrid.h"
+#include "GLSLRayCaster.h"
 
 namespace Bang
 {
@@ -54,14 +54,16 @@ public:
     void InvalidateAll();
 
     Camera *GetCamera() const;
+    GLSLRayCaster *GetGLSLRayCaster() const;
     GameObject *GetModelGameObject() const;
     const Vector3 &GetModelOriginalLocalScale() const;
     Array<EffectLayer *> GetAllEffectLayers() const;
     Array<EffectLayer *> GetSelectedEffectLayers() const;
     Array<EffectLayerMask *> GetSelectedEffectLayerMasks() const;
     EffectLayerCompositer *GetEffectLayerCompositer() const;
-    const MeshUniformGrid &GetMeshUniformGrid() const;
     Model *GetCurrentModel() const;
+
+    static View3DScene *GetInstance();
 
 private:
     struct MeshRendererInfo
@@ -73,8 +75,8 @@ private:
         Array<EffectLayer *> effectLayers;
     };
 
-    MeshUniformGrid m_meshUniformGrid;
     Time m_lastTimeTexturesValidated = Time::Zero();
+    GLSLRayCaster *m_glslRayCaster = nullptr;
     LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;

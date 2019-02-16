@@ -1,6 +1,9 @@
 #ifndef MATH_GLSL
 #define MATH_GLSL
 
+const float PI = 3.1415926f;
+const float PI2 = PI * 2.0f;
+
 float side(vec2 p1, vec2 p2, vec2 p3)
 {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -97,7 +100,11 @@ bool PointInTriangle(vec3 point, vec3[3] trianglePoints)
 float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
 {
     float dotProd = dot(planeNormal, rayDir);
-    return dot(planePoint - rayOrig, planeNormal) / dotProd;
+    if (dotProd >= 0)
+    {
+        return dot(planePoint - rayOrig, planeNormal) / dotProd;
+    }
+    return 1e9f;
 }
 
 void IntersectRayTriangle(in vec3 rayOrig,

@@ -20,17 +20,16 @@ public:
 
     void SetBlurRadius(int blurRadius);
     void SetBlurStepResolution(float blurStepResolution);
-    void SetNeighborhoodRadius(int neighborhoodRadius);
 
     int GetBlurRadius() const;
     float GetBlurStepResolution() const;
-    int GetNeighborhoodRadius() const;
 
     // Serializable
     virtual void Reflect() override;
 
 protected:
     // EffectLayerMaskImplementation
+    virtual bool GetIsPostProcessEffectLayer() const override;
     virtual EffectLayerMask::Type GetEffectLayerMaskType() const override;
     virtual String GetTypeName() const override;
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
@@ -47,12 +46,9 @@ protected:
 private:
     int m_blurRadius = 3;
     float m_blurStepResolution = 30.0f;
-    int m_neighborhoodRadius = 2;
 
     bool m_generatedTextureArrays = false;
     GLSLArrayOfArrays m_triangleUvsGLSLArray;
-    GLSLArrayOfArrays m_trianglePositionsGLSLArray;
-    GLSLArrayOfArrays m_triangleNeighborhoodsGLSLArray;
 
     void FillGLSLArrays(MeshRenderer *mr);
 

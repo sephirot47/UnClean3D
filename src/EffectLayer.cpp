@@ -222,7 +222,7 @@ void EffectLayer::MergeMasks(MeshRenderer *mr)
         EffectLayerMask *mask = GetMasks()[i];
 
         EffectLayerMaskImplementation *impl = mask->GetImplementation();
-        if (impl)
+        if (impl && !impl->IsValid())
         {
             impl->GenerateEffectMaskTextureOnCompositeBefore(
                 GetMergedMaskTexture(), mr);
@@ -261,7 +261,7 @@ void EffectLayer::MergeMasks(MeshRenderer *mr)
             }
         }
 
-        if (impl)
+        if (impl && !impl->IsValid())
         {
             impl->GenerateEffectMaskTextureOnCompositeAfter(
                 GetMergedMaskTexture(), mr);

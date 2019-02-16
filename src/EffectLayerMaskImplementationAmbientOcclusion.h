@@ -33,13 +33,6 @@ protected:
 
 private:
     bool m_generatedTextureArrays = false;
-
-    GLSLArrayOfArrays m_trianglePositionsGLSLArray;
-    GLSLArrayOfArrays m_uniformGridGLSLArray;
-
-    void FillTrianglePositionsGLSLArray(MeshRenderer *mr);
-    void FillMeshUniformGridGLSLArray();
-    const MeshUniformGrid &GetMeshUniformGrid() const;
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONAMBIENTOCCLUSION_H

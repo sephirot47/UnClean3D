@@ -78,6 +78,8 @@ View3DScene::View3DScene()
         maskBrushRendGo->SetParent(this);
     }
 
+    m_glslRayCaster = new GLSLRayCaster();
+
     // Light
     GameObject *dlGo = GameObjectFactory::CreateGameObject();
     DirectionalLight *dl = dlGo->AddComponent<DirectionalLight>();
@@ -373,8 +375,6 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
-            m_meshUniformGrid.Create(mr);
-
             Material *mat = mr->GetMaterial();
 
             // Create default textures if they do not exist
@@ -419,6 +419,8 @@ void View3DScene::OnModelChanged(Model *newModel)
             m_meshRendererToInfo.Add(mr, mrInfo);
 
             mat->SetShaderProgram(m_view3DShaderProgram.Get());
+
+            m_glslRayCaster->SetMeshRenderer(mr);
         }
 
         Path prevModelPath =
@@ -542,6 +544,11 @@ Camera *View3DScene::GetCamera() const
     return p_cam;
 }
 
+GLSLRayCaster *View3DScene::GetGLSLRayCaster() const
+{
+    return m_glslRayCaster;
+}
+
 GameObject *View3DScene::GetModelGameObject() const
 {
     GameObject *modelGo = p_modelContainer->GetChildren().Size() >= 1
@@ -611,14 +618,14 @@ EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
     return m_effectLayerCompositer;
 }
 
-const MeshUniformGrid &View3DScene::GetMeshUniformGrid() const
-{
-    return m_meshUniformGrid;
-}
-
 Model *View3DScene::GetCurrentModel() const
 {
     return MainScene::GetInstance()->GetCurrentModel();
+}
+
+View3DScene *View3DScene::GetInstance()
+{
+    return MainScene::GetInstance()->GetView3DScene();
 }
 
 void View3DScene::ResetCamera()

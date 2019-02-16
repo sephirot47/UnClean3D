@@ -26,6 +26,11 @@ void EffectLayerMaskImplementation::ReloadShaders()
 {
 }
 
+bool EffectLayerMaskImplementation::GetIsPostProcessEffectLayer() const
+{
+    return false;
+}
+
 void EffectLayerMaskImplementation::SetEffectLayerMask(
     EffectLayerMask *effectLayerMask)
 {
@@ -78,7 +83,7 @@ void EffectLayerMaskImplementation::Reflect()
     {
         BANG_REFLECT_BUTTON(
             EffectLayerMaskImplementation, "Generate", [this]() {
-                GetEffectLayerMask()->Invalidate();
+                GetEffectLayerMask()->Invalidate(true);
                 GetEffectLayerMask()->GenerateMask();
             });
     }

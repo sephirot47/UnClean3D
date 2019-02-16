@@ -17,8 +17,6 @@ MeshUniformGrid::~MeshUniformGrid()
 
 void MeshUniformGrid::Create(MeshRenderer *mr)
 {
-    using TriId = Mesh::TriangleId;
-
     m_grid.Clear();
 
     Mesh *mesh = mr->GetMesh();
@@ -31,7 +29,7 @@ void MeshUniformGrid::Create(MeshRenderer *mr)
         mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
     m_gridAABox = mesh->GetAABBox();
     m_gridAABox = localToWorldMatrix * GetGridAABox();
-    const Vector3 padding = GetGridAABox().GetSize() * 0.1f;
+    const Vector3 padding = GetGridAABox().GetSize() * 0.01f;
     m_gridAABox.SetMin(GetGridAABox().GetMin() - padding);
     m_gridAABox.SetMax(GetGridAABox().GetMax() + padding);
 
@@ -71,12 +69,12 @@ AABox MeshUniformGrid::GetCellBox(uint x,
 {
     const Vector3 xyz(x, y, z);
     const Vector3 normalSize = m_gridCellSize;
-    const Vector3 paddedSize = normalSize * 0.1f;
+    const Vector3 padding = normalSize * 0.05f;
 
     AABox cellBox;
-    cellBox.SetMin(GetGridAABox().GetMin() + xyz * normalSize - paddedSize);
+    cellBox.SetMin(GetGridAABox().GetMin() + xyz * normalSize - padding);
     cellBox.SetMax(cellBox.GetMin() + Vector3(rangeSize) * normalSize +
-                   paddedSize * 2.0f);
+                   padding * 2.0f);
 
     return cellBox;
 }

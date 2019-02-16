@@ -12,17 +12,19 @@
 #include "Bang/Transform.h"
 
 #include "EffectLayer.h"
+#include "GLSLRayCaster.h"
+#include "View3DScene.h"
 
 using namespace Bang;
 
 EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
 {
     m_blurTexture0 = Assets::Create<Texture2D>();
-    m_blurTexture0.Get()->CreateEmpty(1, 1);
+    m_blurTexture0.Get()->Fill(Color::Black(), 1, 1);
     m_blurTexture0.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
     m_blurTexture1 = Assets::Create<Texture2D>();
-    m_blurTexture1.Get()->CreateEmpty(1, 1);
+    m_blurTexture1.Get()->Fill(Color::Black(), 1, 1);
     m_blurTexture1.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
     m_blurShaderProgram.Set(ShaderProgramFactory::Get(
@@ -30,8 +32,6 @@ EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
             "GenerateEffectMaskTextureBlur.bushader")));
 
     m_triangleUvsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
-    m_trianglePositionsGLSLArray.SetFormat(GL::ColorFormat::RGB32F);
-    m_triangleNeighborhoodsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 
 EffectLayerMaskImplementationBlur::~EffectLayerMaskImplementationBlur()
@@ -43,7 +43,6 @@ void EffectLayerMaskImplementationBlur::SetBlurRadius(int blurRadius)
     if (blurRadius != GetBlurRadius())
     {
         m_blurRadius = blurRadius;
-        Invalidate();
     }
 }
 
@@ -53,19 +52,6 @@ void EffectLayerMaskImplementationBlur::SetBlurStepResolution(
     if (blurStepResolution != GetBlurStepResolution())
     {
         m_blurStepResolution = blurStepResolution;
-        Invalidate();
-    }
-}
-
-void EffectLayerMaskImplementationBlur::SetNeighborhoodRadius(
-    int neighborhoodRadius)
-{
-    if (neighborhoodRadius != GetNeighborhoodRadius())
-    {
-        m_neighborhoodRadius = neighborhoodRadius;
-        FillGLSLArrays(
-            GetEffectLayerMask()->GetEffectLayer()->GetMeshRenderer());
-        Invalidate();
     }
 }
 
@@ -77,11 +63,6 @@ int EffectLayerMaskImplementationBlur::GetBlurRadius() const
 float EffectLayerMaskImplementationBlur::GetBlurStepResolution() const
 {
     return m_blurStepResolution;
-}
-
-int EffectLayerMaskImplementationBlur::GetNeighborhoodRadius() const
-{
-    return m_neighborhoodRadius;
 }
 
 void EffectLayerMaskImplementationBlur::Reflect()
@@ -99,12 +80,11 @@ void EffectLayerMaskImplementationBlur::Reflect()
                                    SetBlurStepResolution,
                                    GetBlurStepResolution,
                                    BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
+}
 
-    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
-                                   "Neighborhood radius",
-                                   SetNeighborhoodRadius,
-                                   GetNeighborhoodRadius,
-                                   BANG_REFLECT_HINT_SLIDER(1.0f, 4.0f));
+bool EffectLayerMaskImplementationBlur::GetIsPostProcessEffectLayer() const
+{
+    return true;
 }
 
 EffectLayerMask::Type
@@ -141,39 +121,6 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
 {
     Mesh *mesh = mr->GetMesh();
     mesh->UpdateVAOsAndTables();
-
-    Array<Array<Vector4>> neighborhoodsArray;
-    for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
-    {
-        Array<Mesh::TriangleId> triangleNeighbors;
-        triangleNeighbors = mesh->GetNeighborTriangleIdsFromTriangleId(
-            triId, GetNeighborhoodRadius());
-
-        Array<Vector4> neighborsVectors;
-        for (Mesh::TriangleId neighborTriId : triangleNeighbors)
-        {
-            neighborsVectors.PushBack(Vector4(neighborTriId, 0, 0, 0));
-        }
-        neighborhoodsArray.PushBack(neighborsVectors);
-    }
-    m_triangleNeighborhoodsGLSLArray.Fill(neighborhoodsArray);
-
-    const Matrix4 &localToWorldMatrix =
-        mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
-    Array<Array<Vector4>> trianglePositionsArray;
-    for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
-    {
-        Triangle tri = mesh->GetTriangle(triId);
-        tri = localToWorldMatrix * tri;
-
-        Array<Vector4> triPositions;
-        triPositions.PushBack(Vector4(tri.GetPoint(0), 0));
-        triPositions.PushBack(Vector4(tri.GetPoint(1), 0));
-        triPositions.PushBack(Vector4(tri.GetPoint(2), 0));
-
-        trianglePositionsArray.PushBack(triPositions);
-    }
-    m_trianglePositionsGLSLArray.Fill(trianglePositionsArray);
 
     Array<Array<Vector4>> triangleUvsArray;
     const auto &uvsPool = mesh->GetUvsPool();
@@ -246,12 +193,14 @@ void EffectLayerMaskImplementationBlur::
         ShaderProgram *sp = m_blurShaderProgram.Get();
         sp->Bind();
         SetGenerateEffectUniforms(sp, mr);
+        GLSLRayCaster *rayCaster =
+            View3DScene::GetInstance()->GetGLSLRayCaster();
+        rayCaster->Bind(sp);
+
         sp->SetFloat("BlurRadius", GetBlurRadius());
         sp->SetFloat("BlurStep", (1.0f / GetBlurStepResolution()));
         sp->SetTexture2D("TextureToBlur", mergedMaskTextureUntilNow);
         m_triangleUvsGLSLArray.Bind("TriangleUvs", sp);
-        m_trianglePositionsGLSLArray.Bind("TrianglePositions", sp);
-        m_triangleNeighborhoodsGLSLArray.Bind("TriangleNeighborhoods", sp);
 
         GL::ClearColorBuffer(Color::Zero());
         EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();
@@ -280,4 +229,6 @@ void EffectLayerMaskImplementationBlur::
         m_blurTexture1.Get()->Resize(mergedMaskTextureUntilNow->GetSize());
         ge->CopyTexture(mergedMaskTextureUntilNow, m_blurTexture1.Get());
     }
+
+    m_isValid = true;
 }

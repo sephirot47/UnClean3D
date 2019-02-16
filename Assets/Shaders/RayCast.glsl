@@ -5,7 +5,6 @@
 #include "ArrayOfArrays.glsl"
 
 uniform mat4 SceneModelMatrix;
-uniform int NumTriangles;
 
 uniform int NumGridCells;
 uniform vec3 GridCellSize;
@@ -21,8 +20,12 @@ bool RayCast(in vec3 rayOrigin,
              out int hitTriId,
              out vec3 hitBaryCoords)
 {
-    vec3 rayDirectionSign = sign(rayDirection);
+    if (rayDirection == vec3(0) || maxDistance <= 0)
+    {
+        return false;
+    }
 
+    vec3 rayDirectionSign = sign(rayDirection);
     vec3 gridWorldPos = (rayOrigin.xyz - GridMinPoint.xyz);
     vec3 gridCoordXYZ = floor(gridWorldPos.xyz / GridCellSize.xyz);
 
@@ -66,20 +69,30 @@ bool RayCast(in vec3 rayOrigin,
             float intDistPlaneZ = IntersectRayPlaneDist(rayOrigin, rayDirection, planeZPoint, vec3(0,0,1));
 
             float minIntersectionDist;
-            if (intDistPlaneX <= intDistPlaneY && intDistPlaneX <= intDistPlaneZ)
+            if (rayDirectionSign.x != 0 &&
+                intDistPlaneX <= intDistPlaneY &&
+                intDistPlaneX <= intDistPlaneZ)
             {
                 minIntersectionDist = intDistPlaneX;
                 gridStepXYZ = vec3(1,0,0) * rayDirectionSign.x;
             }
-            else if (intDistPlaneY <= intDistPlaneX && intDistPlaneY <= intDistPlaneZ)
+            else if (rayDirectionSign.y != 0 &&
+                     intDistPlaneY <= intDistPlaneX &&
+                     intDistPlaneY <= intDistPlaneZ)
             {
                 minIntersectionDist = intDistPlaneY;
                 gridStepXYZ = vec3(0,1,0) * rayDirectionSign.y;
             }
-            else
+            else if (rayDirectionSign.z != 0 &&
+                     intDistPlaneZ <= intDistPlaneX &&
+                     intDistPlaneZ <= intDistPlaneY)
             {
                 minIntersectionDist = intDistPlaneZ;
                 gridStepXYZ = vec3(0,0,1) * rayDirectionSign.z;
+            }
+            else
+            {
+                return false;
             }
 
             currentMaxDistance -= minIntersectionDist;
