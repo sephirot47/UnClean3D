@@ -1,3 +1,7 @@
+#ifndef RAYCAST_GLSL
+#define RAYCAST_GLSL
+
+#include "Math.glsl"
 #include "ArrayOfArrays.glsl"
 
 uniform mat4 SceneModelMatrix;
@@ -9,44 +13,6 @@ uniform vec3 GridMinPoint;
 
 ARRAY_OF_ARRAYS(UniformMeshGrid)
 ARRAY_OF_ARRAYS(TrianglePositions)
-
-float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
-{
-    float dotProd = dot(planeNormal, rayDir);
-    return dot(planePoint - rayOrig, planeNormal) / dotProd;
-}
-
-void IntersectRayTriangle(in vec3 rayOrig,
-                          in vec3 rayDir,
-                          in vec3 triPoints[3],
-                          out float hitDistance,
-                          out vec3 hitBaryCoords)
-{
-    const float INF = 1e12;
-    const float Epsilon = 1e-8;
-
-    vec3 v10 = (triPoints[1] - triPoints[0]);
-    vec3 v20 = (triPoints[2] - triPoints[0]);
-
-    vec3 h = cross(rayDir, v20);
-    float a = dot(v10, h);
-
-    if (a > -Epsilon && a < Epsilon) { hitDistance = INF; return; }
-
-    float f = 1.0 / a;
-    vec3 s = (rayOrig - triPoints[0]);
-    float u = f * dot(s, h);
-    if (u < 0.0 || u > 1.0) { hitDistance = INF; return; }
-
-    vec3 q = cross(s, v10);
-    float v = f * dot(rayDir, q);
-    if (v < 0.0 || u + v > 1.0) { hitDistance = INF; return; }
-
-    hitBaryCoords = vec3(u, v, 1.0 - u - v);
-
-    hitDistance = (f * dot(v20, q));
-    if (hitDistance < Epsilon) { hitDistance = INF; return; }
-}
 
 bool RayCast(in vec3 rayOrigin,
              in vec3 rayDirection,
@@ -128,3 +94,5 @@ bool RayCast(in vec3 rayOrigin,
 
     return false;
 }
+
+#endif

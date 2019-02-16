@@ -1,3 +1,5 @@
+#ifndef ARRAY_OF_ARRAYS_GLSL
+#define ARRAY_OF_ARRAYS_GLSL
 
 vec4 _GetArrayOfArraysPixel(sampler2D arrayOfArraysTexture,
                             vec2 arrayOfArraysTextureSize,
@@ -36,3 +38,6 @@ vec4 _GetArrayOfArraysPixel(sampler2D arrayOfArraysTexture,
                                       ArrayOfArraysName##_TexelUvSize, \
                                       elementCoord); \
     }
+
+
+#endif
