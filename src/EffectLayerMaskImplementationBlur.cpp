@@ -31,7 +31,7 @@ EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
 
     m_triangleUvsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
     m_trianglePositionsGLSLArray.SetFormat(GL::ColorFormat::RGB32F);
-    m_oneRingNeighborhoodsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
+    m_triangleNeighborhoodsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 
 EffectLayerMaskImplementationBlur::~EffectLayerMaskImplementationBlur()
@@ -57,6 +57,18 @@ void EffectLayerMaskImplementationBlur::SetBlurStepResolution(
     }
 }
 
+void EffectLayerMaskImplementationBlur::SetNeighborhoodRadius(
+    int neighborhoodRadius)
+{
+    if (neighborhoodRadius != GetNeighborhoodRadius())
+    {
+        m_neighborhoodRadius = neighborhoodRadius;
+        FillGLSLArrays(
+            GetEffectLayerMask()->GetEffectLayer()->GetMeshRenderer());
+        Invalidate();
+    }
+}
+
 int EffectLayerMaskImplementationBlur::GetBlurRadius() const
 {
     return m_blurRadius;
@@ -65,6 +77,11 @@ int EffectLayerMaskImplementationBlur::GetBlurRadius() const
 float EffectLayerMaskImplementationBlur::GetBlurStepResolution() const
 {
     return m_blurStepResolution;
+}
+
+int EffectLayerMaskImplementationBlur::GetNeighborhoodRadius() const
+{
+    return m_neighborhoodRadius;
 }
 
 void EffectLayerMaskImplementationBlur::Reflect()
@@ -82,6 +99,12 @@ void EffectLayerMaskImplementationBlur::Reflect()
                                    SetBlurStepResolution,
                                    GetBlurStepResolution,
                                    BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
+                                   "Neighborhood radius",
+                                   SetNeighborhoodRadius,
+                                   GetNeighborhoodRadius,
+                                   BANG_REFLECT_HINT_SLIDER(1.0f, 4.0f));
 }
 
 EffectLayerMask::Type
@@ -119,21 +142,21 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
     Mesh *mesh = mr->GetMesh();
     mesh->UpdateVAOsAndTables();
 
-    Array<Array<Vector4>> oneRingNeighborhoodsArray;
+    Array<Array<Vector4>> neighborhoodsArray;
     for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
     {
-        Array<Mesh::TriangleId> oneRingNeighbors;
-        oneRingNeighbors = mesh->GetNeighborTriangleIdsFromTriangleId(triId);
+        Array<Mesh::TriangleId> triangleNeighbors;
+        triangleNeighbors = mesh->GetNeighborTriangleIdsFromTriangleId(
+            triId, GetNeighborhoodRadius());
 
-        Array<Vector4> oneRingNeighborsVectors;
-        for (Mesh::TriangleId neighborTriId : oneRingNeighbors)
+        Array<Vector4> neighborsVectors;
+        for (Mesh::TriangleId neighborTriId : triangleNeighbors)
         {
-            oneRingNeighborsVectors.PushBack(Vector4(neighborTriId, 0, 0, 0));
+            neighborsVectors.PushBack(Vector4(neighborTriId, 0, 0, 0));
         }
-
-        oneRingNeighborhoodsArray.PushBack(oneRingNeighborsVectors);
+        neighborhoodsArray.PushBack(neighborsVectors);
     }
-    m_oneRingNeighborhoodsGLSLArray.Fill(oneRingNeighborhoodsArray);
+    m_triangleNeighborhoodsGLSLArray.Fill(neighborhoodsArray);
 
     const Matrix4 &localToWorldMatrix =
         mr->GetGameObject()->GetTransform()->GetLocalToWorldMatrix();
@@ -170,7 +193,7 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
 bool EffectLayerMaskImplementationBlur::CanGenerateEffectMaskTextureInRealTime()
     const
 {
-    return true;
+    return false;
 }
 
 Texture2D *EffectLayerMaskImplementationBlur::GetMaskTextureToSee() const
@@ -228,7 +251,7 @@ void EffectLayerMaskImplementationBlur::
         sp->SetTexture2D("TextureToBlur", mergedMaskTextureUntilNow);
         m_triangleUvsGLSLArray.Bind("TriangleUvs", sp);
         m_trianglePositionsGLSLArray.Bind("TrianglePositions", sp);
-        m_oneRingNeighborhoodsGLSLArray.Bind("OneRingNeighborhoods", sp);
+        m_triangleNeighborhoodsGLSLArray.Bind("TriangleNeighborhoods", sp);
 
         GL::ClearColorBuffer(Color::Zero());
         EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();

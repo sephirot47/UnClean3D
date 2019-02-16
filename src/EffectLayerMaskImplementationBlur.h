@@ -20,9 +20,11 @@ public:
 
     void SetBlurRadius(int blurRadius);
     void SetBlurStepResolution(float blurStepResolution);
+    void SetNeighborhoodRadius(int neighborhoodRadius);
 
     int GetBlurRadius() const;
     float GetBlurStepResolution() const;
+    int GetNeighborhoodRadius() const;
 
     // Serializable
     virtual void Reflect() override;
@@ -45,10 +47,12 @@ protected:
 private:
     int m_blurRadius = 3;
     float m_blurStepResolution = 30.0f;
+    int m_neighborhoodRadius = 2;
+
     bool m_generatedTextureArrays = false;
     GLSLArrayOfArrays m_triangleUvsGLSLArray;
     GLSLArrayOfArrays m_trianglePositionsGLSLArray;
-    GLSLArrayOfArrays m_oneRingNeighborhoodsGLSLArray;
+    GLSLArrayOfArrays m_triangleNeighborhoodsGLSLArray;
 
     void FillGLSLArrays(MeshRenderer *mr);
 

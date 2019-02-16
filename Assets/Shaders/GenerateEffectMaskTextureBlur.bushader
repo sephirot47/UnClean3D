@@ -27,7 +27,7 @@ void main()
 
 ARRAY_OF_ARRAYS(TriangleUvs)
 ARRAY_OF_ARRAYS(TrianglePositions)
-ARRAY_OF_ARRAYS(OneRingNeighborhoods)
+ARRAY_OF_ARRAYS(TriangleNeighborhoods)
 
 uniform sampler2D TextureToBlur;
 uniform float BlurRadius;
@@ -172,7 +172,7 @@ void main()
 
     vec4 accumulatedColor = vec4(0);
     float totalWeight = 0.0f;
-    int numNeighbors = GetOneRingNeighborhoodsArraySize(thisTriId);
+    int numNeighbors = GetTriangleNeighborhoodsArraySize(thisTriId);
     float BR = BlurRadius;
     for (float y = -BR; y <= BR; ++y)
     {
@@ -195,11 +195,11 @@ void main()
             for (int i = 0; i < (numNeighbors + 1); ++i) // Neighbors or this triId
             {
                 int neighborTriId = (i == 0 ? thisTriId :
-                      int(GetOneRingNeighborhoodsElement(thisTriId, i-1).x));
+                      int(GetTriangleNeighborhoodsElement(thisTriId, i-1).x));
                 vec3[3] nTriWorldPosition = GetTrianglePoints(neighborTriId);
                 if (IsDegenerateTriangle(nTriWorldPosition))
                 {
-                    continue;
+                    // continue;
                 }
 
                 bool isInsideNeighborTriangleAfterProjected = false;
@@ -210,7 +210,7 @@ void main()
                     vec3 nTriNormal = normalize(cross(nTriEdge01, nTriEdge02));
                     if (dot(thisTriNormal, nTriNormal) < -0.9f)
                     {
-                        continue;
+                        // continue;
                     }
 
                     // Modify sample world position so that it follows the surface
@@ -238,7 +238,6 @@ void main()
                             {
                                 vec3 projectedSampleWorldPositionInNeighborTriPlane =
                                         sampleWorldPosition + projectionRayDir * projectionDist;
-
                                 sampleWorldPosition = projectedSampleWorldPositionInNeighborTriPlane;
 
                                 isInsideNeighborTriangleAfterProjected =
