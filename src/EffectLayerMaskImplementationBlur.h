@@ -49,6 +49,7 @@ private:
 
     bool m_generatedTextureArrays = false;
     GLSLArrayOfArrays m_triangleUvsGLSLArray;
+    GLSLArrayOfArrays m_triangleNeighborhoodsGLSLArray;
 
     void FillGLSLArrays(MeshRenderer *mr);
 

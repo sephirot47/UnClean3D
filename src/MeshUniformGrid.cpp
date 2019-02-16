@@ -33,7 +33,7 @@ void MeshUniformGrid::Create(MeshRenderer *mr)
     m_gridAABox.SetMin(GetGridAABox().GetMin() - padding);
     m_gridAABox.SetMax(GetGridAABox().GetMax() + padding);
 
-    m_gridNumCells = 50;
+    m_gridNumCells = 20;
     m_gridCellSize = (GetGridAABox().GetSize() / SCAST<float>(m_gridNumCells));
     m_grid.Resize(m_gridNumCells * m_gridNumCells * m_gridNumCells);
 

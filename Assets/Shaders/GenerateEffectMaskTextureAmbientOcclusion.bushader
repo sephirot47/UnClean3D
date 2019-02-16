@@ -7,12 +7,12 @@ layout(location = 1) in vec3 vinPosition;
 layout(location = 2) in vec3 vinNormal;
 
 out vec3 inWorldPosition;
-out vec3 inWorldNormal;
+flat out int inTriId;
 
 void main()
 {
     inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
-    inWorldNormal = (SceneModelMatrix * vec4(vinNormal, 0)).xyz;
+    inTriId = gl_VertexID / 3;
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -24,41 +24,56 @@ void main()
 #include "RayCast.glsl"
 
 in vec3 inWorldPosition;
-in vec3 inWorldNormal;
+flat in int inTriId;
 
 layout(location = 0) out vec4 OutColor;
 
-float rand(vec3 co)
+vec3[3] GetTrianglePoints(int triId)
 {
-    return fract(sin(dot(co.xyz, vec3(12.9898, 78.233, 32.123))) * 43758.5453);
-}
-vec3 rand3(vec3 co)
-{
-    return vec3(rand(co.xyz), rand(co.yxz), rand(co.zyx));
+    vec3 triPoints[3];
+    for (int vi = 0; vi < 3; ++vi)
+    {
+        triPoints[vi] = GetTrianglePositionsElement(triId, vi).xyz;
+    }
+    return triPoints;
 }
 
 void main()
 {
     vec3 worldPosition = inWorldPosition;
-    vec3 worldNormal = normalize(inWorldNormal);
+    int triId = inTriId;
 
-    float totalRays = 10;
-    float maxDistance = 0.05;
+    vec3[3] triWorldPosition = GetTrianglePoints(triId);
+    vec3 worldNormal = normalize( cross(triWorldPosition[1] - triWorldPosition[0],
+                                        triWorldPosition[2] - triWorldPosition[0]) );
+    // OutColor = vec4(worldNormal, 1); return;
+
+    float totalRays = 5;
+    float maxDistance = 4.0f;
     float intersectedRaysAO = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
         vec3 rayDirection = rand3(worldPosition * (iRay + 100));
+        // OutColor = vec4(vec3(rayDirection.x),1);
+        // return;
         rayDirection = normalize(rayDirection * 2 - 1);
         rayDirection *= sign(dot(rayDirection, worldNormal));
+        // rayDirection.x = abs(rayDirection.x);
+        // rayDirection.y = abs(rayDirection.y);
+        // rayDirection.z = -abs(rayDirection.z);
+        // rayDirection = normalize(vec3(1,-1,0));
+        // OutColor = vec4(vec3(rayDirection), 1); return;
 
-        vec3 rayOrigin = worldPosition + worldNormal * 0.001f;
+        vec3 rayOrigin = worldPosition + worldNormal * 0.00001f;
 
         int triId;
         float hitDistance;
         vec3 triBaryCoords;
-        if (RayCast(rayOrigin, rayDirection, maxDistance, hitDistance, triId, triBaryCoords))
+        if (RayCast(rayOrigin, rayDirection,
+                    maxDistance, hitDistance,
+                    triId, triBaryCoords))
         {
-            float distFactor = (hitDistance / maxDistance);
+            float distFactor = 0.0f; // (hitDistance / maxDistance);
             intersectedRaysAO += (1.0f - distFactor);
         }
     }

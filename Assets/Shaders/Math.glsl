@@ -4,6 +4,16 @@
 const float PI = 3.1415926f;
 const float PI2 = PI * 2.0f;
 
+float rand(vec3 co)
+{
+    return fract(sin(dot(co.xyz, vec3(12.9898, 78.233, 32.123))) * 43758.5453);
+}
+
+vec3 rand3(vec3 co)
+{
+    return vec3(rand(co.xyz), rand(co.zxy), rand(co.yzx));
+}
+
 float side(vec2 p1, vec2 p2, vec2 p3)
 {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -100,7 +110,7 @@ bool PointInTriangle(vec3 point, vec3[3] trianglePoints)
 float IntersectRayPlaneDist(vec3 rayOrig, vec3 rayDir, vec3 planePoint, vec3 planeNormal)
 {
     float dotProd = dot(planeNormal, rayDir);
-    if (dotProd >= 0)
+    if (abs(dotProd) > 1e-6)
     {
         return dot(planePoint - rayOrig, planeNormal) / dotProd;
     }
@@ -113,8 +123,8 @@ void IntersectRayTriangle(in vec3 rayOrig,
                           out float hitDistance,
                           out vec3 hitBaryCoords)
 {
-    const float INF = 1e12;
-    const float Epsilon = 1e-8;
+    const float INF = 1e12f;
+    const float Epsilon = 1e-8f;
 
     vec3 v10 = (triPoints[1] - triPoints[0]);
     vec3 v20 = (triPoints[2] - triPoints[0]);

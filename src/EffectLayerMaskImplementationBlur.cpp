@@ -32,6 +32,7 @@ EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
             "GenerateEffectMaskTextureBlur.bushader")));
 
     m_triangleUvsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
+    m_triangleNeighborhoodsGLSLArray.SetFormat(GL::ColorFormat::RG32F);
 }
 
 EffectLayerMaskImplementationBlur::~EffectLayerMaskImplementationBlur()
@@ -43,6 +44,7 @@ void EffectLayerMaskImplementationBlur::SetBlurRadius(int blurRadius)
     if (blurRadius != GetBlurRadius())
     {
         m_blurRadius = blurRadius;
+        Invalidate();
     }
 }
 
@@ -52,6 +54,7 @@ void EffectLayerMaskImplementationBlur::SetBlurStepResolution(
     if (blurStepResolution != GetBlurStepResolution())
     {
         m_blurStepResolution = blurStepResolution;
+        Invalidate();
     }
 }
 
@@ -122,6 +125,21 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
     Mesh *mesh = mr->GetMesh();
     mesh->UpdateVAOsAndTables();
 
+    Array<Array<Vector4>> neighborhoodsArray;
+    for (Mesh::TriangleId triId = 0; triId < mesh->GetNumTriangles(); ++triId)
+    {
+        Array<Mesh::TriangleId> triangleNeighbors;
+        triangleNeighbors = mesh->GetNeighborTriangleIdsFromTriangleId(triId);
+
+        Array<Vector4> neighborsVectors;
+        for (Mesh::TriangleId neighborTriId : triangleNeighbors)
+        {
+            neighborsVectors.PushBack(Vector4(neighborTriId, 0, 0, 0));
+        }
+        neighborhoodsArray.PushBack(neighborsVectors);
+    }
+    m_triangleNeighborhoodsGLSLArray.Fill(neighborhoodsArray);
+
     Array<Array<Vector4>> triangleUvsArray;
     const auto &uvsPool = mesh->GetUvsPool();
     const auto &triVertIds = mesh->GetTrianglesVertexIds();
@@ -140,7 +158,7 @@ void EffectLayerMaskImplementationBlur::FillGLSLArrays(MeshRenderer *mr)
 bool EffectLayerMaskImplementationBlur::CanGenerateEffectMaskTextureInRealTime()
     const
 {
-    return false;
+    return true;
 }
 
 Texture2D *EffectLayerMaskImplementationBlur::GetMaskTextureToSee() const
@@ -229,6 +247,4 @@ void EffectLayerMaskImplementationBlur::
         m_blurTexture1.Get()->Resize(mergedMaskTextureUntilNow->GetSize());
         ge->CopyTexture(mergedMaskTextureUntilNow, m_blurTexture1.Get());
     }
-
-    m_isValid = true;
 }
