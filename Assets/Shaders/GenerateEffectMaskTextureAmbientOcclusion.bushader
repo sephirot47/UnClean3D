@@ -46,23 +46,15 @@ void main()
     vec3[3] triWorldPosition = GetTrianglePoints(triId);
     vec3 worldNormal = normalize( cross(triWorldPosition[1] - triWorldPosition[0],
                                         triWorldPosition[2] - triWorldPosition[0]) );
-    // OutColor = vec4(worldNormal, 1); return;
 
-    float totalRays = 5;
-    float maxDistance = 4.0f;
+    float totalRays = 20;
+    float maxDistance = 0.1f;
     float intersectedRaysAO = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
         vec3 rayDirection = rand3(worldPosition * (iRay + 100));
-        // OutColor = vec4(vec3(rayDirection.x),1);
-        // return;
         rayDirection = normalize(rayDirection * 2 - 1);
         rayDirection *= sign(dot(rayDirection, worldNormal));
-        // rayDirection.x = abs(rayDirection.x);
-        // rayDirection.y = abs(rayDirection.y);
-        // rayDirection.z = -abs(rayDirection.z);
-        // rayDirection = normalize(vec3(1,-1,0));
-        // OutColor = vec4(vec3(rayDirection), 1); return;
 
         vec3 rayOrigin = worldPosition + worldNormal * 0.00001f;
 
@@ -73,7 +65,7 @@ void main()
                     maxDistance, hitDistance,
                     triId, triBaryCoords))
         {
-            float distFactor = 0.0f; // (hitDistance / maxDistance);
+            float distFactor = (hitDistance / maxDistance);
             intersectedRaysAO += (1.0f - distFactor);
         }
     }

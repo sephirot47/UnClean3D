@@ -22,9 +22,50 @@ EffectLayerMaskImplementationAmbientOcclusion::
 {
 }
 
+void EffectLayerMaskImplementationAmbientOcclusion::SetNumRays(int numRays)
+{
+    if (numRays != GetNumRays())
+    {
+        m_numRays = numRays;
+    }
+}
+
+void EffectLayerMaskImplementationAmbientOcclusion::SetMaxDistance(
+    float maxDistance)
+{
+    if (maxDistance != GetMaxDistance())
+    {
+        m_maxDistance = maxDistance;
+    }
+}
+
+int EffectLayerMaskImplementationAmbientOcclusion::GetNumRays() const
+{
+    return m_numRays;
+}
+
+float EffectLayerMaskImplementationAmbientOcclusion::GetMaxDistance() const
+{
+    return m_maxDistance;
+}
+
 void EffectLayerMaskImplementationAmbientOcclusion::Reflect()
 {
     EffectLayerMaskImplementationGPU::Reflect();
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(
+        EffectLayerMaskImplementationAmbientOcclusion,
+        "Num Rays",
+        SetNumRays,
+        GetNumRays,
+        BANG_REFLECT_HINT_SLIDER(0.0f, 50.0f));
+
+    BANG_REFLECT_VAR_MEMBER_HINTED(
+        EffectLayerMaskImplementationAmbientOcclusion,
+        "Max distance",
+        SetMaxDistance,
+        GetMaxDistance,
+        BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f));
 }
 
 EffectLayerMask::Type

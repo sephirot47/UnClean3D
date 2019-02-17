@@ -19,6 +19,12 @@ public:
     EffectLayerMaskImplementationAmbientOcclusion();
     virtual ~EffectLayerMaskImplementationAmbientOcclusion() override;
 
+    void SetNumRays(int numRays);
+    void SetMaxDistance(float maxDistance);
+
+    int GetNumRays() const;
+    float GetMaxDistance() const;
+
     // Serializable
     virtual void Reflect() override;
 
@@ -32,6 +38,8 @@ protected:
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:
+    int m_numRays = 15;
+    float m_maxDistance = 0.05f;
     bool m_generatedTextureArrays = false;
 };
 

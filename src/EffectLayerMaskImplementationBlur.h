@@ -54,8 +54,7 @@ private:
     void FillGLSLArrays(MeshRenderer *mr);
 
     AH<ShaderProgram> m_blurShaderProgram;
-    AH<Texture2D> m_blurTexture0;
-    AH<Texture2D> m_blurTexture1;
+    AH<Texture2D> m_blurTexture;
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONBLUR_H

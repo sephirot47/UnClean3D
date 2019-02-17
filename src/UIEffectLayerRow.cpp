@@ -177,7 +177,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_addNewMaskRow->SetParent(this);
 
     AddNewMaskRow();
-    AddNewMaskRow();
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()

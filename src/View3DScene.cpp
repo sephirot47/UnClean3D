@@ -375,6 +375,11 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
+            if (!mr->GetMesh() || mr->GetMesh()->GetPositionsPool().Size() == 0)
+            {
+                continue;
+            }
+
             Material *mat = mr->GetMaterial();
 
             // Create default textures if they do not exist
