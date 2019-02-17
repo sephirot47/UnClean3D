@@ -22,6 +22,8 @@
 #include "Bang/ShaderProgramFactory.h"
 #include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
+#include "Bang/VAO.h"
+#include "Bang/VBO.h"
 
 #include "ControlPanel.h"
 #include "EffectLayerCompositer.h"
@@ -149,6 +151,11 @@ void View3DScene::Update()
         }
 
         m_lastTimeTexturesValidated = Time::GetNow();
+    }
+
+    if (Input::GetKeyDown(Key::S))
+    {
+        ReloadShaders();
     }
 
     if (MainScene::GetInstance()->GetSceneMode() !=
@@ -289,14 +296,6 @@ void View3DScene::Update()
             p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
         }
     }
-
-    // Other shortcuts
-    {
-        if (Input::GetKeyDown(Key::S))
-        {
-            ReloadShaders();
-        }
-    }
 }
 
 void View3DScene::Render(RenderPass rp, bool renderChildren)
@@ -331,6 +330,7 @@ void View3DScene::ReloadShaders()
 {
     m_view3DShaderProgram.Get()->ReImport();
     m_effectLayerCompositer->ReloadShaders();
+    GetControlPanel()->ReloadShaders();
     for (auto &it : m_meshRendererToInfo)
     {
         const Array<EffectLayer *> &effectLayers = it.second.effectLayers;
@@ -375,7 +375,8 @@ void View3DScene::OnModelChanged(Model *newModel)
             p_modelContainer->GetComponentsInDescendantsAndThis<MeshRenderer>();
         for (MeshRenderer *mr : mrs)
         {
-            if (!mr->GetMesh() || mr->GetMesh()->GetPositionsPool().Size() == 0)
+            Mesh *mesh = mr->GetMesh();
+            if (!mesh || mesh->GetPositionsPool().Size() == 0)
             {
                 continue;
             }
@@ -426,6 +427,65 @@ void View3DScene::OnModelChanged(Model *newModel)
             mat->SetShaderProgram(m_view3DShaderProgram.Get());
 
             m_glslRayCaster->SetMeshRenderer(mr);
+
+            // Create texture mesh
+            {
+                AH<Mesh> textureMeshAH = Assets::Create<Mesh>();
+                Mesh *textureMesh = textureMeshAH.Get();
+
+                // Gather some data
+                Array<Vector3> texTriMeshPositions;
+                Array<Vector3> originalVertexPositions;
+                Array<Vector3> originalVertexNormals;
+                for (Mesh::VertexId triId = 0; triId < mesh->GetNumTriangles();
+                     ++triId)
+                {
+                    for (uint i = 0; i < 3; ++i)
+                    {
+                        Mesh::VertexId vId =
+                            mesh->GetTrianglesVertexIds()[triId * 3 + i];
+                        if (vId >= mesh->GetUvsPool().Size())
+                        {
+                            break;
+                        }
+
+                        const Vector2 &oriVertUv = mesh->GetUvsPool()[vId];
+                        Vector3 texTriMeshPos = oriVertUv.xy0() * 2.0f - 1.0f;
+                        texTriMeshPos.y *= -1;
+                        texTriMeshPositions.PushBack(texTriMeshPos);
+
+                        const Vector3 &oriVertPos =
+                            mesh->GetPositionsPool()[vId];
+                        const Vector3 &oriVertNormal =
+                            mesh->GetNormalsPool()[vId];
+                        originalVertexPositions.PushBack(oriVertPos);
+                        originalVertexNormals.PushBack(oriVertNormal);
+                    }
+                }
+
+                // Set original mesh uvs as texture mesh positions
+                textureMesh->SetPositionsPool(texTriMeshPositions);
+                textureMesh->SetTrianglesVertexIds({});
+
+                // Add actual original mesh attributes as other VBOs
+                VBO *positionsVBO = new VBO();
+                positionsVBO->CreateAndFill(
+                    originalVertexPositions.Data(),
+                    originalVertexPositions.Size() * sizeof(float) * 3);
+                textureMesh->GetVAO()->SetVBO(
+                    positionsVBO, 1, 3, GL::VertexAttribDataType::FLOAT);
+
+                VBO *normalsVBO = new VBO();
+                normalsVBO->CreateAndFill(
+                    originalVertexNormals.Data(),
+                    originalVertexNormals.Size() * sizeof(float) * 3);
+                textureMesh->GetVAO()->SetVBO(
+                    normalsVBO, 2, 3, GL::VertexAttribDataType::FLOAT);
+
+                textureMesh->UpdateVAOs();
+
+                m_textureMesh.Set(textureMesh);
+            }
         }
 
         Path prevModelPath =
@@ -626,6 +686,11 @@ EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
 Model *View3DScene::GetCurrentModel() const
 {
     return MainScene::GetInstance()->GetCurrentModel();
+}
+
+Mesh *View3DScene::GetTextureMesh() const
+{
+    return m_textureMesh.Get();
 }
 
 View3DScene *View3DScene::GetInstance()

@@ -1,0 +1,80 @@
+#vertex
+#include "ScreenPass.vert"
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "Common.glsl"
+
+const int MARKING_INFO_ZONES = 0;
+const int PULLING = 1;
+const int PUSHING = 2;
+
+uniform int ShaderPhase;
+uniform int Iteration;
+uniform vec2 TexelSize;
+uniform vec2 IterationTextureSize;
+uniform vec2 PreviousIterationTextureSize;
+uniform vec2 PreviousIterationTextureMin;
+uniform sampler2D InformationMask;
+uniform sampler2D TextureToPullPush;
+uniform vec2 TextureToPullPushSize;
+
+in vec2 B_FIn_AlbedoUv;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec2 uv = B_FIn_AlbedoUv;
+    vec2 step = B_GetViewportStep() * 1.0;
+
+    if (ShaderPhase == MARKING_INFO_ZONES)
+    {
+        OutColor = vec4(1); return;
+    }
+    else if (ShaderPhase == PULLING)
+    {
+        float totalWeight = 0.0f;
+        vec4 accumulatedColor = vec4(0);
+        vec2 prevIterationUvSizeRatio = (PreviousIterationTextureSize /
+                                         TextureToPullPushSize);
+        for (int x = -1; x <= 1; ++x)
+        {
+            for (int y = 1; y <= 1; ++y)
+            {
+                vec2 sampleUv;
+                sampleUv = uv * prevIterationUvSizeRatio;
+                sampleUv += vec2(x,y) * TexelSize;
+                sampleUv.x += (PreviousIterationTextureMin.x * TexelSize.x);
+                // sampleUv.y = (1.0 - sampleUv.y);
+
+                // OutColor = vec4(sampleUv, 0, 1); return;
+
+                vec4 texColor = texture(TextureToPullPush, sampleUv);
+                bool hasInfo = (Iteration == 0 ? (texture(InformationMask, sampleUv).r > 0) : (texColor.a > 0));
+                if (hasInfo)
+                {
+                    totalWeight += 1.0f;
+                    accumulatedColor += texColor;
+                }
+            }
+        }
+
+        if (totalWeight > 0)
+        {
+            OutColor = accumulatedColor / totalWeight;
+        }
+        else
+        {
+            OutColor = vec4(0);
+        }
+    }
+    else
+    {
+        OutColor = vec4(uv, 0, 1); return;
+    }
+}
+
+

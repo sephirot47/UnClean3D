@@ -95,13 +95,10 @@ private:
     BlendMode m_roughnessBlendMode = BlendMode::MULTIPLY;
     BlendMode m_metalnessBlendMode = BlendMode::IGNORE;
 
-    VBO *m_positionsVBO = nullptr;
-    VBO *m_normalsVBO = nullptr;
     Framebuffer *m_framebuffer = nullptr;
     bool m_visible = true;
     String m_name = "Layer";
 
-    AH<Mesh> m_textureMesh;
     AH<ShaderProgram> m_generateEffectTextureSP;
     AH<ShaderProgram> m_growTextureBordersSP;
 

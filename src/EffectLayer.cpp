@@ -71,62 +71,6 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_growTextureBordersSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "GrowBorders.bushader")));
-
-    // Create texture mesh
-    m_textureMesh = Assets::Create<Mesh>();
-    if (Mesh *originalMesh = mr->GetMesh())
-    {
-        // Gather some data
-        Array<Vector3> texTriMeshPositions;
-        Array<Vector3> originalVertexPositions;
-        Array<Vector3> originalVertexNormals;
-        for (Mesh::VertexId triId = 0; triId < originalMesh->GetNumTriangles();
-             ++triId)
-        {
-            for (uint i = 0; i < 3; ++i)
-            {
-                Mesh::VertexId vId =
-                    originalMesh->GetTrianglesVertexIds()[triId * 3 + i];
-                if (vId >= originalMesh->GetUvsPool().Size())
-                {
-                    break;
-                }
-
-                const Vector2 &oriVertUv = originalMesh->GetUvsPool()[vId];
-                Vector3 texTriMeshPos = oriVertUv.xy0() * 2.0f - 1.0f;
-                texTriMeshPos.y *= -1;
-                texTriMeshPositions.PushBack(texTriMeshPos);
-
-                const Vector3 &oriVertPos =
-                    originalMesh->GetPositionsPool()[vId];
-                const Vector3 &oriVertNormal =
-                    originalMesh->GetNormalsPool()[vId];
-                originalVertexPositions.PushBack(oriVertPos);
-                originalVertexNormals.PushBack(oriVertNormal);
-            }
-        }
-
-        // Set original mesh uvs as texture mesh positions
-        GetTextureMesh()->SetPositionsPool(texTriMeshPositions);
-        GetTextureMesh()->SetTrianglesVertexIds({});
-
-        // Add actual original mesh attributes as other VBOs
-        m_positionsVBO = new VBO();
-        m_positionsVBO->CreateAndFill(
-            originalVertexPositions.Data(),
-            originalVertexPositions.Size() * sizeof(float) * 3);
-        GetTextureMesh()->GetVAO()->SetVBO(
-            m_positionsVBO, 1, 3, GL::VertexAttribDataType::FLOAT);
-
-        m_normalsVBO = new VBO();
-        m_normalsVBO->CreateAndFill(
-            originalVertexNormals.Data(),
-            originalVertexNormals.Size() * sizeof(float) * 3);
-        GetTextureMesh()->GetVAO()->SetVBO(
-            m_normalsVBO, 2, 3, GL::VertexAttribDataType::FLOAT);
-
-        GetTextureMesh()->UpdateVAOs();
-    }
 }
 
 EffectLayer::~EffectLayer()
@@ -453,7 +397,7 @@ EffectLayer::BlendMode EffectLayer::GetMetalnessBlendMode() const
 
 Mesh *EffectLayer::GetTextureMesh() const
 {
-    return m_textureMesh.Get();
+    return View3DScene::GetInstance()->GetTextureMesh();
 }
 
 MeshRenderer *EffectLayer::GetMeshRenderer() const

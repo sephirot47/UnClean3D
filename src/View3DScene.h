@@ -62,6 +62,7 @@ public:
     Array<EffectLayerMask *> GetSelectedEffectLayerMasks() const;
     EffectLayerCompositer *GetEffectLayerCompositer() const;
     Model *GetCurrentModel() const;
+    Mesh *GetTextureMesh() const;
 
     static View3DScene *GetInstance();
 
@@ -80,6 +81,7 @@ private:
     LineRenderer *p_maskBrushRend = nullptr;
 
     FPSChrono m_fpsChrono;
+    AH<Mesh> m_textureMesh;
     GameObject *p_modelContainer = nullptr;
     Vector3 m_originalModelLocalScale = Vector3::One();
     Map<MeshRenderer *, MeshRendererInfo> m_meshRendererToInfo;
