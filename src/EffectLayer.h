@@ -90,7 +90,7 @@ private:
     float m_height = -1.0f;
     float m_roughness = 0.5f;
     float m_metalness = 0.0f;
-    BlendMode m_colorBlendMode = BlendMode::IGNORE;
+    BlendMode m_colorBlendMode = BlendMode::MULTIPLY;
     BlendMode m_heightBlendMode = BlendMode::ADD;
     BlendMode m_roughnessBlendMode = BlendMode::MULTIPLY;
     BlendMode m_metalnessBlendMode = BlendMode::IGNORE;
@@ -100,14 +100,10 @@ private:
     String m_name = "Layer";
 
     AH<ShaderProgram> m_generateEffectTextureSP;
-    AH<ShaderProgram> m_growTextureBordersSP;
 
     AH<Texture2D> m_effectColorTexture;
     AH<Texture2D> m_effectMiscTexture;
     AH<Texture2D> m_mergedMaskTexture;
-    AH<Texture2D> m_growAuxiliarTexture;
-
-    void GrowTextureBorders(Texture2D *texture);
 };
 
 #endif  // EFFECTLAYER_H

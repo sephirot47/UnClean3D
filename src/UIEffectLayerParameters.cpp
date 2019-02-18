@@ -92,7 +92,7 @@ UIEffectLayerParameters::UIEffectLayerParameters()
               &p_heightBlendModeInput)
         ->SetParent(this);
 
-    p_roughnessInput = GameObjectFactory::CreateUISlider(0.0f, 1.0f, 0.1f);
+    p_roughnessInput = GameObjectFactory::CreateUISlider(0.01f, 1.0f, 0.1f);
     p_roughnessInput->EventEmitter<IEventsValueChanged>::RegisterListener(this);
     CreateRow("Roughness",
               p_roughnessInput->GetGameObject(),
@@ -100,7 +100,7 @@ UIEffectLayerParameters::UIEffectLayerParameters()
               &p_roughnessBlendModeInput)
         ->SetParent(this);
 
-    p_metalnessInput = GameObjectFactory::CreateUISlider(0.0f, 1.0f, 0.1f);
+    p_metalnessInput = GameObjectFactory::CreateUISlider(0.01f, 1.0f, 0.1f);
     p_metalnessInput->EventEmitter<IEventsValueChanged>::RegisterListener(this);
     CreateRow("Metalness",
               p_metalnessInput->GetGameObject(),

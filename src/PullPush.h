@@ -3,6 +3,7 @@
 
 #include "Bang/AssetHandle.h"
 #include "Bang/Bang.h"
+#include "Bang/Map.h"
 #include "BangEditor/BangEditor.h"
 
 namespace Bang
@@ -26,9 +27,13 @@ public:
 private:
     Framebuffer *m_framebuffer = nullptr;
     AH<ShaderProgram> m_pullPushSP;
-    AH<Texture2D> m_informationMaskTexture;
-    AH<Texture2D> m_texture0;
-    AH<Texture2D> m_texture1;
+    AH<ShaderProgram> m_pullPushPrepareTextureSP;
+    Map<int, AH<Texture2D>> m_pullTextures;
+    Map<int, AH<Texture2D>> m_pushTextures;
+
+    Texture2D *GetPullTexture(int size);
+    Texture2D *GetPushTexture(int size);
+    Texture2D *GetPullPushTexture(int size, bool pull);
 };
 
 #endif  // PULLPUSH_H

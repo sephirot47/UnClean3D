@@ -7,6 +7,7 @@
 #include "Bang/ShaderProgram.h"
 #include "Bang/ShaderProgramFactory.h"
 #include "Bang/Texture2D.h"
+#include "Bang/TextureFactory.h"
 
 #include "View3DScene.h"
 
@@ -16,17 +17,9 @@ PullPush::PullPush()
 {
     m_framebuffer = new Framebuffer();
 
-    m_informationMaskTexture = Assets::Create<Texture2D>();
-    m_informationMaskTexture.Get()->Fill(Color::Zero(), 1, 1);
-    m_informationMaskTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
-
-    m_texture0 = Assets::Create<Texture2D>();
-    m_texture0.Get()->Fill(Color::Black(), 1, 1);
-    m_texture0.Get()->SetFormat(GL::ColorFormat::RGBA8);
-
-    m_texture1 = Assets::Create<Texture2D>();
-    m_texture1.Get()->Fill(Color::Black(), 1, 1);
-    m_texture1.Get()->SetFormat(GL::ColorFormat::RGBA8);
+    m_pullPushPrepareTextureSP.Set(ShaderProgramFactory::Get(
+        Paths::GetProjectAssetsDir().Append("Shaders").Append(
+            "PullPushPrepareTexture.bushader")));
 
     m_pullPushSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
@@ -40,10 +33,16 @@ PullPush::~PullPush()
 void PullPush::ReloadShaders()
 {
     m_pullPushSP.Get()->ReImport();
+    m_pullPushPrepareTextureSP.Get()->ReImport();
 }
 
-void PullPush::PullPushTexture(Texture2D *textureToPullPush)
+void PullPush::PullPushTexture(Texture2D *originalTextureToPullPush)
 {
+    if (!originalTextureToPullPush)
+    {
+        return;
+    }
+
     GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Push(GL::Pushable::SHADER_PROGRAM);
     GL::Push(GL::Pushable::BLEND_STATES);
@@ -53,112 +52,130 @@ void PullPush::PullPushTexture(Texture2D *textureToPullPush)
     GL::Disable(GL::Enablable::BLEND);
     GL::Disable(GL::Enablable::CULL_FACE);
 
-    Vector2i texSize = textureToPullPush->GetSize();
-    m_texture0.Get()->Resize(texSize);
-    m_texture1.Get()->Resize(texSize);
-    m_informationMaskTexture.Get()->Resize(texSize);
-    Texture2D *drawTexture = m_texture0.Get();
-    Texture2D *readTexture = m_texture1.Get();
+    Vector2i originalTexSize = originalTextureToPullPush->GetSize();
 
     m_framebuffer->Bind();
 
-    m_pullPushSP.Get()->Bind();
-    m_pullPushSP.Get()->SetTexture2D("InformationMask",
-                                     m_informationMaskTexture.Get());
-    m_pullPushSP.Get()->SetVector2("TextureToPullPushSize",
-                                   Vector2(textureToPullPush->GetSize()));
-    m_pullPushSP.Get()->SetVector2("TexelSize", (1.0f / Vector2(texSize)));
-
-    int pullPushIterations = SCAST<int>(Math::Log(texSize.x) / Math::Log(2.0f));
-
-    GEngine::GetInstance()->CopyTexture(textureToPullPush, readTexture);
-    GEngine::GetInstance()->FillTexture(drawTexture, Color::Zero());
-
     enum ShaderPhase
     {
-        MARKING_INFO_ZONES = 0,
-        PULLING = 1,
-        PUSHING = 2
+        PULLING = 0,
+        PUSHING = 1
     };
 
-    // Mark zones with information
+    // Prepare texture
+    m_pullPushPrepareTextureSP.Get()->Bind();
+    m_pullPushPrepareTextureSP.Get()->SetTexture2D("TextureToPullPush",
+                                                   originalTextureToPullPush);
     {
         Mesh *textureMesh = View3DScene::GetInstance()->GetTextureMesh();
-        GL::SetViewport(0, 0, texSize.x, texSize.y);
+        GL::SetViewport(0, 0, originalTexSize.x, originalTexSize.y);
 
-        m_framebuffer->SetAttachmentTexture(m_informationMaskTexture.Get(),
+        Texture2D *drawTexture = GetPullTexture(originalTexSize.x);
+        m_framebuffer->SetAttachmentTexture(drawTexture,
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
         GL::ClearColorBuffer(Color::Zero());
-
-        m_pullPushSP.Get()->SetInt("ShaderPhase", MARKING_INFO_ZONES);
         GL::Render(textureMesh->GetVAO(),
                    GL::Primitive::TRIANGLES,
                    textureMesh->GetNumVerticesIds());
     }
 
     // Pull
-    Vector2 currentMinPoint = Vector2::Zero();
-    Vector2 currentTexSize = Vector2(texSize);
+    Vector2i currentTexSize = Vector2i(originalTexSize);
+
+    m_pullPushSP.Get()->Bind();
+    m_pullPushSP.Get()->SetVector2(
+        "TextureToPullPushSize", Vector2(originalTextureToPullPush->GetSize()));
+    m_pullPushSP.Get()->SetVector2("OriginalTextureToPullPushTexelSize",
+                                   (1.0f / Vector2(originalTexSize)));
     m_pullPushSP.Get()->SetInt("ShaderPhase", PULLING);
-    for (int i = 0; i < pullPushIterations; ++i)
+
+    m_pullPushSP.Get()->SetTexture2D("CurrentPulledTexture",
+                                     TextureFactory::GetWhiteTexture());
+    m_pullPushSP.Get()->SetTexture2D("PreviousPulledTexture",
+                                     TextureFactory::GetWhiteTexture());
+    m_pullPushSP.Get()->SetTexture2D("PreviousPushedTexture",
+                                     TextureFactory::GetWhiteTexture());
+
+    for (int i = 0; i < 99999; ++i)
     {
-        currentTexSize /= 2.0f;
-        GL::SetViewport(
-            currentMinPoint.x, 0, currentTexSize.x, currentTexSize.y);
+        currentTexSize /= 2;
+        if (currentTexSize.x <= 0)
+        {
+            break;
+        }
+
+        Texture2D *drawTexture = GetPullTexture(currentTexSize.x);
+        GL::SetViewport(0, 0, currentTexSize.x, currentTexSize.y);
 
         m_framebuffer->SetAttachmentTexture(drawTexture,
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-        Vector2 prevIterTexSize = (currentTexSize * 2.0f);
-        Vector2 prevIterTexMin = (currentMinPoint - prevIterTexSize.x);
-        m_pullPushSP.Get()->SetInt("Iteration", i);
-        m_pullPushSP.Get()->SetVector2("PreviousIterationTextureSize",
-                                       prevIterTexSize);
-        m_pullPushSP.Get()->SetVector2("PreviousIterationTextureMin",
-                                       prevIterTexMin);
-        m_pullPushSP.Get()->SetVector2("IterationTextureSize", currentTexSize);
-        m_pullPushSP.Get()->SetTexture2D("TextureToPullPush", readTexture);
+        Vector2i prevIterTexSize = (currentTexSize * 2);
+        m_pullPushSP.Get()->SetTexture2D("PreviousPulledTexture",
+                                         GetPullTexture(prevIterTexSize.x));
 
         GEngine::GetInstance()->RenderViewportPlane();
-
-        currentMinPoint.x += currentTexSize.x;
-
-        GEngine::GetInstance()->CopyTexture(drawTexture, readTexture);
-        std::swap(drawTexture, readTexture);
     }
 
-    /*
     // Push
-    currTexSize = texSize;
+    currentTexSize = Vector2i(1);
     m_pullPushSP.Get()->SetInt("ShaderPhase", PUSHING);
-    for (int i = 0; i < pullPushIterations; ++i)
+    for (int i = 0; i < 99999; ++i)
     {
-        currTexSize /= 2.0f;
-        GL::SetViewport(0, 0, currTexSize.x, currTexSize.y);
+        if (currentTexSize.x > originalTexSize.x)
+        {
+            break;
+        }
 
+        currentTexSize *= 2;
+        GL::SetViewport(0, 0, currentTexSize.x, currentTexSize.y);
+
+        Texture2D *drawTexture = GetPushTexture(currentTexSize.x);
         m_framebuffer->SetAttachmentTexture(drawTexture,
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-        m_pullPushSP.Get()->SetInt("Iteration", i);
-        m_pullPushSP.Get()->SetVector2("IterationTextureSize",
-                                       Vector2(currTexSize));
-        m_pullPushSP.Get()->SetTexture2D("TextureToPullPush", readTexture);
+        Vector2i prevIterTexSize = (currentTexSize / 2);
+        m_pullPushSP.Get()->SetTexture2D("CurrentPulledTexture",
+                                         GetPullTexture(currentTexSize.x));
+        m_pullPushSP.Get()->SetTexture2D("PreviousPushedTexture",
+                                         GetPushTexture(prevIterTexSize.x));
 
         GEngine::GetInstance()->RenderViewportPlane();
-
-        std::swap(drawTexture, readTexture);
     }
-    */
 
-    GEngine::GetInstance()->CopyTexture(readTexture, textureToPullPush);
+    GEngine::GetInstance()->CopyTexture(GetPushTexture(originalTexSize.x),
+                                        originalTextureToPullPush);
 
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::CULL_FACE);
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+}
+
+Texture2D *PullPush::GetPullPushTexture(int size, bool pull)
+{
+    auto &textureMap = (pull ? m_pullTextures : m_pushTextures);
+    if (!textureMap.ContainsKey(size))
+    {
+        AH<Texture2D> texture = Assets::Create<Texture2D>();
+        texture.Get()->Fill(Color::Zero(), size, size);
+        texture.Get()->SetFormat(GL::ColorFormat::RGBA8);
+        texture.Get()->SetFilterMode(GL::FilterMode::BILINEAR);
+
+        textureMap.Add(size, texture);
+    }
+    return textureMap.Get(size).Get();
+}
+Texture2D *PullPush::GetPullTexture(int size)
+{
+    return GetPullPushTexture(size, true);
+}
+Texture2D *PullPush::GetPushTexture(int size)
+{
+    return GetPullPushTexture(size, false);
 }

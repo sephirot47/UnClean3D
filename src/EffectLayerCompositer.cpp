@@ -12,12 +12,14 @@
 #include "EffectLayerMask.h"
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
+#include "PullPush.h"
 
 using namespace Bang;
 
 EffectLayerCompositer::EffectLayerCompositer()
 {
     m_framebuffer = new Framebuffer();
+    m_pullPush = new PullPush();
 
     m_albedoPingPongTexture0 = Assets::Create<Texture2D>();
     m_albedoPingPongTexture1 = Assets::Create<Texture2D>();
@@ -41,10 +43,12 @@ EffectLayerCompositer::EffectLayerCompositer()
 EffectLayerCompositer::~EffectLayerCompositer()
 {
     delete m_framebuffer;
+    delete m_pullPush;
 }
 
 void EffectLayerCompositer::ReloadShaders()
 {
+    m_pullPush->ReloadShaders();
     m_compositeLayersSP.Get()->ReImport();
     m_heightfieldToNormalTextureSP.Get()->ReImport();
 }
@@ -224,4 +228,9 @@ void EffectLayerCompositer::CompositeLayers(
     p_finalHeightTexture.Set(heightReadTex);
     p_finalRoughnessTexture.Set(roughnessReadTex);
     p_finalMetalnessTexture.Set(metalnessReadTex);
+
+    m_pullPush->PullPushTexture(GetFinalAlbedoTexture());
+    m_pullPush->PullPushTexture(GetFinalNormalTexture());
+    m_pullPush->PullPushTexture(GetFinalMetalnessTexture());
+    m_pullPush->PullPushTexture(GetFinalRoughnessTexture());
 }

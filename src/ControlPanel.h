@@ -23,7 +23,6 @@ class UIInputColor;
 class SerializableInspectorWidget;
 }
 
-class PullPush;
 class EffectLayer;
 class EffectLayerMask;
 class UIEffectLayerParameters;
@@ -68,7 +67,6 @@ public:
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
 
 private:
-    PullPush *m_pullPush = nullptr;
     Path m_openModelPath = Path::Empty();
 
     // File
@@ -80,7 +78,6 @@ private:
     UISlider *p_baseRoughnessInput = nullptr;
     UISlider *p_baseMetalnessInput = nullptr;
     UIComboBox *p_texturesSizeInput = nullptr;
-    UIButton *p_sewSeamsButton = nullptr;
 
     // Mask
     GameObject *p_maskParamsGo = nullptr;

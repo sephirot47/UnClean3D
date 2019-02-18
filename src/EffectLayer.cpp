@@ -56,10 +56,6 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_effectMiscTexture.Get()->Fill(Color::Zero(), 1, 1);
     m_effectMiscTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
-    m_growAuxiliarTexture = Assets::Create<Texture2D>();
-    m_growAuxiliarTexture.Get()->Fill(Color::Zero(), 1, 1);
-    m_growAuxiliarTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
-
     // Create mask textures
     m_mergedMaskTexture = Assets::Create<Texture2D>();
     m_mergedMaskTexture.Get()->Fill(Color::Zero(), 1, 1);
@@ -68,9 +64,6 @@ EffectLayer::EffectLayer(MeshRenderer *mr)
     m_generateEffectTextureSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "GenerateEffectTexture.bushader")));
-    m_growTextureBordersSP.Set(ShaderProgramFactory::Get(
-        Paths::GetProjectAssetsDir().Append("Shaders").Append(
-            "GrowBorders.bushader")));
 }
 
 EffectLayer::~EffectLayer()
@@ -136,8 +129,6 @@ void EffectLayer::GenerateEffectTexture()
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-
-    GrowTextureBorders(GetEffectColorTexture());
 
     m_isValid = true;
 }
@@ -224,7 +215,6 @@ void EffectLayer::ReloadShaders()
         effectLayerMask->ReloadShaders();
     }
     m_generateEffectTextureSP.Get()->ReImport();
-    m_growTextureBordersSP.Get()->ReImport();
     Invalidate();
 }
 
@@ -469,34 +459,4 @@ void EffectLayer::Reflect()
                                    SetVisible,
                                    GetVisible,
                                    BANG_REFLECT_HINT_SHOWN(false));
-}
-
-void EffectLayer::GrowTextureBorders(Texture2D *texture)
-{
-    GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-    GL::Push(GL::Pushable::SHADER_PROGRAM);
-    GL::Push(GL::Pushable::BLEND_STATES);
-    GL::Push(GL::Pushable::VIEWPORT);
-
-    GL::Disable(GL::Enablable::BLEND);
-    m_growAuxiliarTexture.Get()->ResizeConservingData(texture->GetWidth(),
-                                                      texture->GetHeight());
-    GEngine::GetInstance()->CopyTexture(texture, m_growAuxiliarTexture.Get());
-
-    ShaderProgram *sp = m_growTextureBordersSP.Get();
-    sp->Bind();
-    sp->SetTexture2D("TextureToGrow", m_growAuxiliarTexture.Get());
-    GL::SetViewport(0, 0, texture->GetWidth(), texture->GetHeight());
-
-    m_framebuffer->Bind();
-    m_framebuffer->SetAttachmentTexture(texture, GL::Attachment::COLOR0);
-    m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-
-    // GL::ClearColorBuffer(Color::Zero());
-    GEngine::GetInstance()->RenderViewportPlane();
-
-    GL::Pop(GL::Pushable::VIEWPORT);
-    GL::Pop(GL::Pushable::BLEND_STATES);
-    GL::Pop(GL::Pushable::SHADER_PROGRAM);
-    GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 }

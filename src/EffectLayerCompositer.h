@@ -13,6 +13,7 @@ class Texture2D;
 class Framebuffer;
 }
 
+class PullPush;
 class EffectLayer;
 using namespace Bang;
 
@@ -36,6 +37,7 @@ public:
     Texture2D *GetFinalMetalnessTexture() const;
 
 private:
+    PullPush *m_pullPush = nullptr;
     Framebuffer *m_framebuffer = nullptr;
 
     AH<Texture2D> m_albedoPingPongTexture0;

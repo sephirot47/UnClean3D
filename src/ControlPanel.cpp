@@ -27,7 +27,6 @@
 #include "EffectLayerMask.h"
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
-#include "PullPush.h"
 #include "UIEffectLayerMaskRow.h"
 #include "UIEffectLayerParameters.h"
 #include "UIEffectLayerRow.h"
@@ -44,8 +43,6 @@ ControlPanel::ControlPanel()
     UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
     vl->SetPaddings(10);
     vl->SetSpacing(5);
-
-    m_pullPush = new PullPush();
 
     GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
 
@@ -187,15 +184,6 @@ ControlPanel::ControlPanel()
         CreateRow("Textures size", p_texturesSizeInput->GetGameObject(), false)
             ->SetParent(this);
 
-        p_sewSeamsButton = GameObjectFactory::CreateUIButton("Sew seams");
-        p_sewSeamsButton->AddClickedCallback([this]() {
-            EffectLayerCompositer *compositer =
-                GetView3DScene()->GetEffectLayerCompositer();
-            m_pullPush->PullPushTexture(compositer->GetFinalAlbedoTexture());
-        });
-        CreateRow("", p_sewSeamsButton->GetGameObject(), false)
-            ->SetParent(this);
-
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
     }
@@ -274,7 +262,6 @@ ControlPanel::ControlPanel()
 
 ControlPanel::~ControlPanel()
 {
-    delete m_pullPush;
 }
 
 void ControlPanel::Update()
@@ -400,7 +387,6 @@ bool ControlPanel::GetMaskBrushEnabled() const
 
 void ControlPanel::ReloadShaders()
 {
-    m_pullPush->ReloadShaders();
 }
 
 float ControlPanel::GetBaseRoughness() const
