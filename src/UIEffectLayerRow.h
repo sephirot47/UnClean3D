@@ -3,6 +3,7 @@
 
 #include "Bang/Bang.h"
 #include "Bang/GameObject.h"
+#include "Bang/IEventsUILabel.h",
 #include "Bang/IEventsUIList.h"
 #include "Bang/IEventsValueChanged.h"
 #include "Bang/UIList.h"
@@ -32,7 +33,8 @@ class UIEffectLayers;
 
 class UIEffectLayerRow : public GameObject,
                          public EventListener<IEventsValueChanged>,
-                         public EventListener<IEventsUIList>
+                         public EventListener<IEventsUIList>,
+                         public EventListener<IEventsUILabel>
 {
 public:
     UIEffectLayerRow(UIEffectLayers *uiEffectLayer, EffectLayer *effectLayer);
@@ -54,6 +56,9 @@ public:
     EffectLayer *GetEffectLayer() const;
     UIEffectLayers *GetUIEffectLayers() const;
     UIToolButton *GetIsLayerVisibleButton() const;
+
+    // IEventsUILabel
+    void OnFloatingInputTextCommited(const String &commitedText) override;
 
 private:
     UIEffectLayers *p_uiEffectLayers = nullptr;

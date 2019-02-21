@@ -109,6 +109,7 @@
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/Particle.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/AnimatorStateMachineTransitionCondition.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/AudioPlayerRunnable.h
+/home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/IEventsUILabel.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/Set.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/IEventsProjectManager.h
 /home/sephirot47/Projects/MIRI/UnClean3D/BangEditor/Bang/include/Bang/CubeMapIBLGenerator.h

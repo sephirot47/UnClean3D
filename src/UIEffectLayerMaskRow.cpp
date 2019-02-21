@@ -1,6 +1,7 @@
 #include "UIEffectLayerMaskRow.h"
 
 #include "Bang/GameObjectFactory.h"
+#include "Bang/Input.h"
 #include "Bang/UIButton.h"
 #include "Bang/UIComboBox.h"
 #include "Bang/UIHorizontalLayout.h"
@@ -16,6 +17,7 @@
 #include "EffectLayerMask.h"
 #include "MainScene.h"
 #include "UIEffectLayerRow.h"
+#include "UIEffectLayers.h"
 
 using namespace Bang;
 using namespace BangEditor;
@@ -87,6 +89,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_nameLabel = GameObjectFactory::CreateUILabel();
         p_nameLabel->GetText()->SetContent("Mask");
         p_nameLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        p_nameLabel->SetFloatingInputEnabled(true);
+        p_nameLabel->EventEmitter<IEventsUILabel>::RegisterListener(this);
         p_nameLabel->GetGameObject()->SetParent(innerHLGo);
 
         p_maskTypeInput = GameObjectFactory::CreateUIComboBox();
@@ -101,10 +105,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
                                  SCAST<int>(EffectLayerMask::Type::BRUSH));
         p_maskTypeInput->AddItem("Blur",
                                  SCAST<int>(EffectLayerMask::Type::BLUR));
-
         p_maskTypeInput->SetSelectionByValue(
             SCAST<int>(EffectLayerMask::Type::FRACTAL));
-
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
         p_blendModeInput = GameObjectFactory::CreateUIComboBox();
@@ -146,6 +148,19 @@ UIEffectLayerMaskRow::~UIEffectLayerMaskRow()
 {
 }
 
+void UIEffectLayerMaskRow::Update()
+{
+    GameObject::Update();
+
+    if (Input::GetKey(Key::F2))
+    {
+        if (GetEffectLayerRow()->GetMaskRowsList()->GetSelectedItem() == this)
+        {
+            p_nameLabel->ShowFloatingInputText();
+        }
+    }
+}
+
 void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
 {
     p_nameLabel->GetText()->SetContent(GetEffectLayerMask()->GetName());
@@ -173,6 +188,12 @@ EffectLayerMask *UIEffectLayerMaskRow::GetEffectLayerMask() const
 UIEffectLayerRow *UIEffectLayerMaskRow::GetEffectLayerRow() const
 {
     return p_uiEffectLayerRow;
+}
+
+void UIEffectLayerMaskRow::OnFloatingInputTextCommited(
+    const String &commitedText)
+{
+    GetEffectLayerMask()->SetName(commitedText);
 }
 
 void UIEffectLayerMaskRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)

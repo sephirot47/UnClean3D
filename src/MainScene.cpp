@@ -69,11 +69,11 @@ void MainScene::Update()
     {
         // ResetModel();
     }
-    else if (Input::GetKeyDown(Key::F1))
+    else if (Input::GetKeyDown(Key::F5))
     {
         SetSceneMode(MainScene::SceneMode::VIEW3D);
     }
-    else if (Input::GetKeyDown(Key::F2))
+    else if (Input::GetKeyDown(Key::F6))
     {
         SetSceneMode(MainScene::SceneMode::TEXTURES);
     }

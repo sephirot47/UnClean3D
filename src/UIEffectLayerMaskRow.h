@@ -3,6 +3,7 @@
 
 #include "Bang/Bang.h"
 #include "Bang/GameObject.h"
+#include "Bang/IEventsUILabel.h"
 #include "Bang/IEventsValueChanged.h"
 #include "BangEditor/BangEditor.h"
 
@@ -27,13 +28,15 @@ class UIEffectLayers;
 class EffectLayerMask;
 class UIEffectLayerRow;
 class UIEffectLayerMaskRow : public GameObject,
-                             public EventListener<IEventsValueChanged>
+                             public EventListener<IEventsValueChanged>,
+                             public EventListener<IEventsUILabel>
 {
 public:
     UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
                          EffectLayerMask *effectLayerMask);
     virtual ~UIEffectLayerMaskRow() override;
 
+    void Update() override;
     void UpdateFromEffectLayerMask();
 
     void SetUIEffectLayerRow(UIEffectLayerRow *uiEffectLayerRow);
@@ -41,6 +44,9 @@ public:
 
     EffectLayerMask *GetEffectLayerMask() const;
     UIEffectLayerRow *GetEffectLayerRow() const;
+
+    // IEventsUILabel
+    void OnFloatingInputTextCommited(const String &commitedText) override;
 
 private:
     UIToolButton *p_visibleButton = nullptr;

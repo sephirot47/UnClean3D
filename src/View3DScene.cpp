@@ -315,6 +315,11 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
                                  ->GetImplementation()
                                  ->GetMaskTextureToSee());
         }
+        else
+        {
+            sp->SetTexture2D("MaskTextureToSee",
+                             TextureFactory::GetWhiteTexture());
+        }
         GetControlPanel()->SetControlPanelUniforms(sp);
     }
 

@@ -79,11 +79,13 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
             Path::GetDuplicateString("NewLayer", existingLayerNames);
 
         p_layerNameLabel = GameObjectFactory::CreateUILabel();
+        p_layerNameLabel->SetFloatingInputEnabled(true);
         p_layerNameLabel->GetGameObject()->SetName(
             "UIEffectLayerRowNameUILabel");
         p_layerNameLabel->GetText()->SetContent(layerName);
         p_layerNameLabel->GetText()->SetHorizontalAlign(
             HorizontalAlignment::LEFT);
+        p_layerNameLabel->EventEmitter<IEventsUILabel>::RegisterListener(this);
         p_layerNameLabel->GetGameObject()->SetParent(effectRow);
 
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
@@ -224,6 +226,11 @@ void UIEffectLayerRow::Update()
             p_uiEffectLayers->GetList()->SetOverColor(UITheme::GetOverColor());
             p_uiEffectLayers->GetList()->SetSelectedColor(
                 UITheme::GetSelectedColor());
+
+            if (Input::GetKeyDown(Key::F2))
+            {
+                p_layerNameLabel->ShowFloatingInputText();
+            }
         }
     }
 
@@ -311,6 +318,11 @@ UIEffectLayers *UIEffectLayerRow::GetUIEffectLayers() const
 UIToolButton *UIEffectLayerRow::GetIsLayerVisibleButton() const
 {
     return p_visibleButton;
+}
+
+void UIEffectLayerRow::OnFloatingInputTextCommited(const String &commitedText)
+{
+    GetEffectLayer()->SetName(commitedText);
 }
 
 void UIEffectLayerRow::OnItemMoved(GameObject *item, int, int newIndex)

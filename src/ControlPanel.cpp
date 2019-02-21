@@ -268,13 +268,16 @@ void ControlPanel::Update()
 {
     GameObject::Update();
 
-    if (Input::GetKeyDown(Key::O))
+    if (Input::GetKey(Key::LCTRL))
     {
-        OpenModel();
-    }
-    else if (Input::GetKeyDown(Key::E))
-    {
-        ExportModel();
+        if (Input::GetKeyDown(Key::O))
+        {
+            OpenModel();
+        }
+        else if (Input::GetKeyDown(Key::E))
+        {
+            ExportModel();
+        }
     }
 
     if (Input::GetKey(Key::LSHIFT))
