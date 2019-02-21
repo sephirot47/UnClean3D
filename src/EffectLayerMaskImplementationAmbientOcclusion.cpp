@@ -94,6 +94,8 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetGenerateEffectUniforms(
 
     GLSLRayCaster *rayCaster = View3DScene::GetInstance()->GetGLSLRayCaster();
     rayCaster->Bind(sp);
+    sp->SetInt("NumRays", GetNumRays());
+    sp->SetFloat("MaxDistance", GetMaxDistance());
 }
 
 bool EffectLayerMaskImplementationAmbientOcclusion::

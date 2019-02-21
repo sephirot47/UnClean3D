@@ -23,6 +23,9 @@ void main()
 
 #include "RayCast.glsl"
 
+uniform int NumRays;
+uniform float MaxDistance;
+
 in vec3 inWorldPosition;
 flat in int inTriId;
 
@@ -47,8 +50,8 @@ void main()
     vec3 worldNormal = normalize( cross(triWorldPosition[1] - triWorldPosition[0],
                                         triWorldPosition[2] - triWorldPosition[0]) );
 
-    float totalRays = 20;
-    float maxDistance = 0.1f;
+    float totalRays = NumRays;
+    float maxDistance = MaxDistance;
     float intersectedRaysAO = 0;
     for (int iRay = 0; iRay < totalRays; ++iRay)
     {
