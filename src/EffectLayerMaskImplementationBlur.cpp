@@ -23,6 +23,10 @@ EffectLayerMaskImplementationBlur::EffectLayerMaskImplementationBlur()
     m_blurTexture.Get()->Fill(Color::Black(), 1, 1);
     m_blurTexture.Get()->SetFormat(GL::ColorFormat::RGBA8);
 
+    m_blurTextureAux = Assets::Create<Texture2D>();
+    m_blurTextureAux.Get()->Fill(Color::Black(), 1, 1);
+    m_blurTextureAux.Get()->SetFormat(GL::ColorFormat::RGBA8);
+
     m_blurShaderProgram.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "GenerateEffectMaskTextureBlur.bushader")));
@@ -44,6 +48,16 @@ void EffectLayerMaskImplementationBlur::SetBlurRadius(int blurRadius)
     }
 }
 
+void EffectLayerMaskImplementationBlur::SetBlurMode(
+    EffectLayerMaskImplementationBlur::BlurMode blurMode)
+{
+    if (blurMode != GetBlurMode())
+    {
+        m_blurMode = blurMode;
+        Invalidate();
+    }
+}
+
 void EffectLayerMaskImplementationBlur::SetBlurStepResolution(
     float blurStepResolution)
 {
@@ -59,6 +73,12 @@ int EffectLayerMaskImplementationBlur::GetBlurRadius() const
     return m_blurRadius;
 }
 
+EffectLayerMaskImplementationBlur::BlurMode
+EffectLayerMaskImplementationBlur::GetBlurMode() const
+{
+    return m_blurMode;
+}
+
 float EffectLayerMaskImplementationBlur::GetBlurStepResolution() const
 {
     return m_blurStepResolution;
@@ -68,17 +88,24 @@ void EffectLayerMaskImplementationBlur::Reflect()
 {
     EffectLayerMaskImplementation::Reflect();
 
+    BANG_REFLECT_VAR_ENUM("Blur mode", SetBlurMode, GetBlurMode, BlurMode);
+    BANG_REFLECT_HINT_ENUM_FIELD_VALUE("Blur mode", "World", BlurMode::WORLD);
+    BANG_REFLECT_HINT_ENUM_FIELD_VALUE(
+        "Blur mode", "Texture", BlurMode::TEXTURE);
+
     BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
                                    "Blur radius",
                                    SetBlurRadius,
                                    GetBlurRadius,
-                                   BANG_REFLECT_HINT_SLIDER(0.0f, 5.0f));
+                                   BANG_REFLECT_HINT_SLIDER(0.0f, 10.0f));
 
-    BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayerMaskImplementationBlur,
-                                   "Blur step resolution",
-                                   SetBlurStepResolution,
-                                   GetBlurStepResolution,
-                                   BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f));
+    BANG_REFLECT_VAR_MEMBER_HINTED(
+        EffectLayerMaskImplementationBlur,
+        "Blur step resolution",
+        SetBlurStepResolution,
+        GetBlurStepResolution,
+        BANG_REFLECT_HINT_SLIDER(1.0f, 500.0f) +
+            BANG_REFLECT_HINT_SHOWN(GetBlurMode() == BlurMode::WORLD));
 }
 
 bool EffectLayerMaskImplementationBlur::GetIsPostProcessEffectLayer() const
@@ -173,76 +200,75 @@ void EffectLayerMaskImplementationBlur::
         MeshRenderer *mr)
 {
     GEngine *ge = GEngine::GetInstance();
-
-    if (!m_generatedTextureArrays)
-    {
-        FillGLSLArrays(mr);
-        m_generatedTextureArrays = true;
-    }
-
-    Vector2i texSize = mergedMaskTextureUntilNow->GetSize();
-    m_blurTexture.Get()->ResizeConservingData(texSize.x, texSize.y);
-
-    bool needsToBlur =
+    const bool needsToBlur =
         (GetEffectLayerMask()->GetVisible() && GetBlurRadius() > 0);
+    Vector2i texSize = mergedMaskTextureUntilNow->GetSize();
+    m_blurTexture.Get()->Resize(texSize.x, texSize.y);
+    GL::SetViewport(0, 0, texSize.x, texSize.y);
     if (needsToBlur)
     {
-        GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
-        GL::Push(GL::Pushable::SHADER_PROGRAM);
-        GL::Push(GL::Pushable::BLEND_STATES);
-        GL::Push(GL::Pushable::CULL_FACE);
-        GL::Push(GL::Pushable::VIEWPORT);
+        if (GetBlurMode() == BlurMode::WORLD)
+        {
+            if (!m_generatedTextureArrays)
+            {
+                FillGLSLArrays(mr);
+                m_generatedTextureArrays = true;
+            }
 
-        GL::Disable(GL::Enablable::BLEND);
-        GL::Disable(GL::Enablable::CULL_FACE);
+            GL::Push(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+            GL::Push(GL::Pushable::SHADER_PROGRAM);
+            GL::Push(GL::Pushable::BLEND_STATES);
+            GL::Push(GL::Pushable::CULL_FACE);
+            GL::Push(GL::Pushable::VIEWPORT);
 
-        m_framebuffer->Bind();
-        m_framebuffer->SetAttachmentTexture(m_blurTexture.Get(),
-                                            GL::Attachment::COLOR0);
-        m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
+            GL::Disable(GL::Enablable::BLEND);
+            GL::Disable(GL::Enablable::CULL_FACE);
 
-        GL::SetViewport(0, 0, texSize.x, texSize.y);
+            m_framebuffer->Bind();
+            m_framebuffer->SetAttachmentTexture(m_blurTexture.Get(),
+                                                GL::Attachment::COLOR0);
+            m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
-        ShaderProgram *sp = m_blurShaderProgram.Get();
-        sp->Bind();
-        SetGenerateEffectUniforms(sp, mr);
-        GLSLRayCaster *rayCaster =
-            View3DScene::GetInstance()->GetGLSLRayCaster();
-        rayCaster->Bind(sp);
+            ShaderProgram *sp = m_blurShaderProgram.Get();
+            sp->Bind();
+            SetGenerateEffectUniforms(sp, mr);
+            GLSLRayCaster *rayCaster =
+                View3DScene::GetInstance()->GetGLSLRayCaster();
+            rayCaster->Bind(sp);
 
-        sp->SetFloat("BlurRadius", GetBlurRadius());
-        sp->SetFloat("BlurStep", (1.0f / GetBlurStepResolution()));
-        sp->SetTexture2D("TextureToBlur", mergedMaskTextureUntilNow);
-        m_triangleUvsGLSLArray.Bind("TriangleUvs", sp);
-        m_triangleNeighborhoodsGLSLArray.Bind("TriangleNeighborhoods", sp);
+            sp->SetFloat("BlurRadius", GetBlurRadius());
+            sp->SetFloat("BlurStep", (1.0f / GetBlurStepResolution()));
+            sp->SetTexture2D("TextureToBlur", mergedMaskTextureUntilNow);
+            m_triangleUvsGLSLArray.Bind("TriangleUvs", sp);
+            m_triangleNeighborhoodsGLSLArray.Bind("TriangleNeighborhoods", sp);
 
-        GL::ClearColorBuffer(Color::Zero());
-        EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();
-        GL::Render(effectLayer->GetTextureMesh()->GetVAO(),
-                   GL::Primitive::TRIANGLES,
-                   effectLayer->GetTextureMesh()->GetNumVerticesIds());
-        ge->CopyTexture(m_blurTexture.Get(), mergedMaskTextureUntilNow);
+            GL::ClearColorBuffer(Color::Zero());
+            EffectLayer *effectLayer = GetEffectLayerMask()->GetEffectLayer();
+            GL::Render(effectLayer->GetTextureMesh()->GetVAO(),
+                       GL::Primitive::TRIANGLES,
+                       effectLayer->GetTextureMesh()->GetNumVerticesIds());
+            ge->CopyTexture(m_blurTexture.Get(), mergedMaskTextureUntilNow);
 
-        /*
-        ge->BlurTexture(mergedMaskTextureUntilNow,
-                        m_blurTexture0.Get(),
-                        m_blurTexture1.Get(),
-                        GetBlurRadius(),
-                        BlurType::GAUSSIAN);
-        ge->CopyTexture(m_blurTexture1.Get(), mergedMaskTextureUntilNow);
-        */
-
-        GL::Pop(GL::Pushable::VIEWPORT);
-        GL::Pop(GL::Pushable::CULL_FACE);
-        GL::Pop(GL::Pushable::BLEND_STATES);
-        GL::Pop(GL::Pushable::SHADER_PROGRAM);
-        GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+            GL::Pop(GL::Pushable::VIEWPORT);
+            GL::Pop(GL::Pushable::CULL_FACE);
+            GL::Pop(GL::Pushable::BLEND_STATES);
+            GL::Pop(GL::Pushable::SHADER_PROGRAM);
+            GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
+        }
+        else
+        {
+            m_blurTextureAux.Get()->Resize(texSize);
+            ge->BlurTexture(mergedMaskTextureUntilNow,
+                            m_blurTextureAux.Get(),
+                            m_blurTexture.Get(),
+                            GetBlurRadius(),
+                            BlurType::GAUSSIAN);
+            ge->CopyTexture(m_blurTexture.Get(), mergedMaskTextureUntilNow);
+        }
     }
     else
     {
-        m_blurTexture.Get()->ResizeConservingData(
-            mergedMaskTextureUntilNow->GetWidth(),
-            mergedMaskTextureUntilNow->GetHeight());
+        m_blurTexture.Get()->Resize(texSize);
         ge->CopyTexture(mergedMaskTextureUntilNow, m_blurTexture.Get());
     }
 }

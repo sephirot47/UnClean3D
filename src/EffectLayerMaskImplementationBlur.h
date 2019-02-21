@@ -15,13 +15,21 @@ class EffectLayerMaskImplementationBlur
     SERIALIZABLE(EffectLayerMaskImplementationBlur)
 
 public:
+    enum BlurMode
+    {
+        WORLD,
+        TEXTURE
+    };
+
     EffectLayerMaskImplementationBlur();
     virtual ~EffectLayerMaskImplementationBlur() override;
 
     void SetBlurRadius(int blurRadius);
+    void SetBlurMode(BlurMode blurMode);
     void SetBlurStepResolution(float blurStepResolution);
 
     int GetBlurRadius() const;
+    BlurMode GetBlurMode() const;
     float GetBlurStepResolution() const;
 
     // Serializable
@@ -45,6 +53,7 @@ protected:
 
 private:
     int m_blurRadius = 3;
+    BlurMode m_blurMode = BlurMode::TEXTURE;
     float m_blurStepResolution = 30.0f;
 
     bool m_generatedTextureArrays = false;
@@ -55,6 +64,7 @@ private:
 
     AH<ShaderProgram> m_blurShaderProgram;
     AH<Texture2D> m_blurTexture;
+    AH<Texture2D> m_blurTextureAux;
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONBLUR_H
