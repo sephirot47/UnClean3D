@@ -442,6 +442,7 @@ void View3DScene::OnModelChanged(Model *newModel)
                 Array<Vector3> texTriMeshPositions;
                 Array<Vector3> originalVertexPositions;
                 Array<Vector3> originalVertexNormals;
+                Array<float> originalTriIds;
                 for (Mesh::VertexId triId = 0; triId < mesh->GetNumTriangles();
                      ++triId)
                 {
@@ -465,6 +466,7 @@ void View3DScene::OnModelChanged(Model *newModel)
                             mesh->GetNormalsPool()[vId];
                         originalVertexPositions.PushBack(oriVertPos);
                         originalVertexNormals.PushBack(oriVertNormal);
+                        originalTriIds.PushBack(triId);
                     }
                 }
 
@@ -486,6 +488,12 @@ void View3DScene::OnModelChanged(Model *newModel)
                     originalVertexNormals.Size() * sizeof(float) * 3);
                 textureMesh->GetVAO()->SetVBO(
                     normalsVBO, 2, 3, GL::VertexAttribDataType::FLOAT);
+
+                VBO *triIdsVBO = new VBO();
+                triIdsVBO->CreateAndFill(originalTriIds.Data(),
+                                         originalTriIds.Size() * sizeof(float));
+                textureMesh->GetVAO()->SetVBO(
+                    triIdsVBO, 3, 1, GL::VertexAttribDataType::FLOAT);
 
                 textureMesh->UpdateVAOs();
 

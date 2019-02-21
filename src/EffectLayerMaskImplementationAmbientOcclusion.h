@@ -35,6 +35,8 @@ protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
                                            MeshRenderer *meshRend) override;
+    void GenerateEffectMaskTexture(Texture2D *maskTexture,
+                                   MeshRenderer *meshRend) override;
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:

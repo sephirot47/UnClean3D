@@ -5,6 +5,7 @@ uniform mat4 SceneModelMatrix;
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
 layout(location = 2) in vec3 vinNormal;
+layout(location = 3) in float vinTriId;
 
 out vec3 inWorldPosition;
 flat out int inTriId;
@@ -12,7 +13,7 @@ flat out int inTriId;
 void main()
 {
     inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
-    inTriId = gl_VertexID / 3;
+    inTriId = int(vinTriId);
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -44,9 +45,8 @@ vec3[3] GetTrianglePoints(int triId)
 void main()
 {
     vec3 worldPosition = inWorldPosition;
-    int triId = inTriId;
 
-    vec3[3] triWorldPosition = GetTrianglePoints(triId);
+    vec3[3] triWorldPosition = GetTrianglePoints(inTriId);
     vec3 worldNormal = normalize( cross(triWorldPosition[1] - triWorldPosition[0],
                                         triWorldPosition[2] - triWorldPosition[0]) );
 
