@@ -36,6 +36,13 @@ class ControlPanel : public GameObject,
                      public EventListener<IEventsValueChanged>
 {
 public:
+    enum class SeeMode
+    {
+        EFFECT,
+        ISOLATED_MASK,
+        ACCUM_MASK
+    };
+
     ControlPanel();
     virtual ~ControlPanel() override;
 
@@ -57,6 +64,7 @@ public:
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
     Vector2i GetTextureSize() const;
+    ControlPanel::SeeMode GetSeeMode() const;
     EffectLayer *GetSelectedEffectLayer() const;
     EffectLayerMask *GetSelectedEffectLayerMask() const;
     UIEffectLayerRow *GetSelectedEffectLayerRow() const;
@@ -73,6 +81,12 @@ private:
     UIButton *p_openModelButton = nullptr;
     UIButton *p_exportModelButton = nullptr;
 
+    // View
+    UIToolButton *p_seeEffectButton = nullptr;
+    UIToolButton *p_seeIsolatedMaskButton = nullptr;
+    UIToolButton *p_seeAccumulatedMaskButton = nullptr;
+    UIToolButton *p_seeWithLightButton = nullptr;
+
     // General
     UIComboBox *p_sceneModeComboBox = nullptr;
     UISlider *p_baseRoughnessInput = nullptr;
@@ -83,8 +97,6 @@ private:
     GameObject *p_maskParamsGo = nullptr;
     GameObject *p_maskSubParamsGo = nullptr;
     UILabel *p_maskLabel = nullptr;
-    UIToolButton *p_seeWithLightButton = nullptr;
-    UIToolButton *p_seeMaskButton = nullptr;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;

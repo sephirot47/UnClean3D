@@ -307,19 +307,6 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 
         ShaderProgram *sp = m_view3DShaderProgram.Get();
         sp->Bind();
-        if (GetControlPanel()->GetSelectedEffectLayerMask())
-        {
-            sp->SetTexture2D("MaskTextureToSee",
-                             GetControlPanel()
-                                 ->GetSelectedEffectLayerMask()
-                                 ->GetImplementation()
-                                 ->GetMaskTextureToSee());
-        }
-        else
-        {
-            sp->SetTexture2D("MaskTextureToSee",
-                             TextureFactory::GetWhiteTexture());
-        }
         GetControlPanel()->SetControlPanelUniforms(sp);
     }
 

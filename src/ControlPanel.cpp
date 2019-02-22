@@ -4,6 +4,7 @@
 #include "Bang/Extensions.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
+#include "Bang/TextureFactory.h"
 #include "Bang/Transform.h"
 #include "Bang/UIButton.h"
 #include "Bang/UICheckBox.h"
@@ -135,6 +136,42 @@ ControlPanel::ControlPanel()
         p_sceneModeComboBox->AddItem(
             "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
 
+        // See effect or mask buttons
+        {
+            p_seeEffectButton =
+                GameObjectFactory::CreateUIToolButton("See effect");
+            p_seeIsolatedMaskButton =
+                GameObjectFactory::CreateUIToolButton("See isolated mask");
+            p_seeAccumulatedMaskButton =
+                GameObjectFactory::CreateUIToolButton("See accumulated mask");
+            p_seeEffectButton->SetOn(true);
+            p_seeIsolatedMaskButton->SetOn(false);
+            p_seeAccumulatedMaskButton->SetOn(false);
+            auto seeEffectOrMaskClick = [this](int pressedButton) {
+                p_seeEffectButton->SetOn(pressedButton == 0);
+                p_seeIsolatedMaskButton->SetOn(pressedButton == 1);
+                p_seeAccumulatedMaskButton->SetOn(pressedButton == 2);
+            };
+            p_seeEffectButton->AddClickedCallback(
+                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(0); });
+            p_seeIsolatedMaskButton->AddClickedCallback(
+                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(1); });
+            p_seeAccumulatedMaskButton->AddClickedCallback(
+                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(2); });
+            GameObject *seeEffectOrMaskButtonRow =
+                GameObjectFactory::CreateUIGameObject();
+            auto hl =
+                seeEffectOrMaskButtonRow->AddComponent<UIHorizontalLayout>();
+            hl->SetSpacing(3);
+            p_seeEffectButton->GetGameObject()->SetParent(
+                seeEffectOrMaskButtonRow);
+            p_seeIsolatedMaskButton->GetGameObject()->SetParent(
+                seeEffectOrMaskButtonRow);
+            p_seeAccumulatedMaskButton->GetGameObject()->SetParent(
+                seeEffectOrMaskButtonRow);
+            CreateRow("See mode", seeEffectOrMaskButtonRow)->SetParent(this);
+        }
+
         p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
         p_seeWithLightButton->SetOn(true);
         CreateRow("", p_seeWithLightButton->GetGameObject())->SetParent(this);
@@ -234,11 +271,6 @@ ControlPanel::ControlPanel()
         p_maskSerializableWidget->SetParent(p_maskParamsGo);
         p_maskSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
 
-        p_seeMaskButton =
-            GameObjectFactory::CreateUIToolButton("See Mask (Shift + M)");
-        p_seeMaskButton->SetOn(false);
-        p_seeMaskButton->GetGameObject()->SetParent(p_maskSubParamsGo);
-
         p_maskSubParamsGo->SetParent(p_maskParamsGo);
         p_maskParamsGo->SetParent(this);
 
@@ -280,14 +312,6 @@ void ControlPanel::Update()
         else if (Input::GetKeyDown(Key::E))
         {
             ExportModel();
-        }
-    }
-
-    if (Input::GetKey(Key::LSHIFT))
-    {
-        if (Input::GetKeyDown(Key::M))
-        {
-            p_seeMaskButton->SetOn(!p_seeMaskButton->GetOn());
         }
     }
 
@@ -379,9 +403,29 @@ void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
 void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
 {
     sp->Bind();
+
     sp->SetBool("WithLight", p_seeWithLightButton->GetOn());
-    sp->SetBool("SeeMask",
-                GetSelectedEffectLayerMask() && p_seeMaskButton->GetOn());
+
+    bool seeMask = (GetSeeMode() == SeeMode::ACCUM_MASK);
+    seeMask |= (GetSeeMode() == SeeMode::ISOLATED_MASK &&
+                GetSelectedEffectLayerMask());
+    sp->SetBool("SeeMask", seeMask);
+
+    Texture2D *maskTexToSee = TextureFactory::GetWhiteTexture();
+    if (seeMask)
+    {
+        if (GetSeeMode() == SeeMode::ACCUM_MASK)
+        {
+            maskTexToSee = GetSelectedEffectLayer()->GetMergedMaskTexture();
+        }
+        else
+        {
+            maskTexToSee = GetSelectedEffectLayerMask()
+                               ->GetImplementation()
+                               ->GetMaskTextureToSee();
+        }
+    }
+    sp->SetTexture2D("MaskTextureToSee", maskTexToSee);
 }
 
 bool ControlPanel::GetMaskBrushEnabled() const
@@ -409,6 +453,19 @@ Vector2i ControlPanel::GetTextureSize() const
 {
     return Vector2i(p_texturesSizeInput->GetSelectedValue(),
                     p_texturesSizeInput->GetSelectedValue());
+}
+
+ControlPanel::SeeMode ControlPanel::GetSeeMode() const
+{
+    if (p_seeEffectButton->GetOn())
+    {
+        return SeeMode::EFFECT;
+    }
+    else if (p_seeIsolatedMaskButton->GetOn())
+    {
+        return SeeMode::ISOLATED_MASK;
+    }
+    return SeeMode::ACCUM_MASK;
 }
 
 EffectLayer *ControlPanel::GetSelectedEffectLayer() const
