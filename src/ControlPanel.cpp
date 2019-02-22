@@ -135,6 +135,10 @@ ControlPanel::ControlPanel()
         p_sceneModeComboBox->AddItem(
             "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
 
+        p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
+        p_seeWithLightButton->SetOn(true);
+        CreateRow("", p_seeWithLightButton->GetGameObject())->SetParent(this);
+
         p_sceneModeComboBox->GetGameObject()->SetParent(sceneModeRow);
 
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
@@ -166,10 +170,6 @@ ControlPanel::ControlPanel()
         CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
             ->SetParent(this);
 
-        p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
-        p_seeWithLightButton->SetOn(true);
-        CreateRow("", p_seeWithLightButton->GetGameObject())->SetParent(this);
-
         p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
         p_texturesSizeInput->AddItem("64", 64);
         p_texturesSizeInput->AddItem("128", 128);
@@ -183,19 +183,6 @@ ControlPanel::ControlPanel()
             ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
         CreateRow("Textures size", p_texturesSizeInput->GetGameObject(), false)
             ->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
-    }
-
-    // Effect layers
-    {
-        p_uiEffectLayers = new UIEffectLayers();
-        UILayoutElement *le = p_uiEffectLayers->AddComponent<UILayoutElement>();
-        le->SetMinHeight(60);
-        le->SetPreferredHeight(200);
-        le->SetFlexibleWidth(1.0f);
-        p_uiEffectLayers->SetParent(this);
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(this);
@@ -257,6 +244,22 @@ ControlPanel::ControlPanel()
 
         GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
             ->SetParent(p_maskParamsGo);
+    }
+
+    // Effect layers
+    {
+        GameObjectFactory::CreateUIVSpacer(LayoutSizeType::FLEXIBLE, 99.9f)
+            ->SetParent(this);
+
+        p_uiEffectLayers = new UIEffectLayers();
+        UILayoutElement *le = p_uiEffectLayers->AddComponent<UILayoutElement>();
+        le->SetMinHeight(60);
+        le->SetPreferredHeight(400);
+        le->SetFlexibleWidth(1.0f);
+        p_uiEffectLayers->SetParent(this);
+
+        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+            ->SetParent(this);
     }
 }
 
