@@ -288,12 +288,12 @@ ControlPanel::ControlPanel()
             UILayoutElement *le =
                 p_uiEffectLayers->AddComponent<UILayoutElement>();
             le->SetMinHeight(60);
-            le->SetPreferredHeight(350);
+            le->SetPreferredHeight(450);
             le->SetFlexibleWidth(1.0f);
             p_uiEffectLayers->SetParent(generalTab);
 
-            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-                ->SetParent(generalTab);
+            // GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+            //     ->SetParent(generalTab);
         }
     }
 
@@ -305,6 +305,60 @@ ControlPanel::ControlPanel()
 
         auto sceneTabLE = sceneTab->AddComponent<UILayoutElement>();
         sceneTabLE->SetFlexibleSize(Vector2::One());
+
+        UILabel *environmentLabel = GameObjectFactory::CreateUILabel();
+        environmentLabel->GetText()->SetContent("Environment");
+        environmentLabel->GetText()->SetTextSize(14);
+        environmentLabel->GetText()->SetHorizontalAlign(
+            HorizontalAlignment::LEFT);
+        CreateRow("", environmentLabel->GetGameObject())->SetParent(sceneTab);
+
+        GameObject *skyboxesRow = GameObjectFactory::CreateUIGameObject();
+        {
+            auto hl = skyboxesRow->AddComponent<UIHorizontalLayout>();
+            hl->SetSpacing(20);
+
+            struct SkyboxButton : public GameObject
+            {
+                SkyboxButton(View3DScene::Environment environment)
+                {
+                    GameObjectFactory::CreateUIGameObjectInto(this);
+                    auto img = AddComponent<UIImageRenderer>();
+                    img->SetImageTexture(
+                        View3DScene::GetInstance()->GetEnvironmentSnapshot(
+                            environment));
+
+                    auto le = AddComponent<UILayoutElement>();
+                    le->SetMinSize(Vector2i(64));
+
+                    auto focusable = AddComponent<UIFocusable>();
+                    focusable->SetCursorType(Cursor::Type::HAND);
+                    focusable->AddEventCallback([this, environment](
+                        UIFocusable *, const UIEvent &event) {
+                        if (event.type == UIEvent::Type::MOUSE_CLICK_FULL)
+                        {
+                            View3DScene::GetInstance()->SetEnvironment(
+                                environment);
+                        }
+                        return UIEventResult::IGNORE;
+                    });
+                }
+            };
+
+            SkyboxButton *openSeaSkyBox =
+                new SkyboxButton(View3DScene::Environment::OPEN_SEA);
+            SkyboxButton *yokohamaSkyBox =
+                new SkyboxButton(View3DScene::Environment::YOKOHAMA_NIGHT);
+            SkyboxButton *parkSkyBox =
+                new SkyboxButton(View3DScene::Environment::PARK);
+            SkyboxButton *hotelSkyBox =
+                new SkyboxButton(View3DScene::Environment::HOTEL);
+            openSeaSkyBox->SetParent(skyboxesRow);
+            yokohamaSkyBox->SetParent(skyboxesRow);
+            parkSkyBox->SetParent(skyboxesRow);
+            hotelSkyBox->SetParent(skyboxesRow);
+        }
+        skyboxesRow->SetParent(sceneTab);
 
         p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
         p_seeWithLightButton->SetOn(true);

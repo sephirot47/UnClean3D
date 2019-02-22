@@ -46,6 +46,38 @@ View3DScene::View3DScene()
     camGo->SetParent(this);
     SetCamera(p_cam);
 
+    // Load skyboxes
+    {
+        m_openSeaSS =
+            Assets::Load<Texture2D>(Paths::GetEngineAssetsDir().Append(
+                "Textures/DefaultSkyboxBack.jpg"));
+
+        auto LoadCM = [](
+            AH<TextureCubeMap> *cm, AH<Texture2D> *ss, const String &dirName) {
+            Path sbsDir =
+                Paths::GetProjectAssetsDir().Append("Skyboxes").Append(dirName);
+            Image rightImg, leftImg, topImg, botImg, backImg, frontImg;
+            *cm = Assets::Create<TextureCubeMap>();
+            {
+                rightImg.Import(sbsDir.Append("posx.jpg"));
+                leftImg.Import(sbsDir.Append("negx.jpg"));
+                topImg.Import(sbsDir.Append("posy.jpg"));
+                botImg.Import(sbsDir.Append("negy.jpg"));
+                backImg.Import(sbsDir.Append("posz.jpg"));
+                frontImg.Import(sbsDir.Append("negz.jpg"));
+
+                cm->Get()->Import(
+                    rightImg, leftImg, topImg, botImg, frontImg, backImg);
+
+                *ss = Assets::Create<Texture2D>();
+                ss->Get()->Import(leftImg);
+            }
+        };
+        LoadCM(&m_yokohamaCM, &m_yokohamaSS, "Yokohama");
+        LoadCM(&m_parkCM, &m_parkSS, "Park");
+        LoadCM(&m_hotelCM, &m_hotelSS, "Hotel");
+    }
+
     // Init mask brush
     GameObject *maskBrushRendGo = GameObjectFactory::CreateGameObject();
     {
@@ -595,6 +627,19 @@ void View3DScene::MoveEffectLayer(EffectLayer *effectLayer, uint newIndex)
     InvalidateAll();
 }
 
+void View3DScene::SetEnvironment(View3DScene::Environment environment)
+{
+    AH<TextureCubeMap> cm;
+    switch (environment)
+    {
+        case Environment::YOKOHAMA_NIGHT: cm = m_yokohamaCM; break;
+        case Environment::PARK: cm = m_parkCM; break;
+        case Environment::HOTEL: cm = m_hotelCM; break;
+        default: cm.Set(TextureFactory::GetDefaultSkybox());
+    }
+    p_cam->SetSkyBoxTexture(cm.Get());
+}
+
 void View3DScene::InvalidateAll()
 {
     Array<EffectLayer *> effectLayers = GetAllEffectLayers();
@@ -681,6 +726,19 @@ Array<EffectLayerMask *> View3DScene::GetSelectedEffectLayerMasks() const
 EffectLayerCompositer *View3DScene::GetEffectLayerCompositer() const
 {
     return m_effectLayerCompositer;
+}
+
+Texture2D *View3DScene::GetEnvironmentSnapshot(
+    View3DScene::Environment environment) const
+{
+    switch (environment)
+    {
+        case Environment::YOKOHAMA_NIGHT: return m_yokohamaSS.Get();
+        case Environment::PARK: return m_parkSS.Get();
+        case Environment::HOTEL: return m_hotelSS.Get();
+        default: break;
+    }
+    return m_openSeaSS.Get();
 }
 
 Model *View3DScene::GetCurrentModel() const

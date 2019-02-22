@@ -33,6 +33,14 @@ class ControlPanel;
 class View3DScene : public Scene
 {
 public:
+    enum class Environment
+    {
+        OPEN_SEA,
+        YOKOHAMA_NIGHT,
+        PARK,
+        HOTEL
+    };
+
     View3DScene();
     virtual ~View3DScene() override;
 
@@ -51,6 +59,7 @@ public:
     void ApplyCompositeTexturesToModel();
     void RestoreOriginalAlbedoTexturesToModel();
     void MoveEffectLayer(EffectLayer *effectLayer, uint newIndex);
+    void SetEnvironment(Environment environment);
     void InvalidateAll();
 
     Camera *GetCamera() const;
@@ -61,6 +70,7 @@ public:
     Array<EffectLayer *> GetSelectedEffectLayers() const;
     Array<EffectLayerMask *> GetSelectedEffectLayerMasks() const;
     EffectLayerCompositer *GetEffectLayerCompositer() const;
+    Texture2D *GetEnvironmentSnapshot(Environment environment) const;
     Model *GetCurrentModel() const;
     Mesh *GetTextureMesh() const;
 
@@ -95,6 +105,14 @@ private:
     Vector3 m_cameraOffset = Vector3::Zero();
     Vector3 m_cameraOrbitPoint = Vector3::Zero();
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
+
+    AH<Texture2D> m_openSeaSS;
+    AH<TextureCubeMap> m_parkCM;
+    AH<Texture2D> m_parkSS;
+    AH<TextureCubeMap> m_hotelCM;
+    AH<Texture2D> m_hotelSS;
+    AH<TextureCubeMap> m_yokohamaCM;
+    AH<Texture2D> m_yokohamaSS;
 
     void ResetCamera();
     ControlPanel *GetControlPanel() const;
