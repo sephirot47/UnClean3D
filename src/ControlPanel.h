@@ -113,6 +113,10 @@ private:
     Path GetOpenModelPath() const;
     View3DScene *GetView3DScene() const;
 
+    GameObject *CreateRow(const String &labelStr = "",
+                          GameObject *go = nullptr,
+                          bool stretch = true);
+
     // IEventsValueChanged
     virtual void OnValueChanged(EventEmitter<IEventsValueChanged> *ee) override;
 };

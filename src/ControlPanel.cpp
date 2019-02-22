@@ -22,6 +22,8 @@
 #include "BangEditor/EditorPaths.h"
 #include "BangEditor/SerializableInspectorWidget.h"
 #include "BangEditor/UIInputColor.h"
+#include "BangEditor/UITabContainer.h"
+#include "BangEditor/UITabHeader.h"
 
 #include "EffectLayer.h"
 #include "EffectLayerCompositer.h"
@@ -41,11 +43,8 @@ ControlPanel::ControlPanel()
 {
     GameObjectFactory::CreateUIGameObjectInto(this);
 
-    UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
-    vl->SetPaddings(10);
-    vl->SetSpacing(5);
-
-    GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
+    GameObject *generalTab = GameObjectFactory::CreateUIGameObject();
+    GameObject *sceneTab = GameObjectFactory::CreateUIGameObject();
 
     UILayoutElement *le = AddComponent<UILayoutElement>();
     le->SetMinWidth(600);
@@ -53,245 +52,264 @@ ControlPanel::ControlPanel()
     UIImageRenderer *bg = AddComponent<UIImageRenderer>();
     bg->SetTint(Color::White().WithValue(0.8f));
 
-    auto CreateRow = [](const String &labelStr = "",
-                        GameObject *go = nullptr,
-                        bool stretch = true) {
-        GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
-        UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
-        rowHL->SetSpacing(10);
+    GameObjectFactory::AddOuterBorder(this, Vector2i(3), Color::Black());
 
-        if (!labelStr.IsEmpty())
-        {
-            UILabel *uiLabel = GameObjectFactory::CreateUILabel();
-            uiLabel->GetText()->SetContent(labelStr);
-            uiLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-            uiLabel->GetGameObject()->SetParent(rowGo);
-        }
+    UITabContainer *tabContainer = new UITabContainer();
+    tabContainer->AddTab("General", generalTab);
+    tabContainer->AddTab("Scene", sceneTab);
+    auto tabContLE = tabContainer->AddComponent<UILayoutElement>();
+    tabContLE->SetMinWidth(600);
+    tabContLE->SetLayoutPriority(99);
+    tabContainer->SetParent(this);
 
-        if (go)
-        {
-            UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
-            if (stretch)
-            {
-                goLE->SetFlexibleWidth(9999.9f);
-            }
-            go->SetParent(rowGo);
-        }
-
-        return rowGo;
-    };
-
-    // Open/Export buttons row
+    // General tab
     {
-        UILabel *fileSettingsLabel = GameObjectFactory::CreateUILabel();
-        fileSettingsLabel->GetText()->SetContent("File settings");
-        fileSettingsLabel->GetText()->SetTextSize(14);
-        fileSettingsLabel->GetText()->SetHorizontalAlign(
-            HorizontalAlignment::LEFT);
-        CreateRow("", fileSettingsLabel->GetGameObject())->SetParent(this);
+        UIVerticalLayout *vl = generalTab->AddComponent<UIVerticalLayout>();
+        vl->SetPaddings(10);
+        vl->SetSpacing(5);
 
-        GameObject *buttonsRow = GameObjectFactory::CreateUIGameObject();
-        UIHorizontalLayout *hl = buttonsRow->AddComponent<UIHorizontalLayout>();
-        hl->SetSpacing(10);
-        UILayoutElement *rowLE = buttonsRow->AddComponent<UILayoutElement>();
-        rowLE->SetMinHeight(20);
-        buttonsRow->SetParent(this);
+        auto generalTabLE = generalTab->AddComponent<UILayoutElement>();
+        generalTabLE->SetFlexibleSize(Vector2::One());
 
-        p_openModelButton = GameObjectFactory::CreateUIButton("Open");
-        p_openModelButton->AddClickedCallback([this]() { OpenModel(); });
-        p_openModelButton->GetGameObject()->SetParent(buttonsRow);
+        // Open/Export buttons row
+        {
+            UILabel *fileSettingsLabel = GameObjectFactory::CreateUILabel();
+            fileSettingsLabel->GetText()->SetContent("File settings");
+            fileSettingsLabel->GetText()->SetTextSize(14);
+            fileSettingsLabel->GetText()->SetHorizontalAlign(
+                HorizontalAlignment::LEFT);
+            CreateRow("", fileSettingsLabel->GetGameObject())
+                ->SetParent(generalTab);
 
-        p_exportModelButton = GameObjectFactory::CreateUIButton("Export");
-        p_exportModelButton->AddClickedCallback([this]() { ExportModel(); });
-        p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
+            GameObject *buttonsRow = GameObjectFactory::CreateUIGameObject();
+            UIHorizontalLayout *hl =
+                buttonsRow->AddComponent<UIHorizontalLayout>();
+            hl->SetSpacing(10);
+            UILayoutElement *rowLE =
+                buttonsRow->AddComponent<UILayoutElement>();
+            rowLE->SetMinHeight(20);
+            buttonsRow->SetParent(generalTab);
 
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
-            ->SetParent(this);
+            p_openModelButton = GameObjectFactory::CreateUIButton("Open");
+            p_openModelButton->AddClickedCallback([this]() { OpenModel(); });
+            p_openModelButton->GetGameObject()->SetParent(buttonsRow);
+
+            p_exportModelButton = GameObjectFactory::CreateUIButton("Export");
+            p_exportModelButton->AddClickedCallback(
+                [this]() { ExportModel(); });
+            p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
+
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
+                ->SetParent(generalTab);
+        }
+
+        // View buttons row
+        {
+            UILabel *viewSettingsLabel = GameObjectFactory::CreateUILabel();
+            viewSettingsLabel->GetText()->SetContent("View settings");
+            viewSettingsLabel->GetText()->SetTextSize(14);
+            viewSettingsLabel->GetText()->SetHorizontalAlign(
+                HorizontalAlignment::LEFT);
+            CreateRow("", viewSettingsLabel->GetGameObject())
+                ->SetParent(generalTab);
+
+            GameObject *sceneModeRow = GameObjectFactory::CreateUIGameObject();
+            UIHorizontalLayout *hl =
+                sceneModeRow->AddComponent<UIHorizontalLayout>();
+            hl->SetSpacing(10);
+            UILayoutElement *rowLE =
+                sceneModeRow->AddComponent<UILayoutElement>();
+            rowLE->SetMinHeight(20);
+            sceneModeRow->SetParent(generalTab);
+
+            UILabel *label = GameObjectFactory::CreateUILabel();
+            label->GetText()->SetContent("Scene mode:");
+            label->GetGameObject()->SetParent(sceneModeRow);
+
+            p_sceneModeComboBox = GameObjectFactory::CreateUIComboBox();
+            p_sceneModeComboBox->AddItem(
+                "View 3D", SCAST<uint>(MainScene::SceneMode::VIEW3D));
+            p_sceneModeComboBox->AddItem(
+                "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
+
+            // See effect or mask buttons
+            {
+                p_seeEffectButton =
+                    GameObjectFactory::CreateUIToolButton("See effect");
+                p_seeIsolatedMaskButton =
+                    GameObjectFactory::CreateUIToolButton("See isolated mask");
+                p_seeAccumulatedMaskButton =
+                    GameObjectFactory::CreateUIToolButton(
+                        "See accumulated mask");
+                p_seeEffectButton->SetOn(true);
+                p_seeIsolatedMaskButton->SetOn(false);
+                p_seeAccumulatedMaskButton->SetOn(false);
+                auto seeEffectOrMaskClick = [this](int pressedButton) {
+                    p_seeEffectButton->SetOn(pressedButton == 0);
+                    p_seeIsolatedMaskButton->SetOn(pressedButton == 1);
+                    p_seeAccumulatedMaskButton->SetOn(pressedButton == 2);
+                };
+                p_seeEffectButton->AddClickedCallback(
+                    [seeEffectOrMaskClick]() { seeEffectOrMaskClick(0); });
+                p_seeIsolatedMaskButton->AddClickedCallback(
+                    [seeEffectOrMaskClick]() { seeEffectOrMaskClick(1); });
+                p_seeAccumulatedMaskButton->AddClickedCallback(
+                    [seeEffectOrMaskClick]() { seeEffectOrMaskClick(2); });
+                GameObject *seeEffectOrMaskButtonRow =
+                    GameObjectFactory::CreateUIGameObject();
+                auto hl = seeEffectOrMaskButtonRow
+                              ->AddComponent<UIHorizontalLayout>();
+                hl->SetSpacing(3);
+                p_seeEffectButton->GetGameObject()->SetParent(
+                    seeEffectOrMaskButtonRow);
+                p_seeIsolatedMaskButton->GetGameObject()->SetParent(
+                    seeEffectOrMaskButtonRow);
+                p_seeAccumulatedMaskButton->GetGameObject()->SetParent(
+                    seeEffectOrMaskButtonRow);
+                CreateRow("See mode", seeEffectOrMaskButtonRow)
+                    ->SetParent(generalTab);
+            }
+
+            p_sceneModeComboBox->GetGameObject()->SetParent(sceneModeRow);
+
+            GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE,
+                                               9999.0f)
+                ->SetParent(sceneModeRow);
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+                ->SetParent(generalTab);
+        }
+
+        // General settings
+        {
+            UILabel *generalSettingsLabel = GameObjectFactory::CreateUILabel();
+            generalSettingsLabel->GetText()->SetContent("General settings");
+            generalSettingsLabel->GetText()->SetTextSize(14);
+            generalSettingsLabel->GetText()->SetHorizontalAlign(
+                HorizontalAlignment::LEFT);
+            CreateRow("", generalSettingsLabel->GetGameObject())
+                ->SetParent(generalTab);
+
+            p_baseRoughnessInput = GameObjectFactory::CreateUISlider(0, 1);
+            p_baseRoughnessInput->SetValue(0.5f);
+            p_baseRoughnessInput
+                ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+            CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
+                ->SetParent(generalTab);
+
+            p_baseMetalnessInput = GameObjectFactory::CreateUISlider(0, 1);
+            p_baseMetalnessInput->SetValue(0.5f);
+            p_baseMetalnessInput
+                ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+            CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
+                ->SetParent(generalTab);
+
+            p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
+            p_texturesSizeInput->AddItem("64", 64);
+            p_texturesSizeInput->AddItem("128", 128);
+            p_texturesSizeInput->AddItem("256", 256);
+            p_texturesSizeInput->AddItem("512", 512);
+            p_texturesSizeInput->AddItem("1024", 1024);
+            p_texturesSizeInput->AddItem("2048", 2048);
+            p_texturesSizeInput->AddItem("4096", 4096);
+            p_texturesSizeInput->SetSelectionByIndex(4);
+            p_texturesSizeInput
+                ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+            CreateRow(
+                "Textures size", p_texturesSizeInput->GetGameObject(), false)
+                ->SetParent(generalTab);
+
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+                ->SetParent(generalTab);
+        }
+
+        // Effect Layer params
+        {
+            p_effectLayerParamsGo = GameObjectFactory::CreateUIGameObject();
+            UIVerticalLayout *vl =
+                p_effectLayerParamsGo->AddComponent<UIVerticalLayout>();
+            vl->SetSpacing(5);
+
+            p_effectLayerParamsTitle = GameObjectFactory::CreateUILabel();
+            p_effectLayerParamsTitle->GetText()->SetContent("Title");
+            p_effectLayerParamsTitle->GetText()->SetTextSize(14);
+            p_effectLayerParamsTitle->GetText()->SetHorizontalAlign(
+                HorizontalAlignment::LEFT);
+            CreateRow("", p_effectLayerParamsTitle->GetGameObject())
+                ->SetParent(p_effectLayerParamsGo);
+
+            p_effectParametersWidget = new UIEffectLayerParameters();
+            p_effectParametersWidget->SetParent(p_effectLayerParamsGo);
+
+            p_effectLayerParamsGo->SetParent(generalTab);
+
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+                ->SetParent(p_effectLayerParamsGo);
+        }
+
+        // Mask
+        {
+            p_maskParamsGo = GameObjectFactory::CreateUIGameObject();
+            UIVerticalLayout *vl =
+                p_maskParamsGo->AddComponent<UIVerticalLayout>();
+            vl->SetSpacing(5);
+
+            p_maskSubParamsGo = GameObjectFactory::CreateUIGameObject();
+            UIVerticalLayout *subVL =
+                p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
+            subVL->SetSpacing(5);
+
+            p_maskLabel = GameObjectFactory::CreateUILabel();
+            p_maskLabel->GetText()->SetContent("Mask");
+            p_maskLabel->GetText()->SetTextSize(14);
+            p_maskLabel->GetText()->SetHorizontalAlign(
+                HorizontalAlignment::LEFT);
+            CreateRow("", p_maskLabel->GetGameObject())
+                ->SetParent(p_maskParamsGo);
+
+            p_maskSerializableWidget = new SerializableInspectorWidget();
+            p_maskSerializableWidget->Init();
+            p_maskSerializableWidget->SetParent(p_maskParamsGo);
+            p_maskSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(
+                false);
+
+            p_maskSubParamsGo->SetParent(p_maskParamsGo);
+            p_maskParamsGo->SetParent(generalTab);
+
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+                ->SetParent(p_maskParamsGo);
+        }
+
+        // Effect layers
+        {
+            GameObjectFactory::CreateUIVSpacer(LayoutSizeType::FLEXIBLE, 99.9f)
+                ->SetParent(generalTab);
+
+            p_uiEffectLayers = new UIEffectLayers();
+            UILayoutElement *le =
+                p_uiEffectLayers->AddComponent<UILayoutElement>();
+            le->SetMinHeight(60);
+            le->SetPreferredHeight(350);
+            le->SetFlexibleWidth(1.0f);
+            p_uiEffectLayers->SetParent(generalTab);
+
+            GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
+                ->SetParent(generalTab);
+        }
     }
 
-    // View buttons row
+    // Scene tab
     {
-        UILabel *viewSettingsLabel = GameObjectFactory::CreateUILabel();
-        viewSettingsLabel->GetText()->SetContent("View settings");
-        viewSettingsLabel->GetText()->SetTextSize(14);
-        viewSettingsLabel->GetText()->SetHorizontalAlign(
-            HorizontalAlignment::LEFT);
-        CreateRow("", viewSettingsLabel->GetGameObject())->SetParent(this);
+        UIVerticalLayout *vl = sceneTab->AddComponent<UIVerticalLayout>();
+        vl->SetPaddings(10);
+        vl->SetSpacing(5);
 
-        GameObject *sceneModeRow = GameObjectFactory::CreateUIGameObject();
-        UIHorizontalLayout *hl =
-            sceneModeRow->AddComponent<UIHorizontalLayout>();
-        hl->SetSpacing(10);
-        UILayoutElement *rowLE = sceneModeRow->AddComponent<UILayoutElement>();
-        rowLE->SetMinHeight(20);
-        sceneModeRow->SetParent(this);
-
-        UILabel *label = GameObjectFactory::CreateUILabel();
-        label->GetText()->SetContent("Scene mode:");
-        label->GetGameObject()->SetParent(sceneModeRow);
-
-        p_sceneModeComboBox = GameObjectFactory::CreateUIComboBox();
-        p_sceneModeComboBox->AddItem("View 3D",
-                                     SCAST<uint>(MainScene::SceneMode::VIEW3D));
-        p_sceneModeComboBox->AddItem(
-            "Textures", SCAST<uint>(MainScene::SceneMode::TEXTURES));
-
-        // See effect or mask buttons
-        {
-            p_seeEffectButton =
-                GameObjectFactory::CreateUIToolButton("See effect");
-            p_seeIsolatedMaskButton =
-                GameObjectFactory::CreateUIToolButton("See isolated mask");
-            p_seeAccumulatedMaskButton =
-                GameObjectFactory::CreateUIToolButton("See accumulated mask");
-            p_seeEffectButton->SetOn(true);
-            p_seeIsolatedMaskButton->SetOn(false);
-            p_seeAccumulatedMaskButton->SetOn(false);
-            auto seeEffectOrMaskClick = [this](int pressedButton) {
-                p_seeEffectButton->SetOn(pressedButton == 0);
-                p_seeIsolatedMaskButton->SetOn(pressedButton == 1);
-                p_seeAccumulatedMaskButton->SetOn(pressedButton == 2);
-            };
-            p_seeEffectButton->AddClickedCallback(
-                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(0); });
-            p_seeIsolatedMaskButton->AddClickedCallback(
-                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(1); });
-            p_seeAccumulatedMaskButton->AddClickedCallback(
-                [seeEffectOrMaskClick]() { seeEffectOrMaskClick(2); });
-            GameObject *seeEffectOrMaskButtonRow =
-                GameObjectFactory::CreateUIGameObject();
-            auto hl =
-                seeEffectOrMaskButtonRow->AddComponent<UIHorizontalLayout>();
-            hl->SetSpacing(3);
-            p_seeEffectButton->GetGameObject()->SetParent(
-                seeEffectOrMaskButtonRow);
-            p_seeIsolatedMaskButton->GetGameObject()->SetParent(
-                seeEffectOrMaskButtonRow);
-            p_seeAccumulatedMaskButton->GetGameObject()->SetParent(
-                seeEffectOrMaskButtonRow);
-            CreateRow("See mode", seeEffectOrMaskButtonRow)->SetParent(this);
-        }
+        auto sceneTabLE = sceneTab->AddComponent<UILayoutElement>();
+        sceneTabLE->SetFlexibleSize(Vector2::One());
 
         p_seeWithLightButton = GameObjectFactory::CreateUIToolButton("Light");
         p_seeWithLightButton->SetOn(true);
-        CreateRow("", p_seeWithLightButton->GetGameObject())->SetParent(this);
-
-        p_sceneModeComboBox->GetGameObject()->SetParent(sceneModeRow);
-
-        GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 9999.0f)
-            ->SetParent(sceneModeRow);
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
-    }
-
-    // General settings
-    {
-        UILabel *generalSettingsLabel = GameObjectFactory::CreateUILabel();
-        generalSettingsLabel->GetText()->SetContent("General settings");
-        generalSettingsLabel->GetText()->SetTextSize(14);
-        generalSettingsLabel->GetText()->SetHorizontalAlign(
-            HorizontalAlignment::LEFT);
-        CreateRow("", generalSettingsLabel->GetGameObject())->SetParent(this);
-
-        p_baseRoughnessInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_baseRoughnessInput->SetValue(0.5f);
-        p_baseRoughnessInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        CreateRow("Base roughness", p_baseRoughnessInput->GetGameObject())
-            ->SetParent(this);
-
-        p_baseMetalnessInput = GameObjectFactory::CreateUISlider(0, 1);
-        p_baseMetalnessInput->SetValue(0.5f);
-        p_baseMetalnessInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
-            ->SetParent(this);
-
-        p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
-        p_texturesSizeInput->AddItem("64", 64);
-        p_texturesSizeInput->AddItem("128", 128);
-        p_texturesSizeInput->AddItem("256", 256);
-        p_texturesSizeInput->AddItem("512", 512);
-        p_texturesSizeInput->AddItem("1024", 1024);
-        p_texturesSizeInput->AddItem("2048", 2048);
-        p_texturesSizeInput->AddItem("4096", 4096);
-        p_texturesSizeInput->SetSelectionByIndex(4);
-        p_texturesSizeInput
-            ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
-        CreateRow("Textures size", p_texturesSizeInput->GetGameObject(), false)
-            ->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
-    }
-
-    // Effect Layer params
-    {
-        p_effectLayerParamsGo = GameObjectFactory::CreateUIGameObject();
-        UIVerticalLayout *vl =
-            p_effectLayerParamsGo->AddComponent<UIVerticalLayout>();
-        vl->SetSpacing(5);
-
-        p_effectLayerParamsTitle = GameObjectFactory::CreateUILabel();
-        p_effectLayerParamsTitle->GetText()->SetContent("Title");
-        p_effectLayerParamsTitle->GetText()->SetTextSize(14);
-        p_effectLayerParamsTitle->GetText()->SetHorizontalAlign(
-            HorizontalAlignment::LEFT);
-        CreateRow("", p_effectLayerParamsTitle->GetGameObject())
-            ->SetParent(p_effectLayerParamsGo);
-
-        p_effectParametersWidget = new UIEffectLayerParameters();
-        p_effectParametersWidget->SetParent(p_effectLayerParamsGo);
-
-        p_effectLayerParamsGo->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(p_effectLayerParamsGo);
-    }
-
-    // Mask
-    {
-        p_maskParamsGo = GameObjectFactory::CreateUIGameObject();
-        UIVerticalLayout *vl = p_maskParamsGo->AddComponent<UIVerticalLayout>();
-        vl->SetSpacing(5);
-
-        p_maskSubParamsGo = GameObjectFactory::CreateUIGameObject();
-        UIVerticalLayout *subVL =
-            p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
-        subVL->SetSpacing(5);
-
-        p_maskLabel = GameObjectFactory::CreateUILabel();
-        p_maskLabel->GetText()->SetContent("Mask");
-        p_maskLabel->GetText()->SetTextSize(14);
-        p_maskLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
-        CreateRow("", p_maskLabel->GetGameObject())->SetParent(p_maskParamsGo);
-
-        p_maskSerializableWidget = new SerializableInspectorWidget();
-        p_maskSerializableWidget->Init();
-        p_maskSerializableWidget->SetParent(p_maskParamsGo);
-        p_maskSerializableWidget->GetInspectorWidgetTitle()->SetEnabled(false);
-
-        p_maskSubParamsGo->SetParent(p_maskParamsGo);
-        p_maskParamsGo->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(p_maskParamsGo);
-    }
-
-    // Effect layers
-    {
-        GameObjectFactory::CreateUIVSpacer(LayoutSizeType::FLEXIBLE, 99.9f)
-            ->SetParent(this);
-
-        p_uiEffectLayers = new UIEffectLayers();
-        UILayoutElement *le = p_uiEffectLayers->AddComponent<UILayoutElement>();
-        le->SetMinHeight(60);
-        le->SetPreferredHeight(400);
-        le->SetFlexibleWidth(1.0f);
-        p_uiEffectLayers->SetParent(this);
-
-        GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 30.0f)
-            ->SetParent(this);
+        CreateRow("", p_seeWithLightButton->GetGameObject())
+            ->SetParent(sceneTab);
     }
 }
 
@@ -534,6 +552,34 @@ Path ControlPanel::GetOpenModelPath() const
 View3DScene *ControlPanel::GetView3DScene() const
 {
     return MainScene::GetInstance()->GetView3DScene();
+}
+
+GameObject *ControlPanel::CreateRow(const String &labelStr,
+                                    GameObject *go,
+                                    bool stretch)
+{
+    GameObject *rowGo = GameObjectFactory::CreateUIGameObject();
+    UIHorizontalLayout *rowHL = rowGo->AddComponent<UIHorizontalLayout>();
+    rowHL->SetSpacing(10);
+
+    if (!labelStr.IsEmpty())
+    {
+        UILabel *uiLabel = GameObjectFactory::CreateUILabel();
+        uiLabel->GetText()->SetContent(labelStr);
+        uiLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::LEFT);
+        uiLabel->GetGameObject()->SetParent(rowGo);
+    }
+
+    if (go)
+    {
+        UILayoutElement *goLE = go->AddComponent<UILayoutElement>();
+        if (stretch)
+        {
+            goLE->SetFlexibleWidth(9999.9f);
+        }
+        go->SetParent(rowGo);
+    }
+    return rowGo;
 }
 
 void ControlPanel::OnValueChanged(EventEmitter<IEventsValueChanged> *)
