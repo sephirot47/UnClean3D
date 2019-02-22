@@ -51,7 +51,10 @@ public:
     void OpenModel();
     void OpenModel(const Path &modelPath);
     void ExportModel();
+    void ImportEffect();
+    void ExportEffect();
 
+    void UpdateFromEffectLayers();
     UIEffectLayerRow *CreateNewEffectLayer();
     void RemoveEffectLayer(uint effectLayerIdx);
     void SetControlPanelUniforms(ShaderProgram *sp);
@@ -80,6 +83,8 @@ private:
     // File
     UIButton *p_openModelButton = nullptr;
     UIButton *p_exportModelButton = nullptr;
+    UIButton *p_importEffectButton = nullptr;
+    UIButton *p_exportEffectButton = nullptr;
 
     // View
     UIToolButton *p_seeEffectButton = nullptr;

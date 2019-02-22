@@ -78,6 +78,10 @@ public:
     const String &GetName() const;
     bool IsValid() const;
 
+    // Serializable
+    void ImportMeta(const MetaNode &meta) override;
+    void ExportMeta(MetaNode *meta) const override;
+
     // IReflectable
     virtual void Reflect() override;
 

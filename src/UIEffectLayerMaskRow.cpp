@@ -94,8 +94,6 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_nameLabel->GetGameObject()->SetParent(innerHLGo);
 
         p_maskTypeInput = GameObjectFactory::CreateUIComboBox();
-        p_maskTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
-            this);
         p_maskTypeInput->AddItem("Fractal",
                                  SCAST<int>(EffectLayerMask::Type::FRACTAL));
         p_maskTypeInput->AddItem(
@@ -107,6 +105,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
                                  SCAST<int>(EffectLayerMask::Type::BLUR));
         p_maskTypeInput->SetSelectionByValue(
             SCAST<int>(EffectLayerMask::Type::FRACTAL));
+        p_maskTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
+            this);
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);
 
         p_blendModeInput = GameObjectFactory::CreateUIComboBox();
@@ -156,14 +156,14 @@ void UIEffectLayerMaskRow::Update()
     {
         if (GetEffectLayerRow()->GetMaskRowsList()->GetSelectedItem() == this)
         {
-            p_nameLabel->ShowFloatingInputText();
+            GetNameLabel()->ShowFloatingInputText();
         }
     }
 }
 
 void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
 {
-    p_nameLabel->GetText()->SetContent(GetEffectLayerMask()->GetName());
+    GetNameLabel()->GetText()->SetContent(GetEffectLayerMask()->GetName());
     p_maskTypeInput->SetSelectionByValue(
         SCAST<int>(GetEffectLayerMask()->GetType()));
 }
@@ -177,7 +177,6 @@ void UIEffectLayerMaskRow::SetUIEffectLayerRow(
 void UIEffectLayerMaskRow::SetEffectLayerMask(EffectLayerMask *effectLayerMask)
 {
     p_effectLayerMask = effectLayerMask;
-    p_effectLayerMask->SetName(p_nameLabel->GetText()->GetContent());
 }
 
 EffectLayerMask *UIEffectLayerMaskRow::GetEffectLayerMask() const
@@ -188,6 +187,11 @@ EffectLayerMask *UIEffectLayerMaskRow::GetEffectLayerMask() const
 UIEffectLayerRow *UIEffectLayerMaskRow::GetEffectLayerRow() const
 {
     return p_uiEffectLayerRow;
+}
+
+UILabel *UIEffectLayerMaskRow::GetNameLabel() const
+{
+    return p_nameLabel;
 }
 
 void UIEffectLayerMaskRow::OnFloatingInputTextCommited(

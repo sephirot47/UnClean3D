@@ -163,6 +163,18 @@ void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
     }
 }
 
+void UIEffectLayers::UpdateFromEffectLayers()
+{
+    Clear();
+
+    View3DScene *view3DScene = View3DScene::GetInstance();
+    for (EffectLayer *effectLayer : view3DScene->GetAllEffectLayers())
+    {
+        UIEffectLayerRow *effectLayerRow = CreateNewEffectLayerRow(effectLayer);
+        effectLayerRow->UpdateFromEffectLayer();
+    }
+}
+
 void UIEffectLayers::SetSelection(uint idx)
 {
     p_uiList->SetSelection(idx);

@@ -2,6 +2,7 @@
 
 #include "Bang/Dialog.h"
 #include "Bang/Extensions.h"
+#include "Bang/File.h"
 #include "Bang/GameObjectFactory.h"
 #include "Bang/Input.h"
 #include "Bang/TextureFactory.h"
@@ -98,6 +99,18 @@ ControlPanel::ControlPanel()
             p_exportModelButton->AddClickedCallback(
                 [this]() { ExportModel(); });
             p_exportModelButton->GetGameObject()->SetParent(buttonsRow);
+
+            p_importEffectButton =
+                GameObjectFactory::CreateUIButton("Import effect");
+            p_importEffectButton->AddClickedCallback(
+                [this]() { ImportEffect(); });
+            p_importEffectButton->GetGameObject()->SetParent(buttonsRow);
+
+            p_exportEffectButton =
+                GameObjectFactory::CreateUIButton("Export effect");
+            p_exportEffectButton->AddClickedCallback(
+                [this]() { ExportEffect(); });
+            p_exportEffectButton->GetGameObject()->SetParent(buttonsRow);
 
             GameObjectFactory::CreateUIHSeparator(LayoutSizeType::MIN, 15)
                 ->SetParent(generalTab);
@@ -456,6 +469,50 @@ void ControlPanel::ExportModel()
     GetView3DScene()->GetModelGameObject()->GetTransform()->SetLocalScale(
         prevScale);
     GetView3DScene()->RestoreOriginalAlbedoTexturesToModel();
+}
+
+void ControlPanel::ImportEffect()
+{
+    Path effectPath = GetInitialDir().Append("Effect.fx");
+    // Dialog::OpenFilePath("Import effect", {"fx"}, GetInitialDir());
+
+    MetaNode meta;
+    meta.Import(effectPath);
+
+    const auto &effectLayerMetas = meta.GetChildren("EffectLayerChildren");
+    for (auto it = effectLayerMetas.RBegin(); it != effectLayerMetas.REnd();
+         ++it)
+    {
+        const MetaNode &effectLayerMeta = *it;
+        UIEffectLayerRow *effectLayerRow = CreateNewEffectLayer();
+        EffectLayer *effectLayer = effectLayerRow->GetEffectLayer();
+        effectLayer->ImportMeta(effectLayerMeta);
+    }
+
+    UpdateFromEffectLayers();
+}
+
+void ControlPanel::ExportEffect()
+{
+    Path effectPath =
+        GetInitialDir().Append("Effect.fx");  // Dialog::SaveFilePath(
+    // "Export effect", "fx", GetInitialDir(), "MyEffect");
+
+    MetaNode wholeEffectMeta;
+    wholeEffectMeta.SetName("Effect");
+    for (EffectLayer *effectLayer : GetView3DScene()->GetAllEffectLayers())
+    {
+        MetaNode effectMeta;
+        effectLayer->ExportMeta(&effectMeta);
+        wholeEffectMeta.AddChild(effectMeta, "EffectLayerChildren");
+    }
+
+    File::Write(effectPath, wholeEffectMeta.ToString());
+}
+
+void ControlPanel::UpdateFromEffectLayers()
+{
+    p_uiEffectLayers->UpdateFromEffectLayers();
 }
 
 UIEffectLayerRow *ControlPanel::CreateNewEffectLayer()

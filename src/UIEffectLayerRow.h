@@ -28,6 +28,7 @@ using namespace Bang;
 using namespace BangEditor;
 
 class EffectLayer;
+class EffectLayerMask;
 class UIEffectLayerMaskRow;
 class UIEffectLayers;
 
@@ -44,7 +45,7 @@ public:
     void Update() override;
     void UpdateFromEffectLayer();
 
-    UIEffectLayerMaskRow *AddNewMaskRow();
+    UIEffectLayerMaskRow *AddNewMaskRow(EffectLayerMask *layerMask = nullptr);
     void Duplicate(UIEffectLayerMaskRow *maskRow);
     void RemoveMaskRow(UIEffectLayerMaskRow *maskRow);
 

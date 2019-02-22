@@ -29,6 +29,7 @@ public:
 
     UIEffectLayerRow *CreateNewEffectLayerRow(EffectLayer *newEffectLayer);
     void RemoveEffectLayer(uint effectLayerIdx);
+    void UpdateFromEffectLayers();
 
     void SetSelection(uint idx);
     void SetSelection(UIEffectLayerRow *effectLayerRow);

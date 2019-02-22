@@ -204,11 +204,41 @@ bool EffectLayerMask::IsValid() const
     return GetImplementation() ? GetImplementation()->IsValid() : true;
 }
 
+void EffectLayerMask::ImportMeta(const MetaNode &meta)
+{
+    Serializable::ImportMeta(meta);
+
+    if (GetImplementation())
+    {
+        for (const MetaNode &childMeta : meta.GetChildren("ImplementationMeta"))
+        {
+            GetImplementation()->ImportMeta(childMeta);
+        }
+    }
+}
+
+void EffectLayerMask::ExportMeta(MetaNode *meta) const
+{
+    Serializable::ExportMeta(meta);
+
+    if (GetImplementation())
+    {
+        MetaNode implMeta;
+        GetImplementation()->ExportMeta(&implMeta);
+        meta->AddChild(implMeta, "ImplementationMeta");
+    }
+}
+
 void EffectLayerMask::Reflect()
 {
     Serializable::Reflect();
 
     BANG_REFLECT_VAR_ENUM("Type", SetType, GetType, EffectLayerMask::Type);
+
+    ReflectVar<String>("Name",
+                       [this](const String &name) { SetName(name); },
+                       [this]() { return GetName(); },
+                       BANG_REFLECT_HINT_SHOWN(false));
 }
 
 ControlPanel *EffectLayerMask::GetControlPanel() const

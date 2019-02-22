@@ -44,6 +44,7 @@ public:
 
     EffectLayerMask *GetEffectLayerMask() const;
     UIEffectLayerRow *GetEffectLayerRow() const;
+    UILabel *GetNameLabel() const;
 
     // IEventsUILabel
     void OnFloatingInputTextCommited(const String &commitedText) override;

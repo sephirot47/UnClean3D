@@ -410,6 +410,30 @@ bool EffectLayer::IsValid() const
     return m_isValid;
 }
 
+void EffectLayer::ImportMeta(const MetaNode &meta)
+{
+    Serializable::ImportMeta(meta);
+
+    const auto &masksMetas = meta.GetChildren("EffectLayerMasksMeta");
+    for (auto it = masksMetas.RBegin(); it != masksMetas.REnd(); ++it)
+    {
+        const MetaNode &maskMeta = *it;
+        EffectLayerMask *mask = AddNewMask();
+        mask->ImportMeta(maskMeta);
+    }
+}
+
+void EffectLayer::ExportMeta(MetaNode *meta) const
+{
+    Serializable::ExportMeta(meta);
+    for (EffectLayerMask *mask : GetMasks())
+    {
+        MetaNode maskMeta;
+        mask->ExportMeta(&maskMeta);
+        meta->AddChild(maskMeta, "EffectLayerMasksMeta");
+    }
+}
+
 Texture2D *EffectLayer::GetEffectColorTexture() const
 {
     return m_effectColorTexture.Get();
@@ -453,6 +477,11 @@ void EffectLayer::Reflect()
                       [this](float metalness) { SetMetalness(metalness); },
                       [this]() { return GetMetalness(); },
                       BANG_REFLECT_HINT_SHOWN(false));
+
+    ReflectVar<String>("Name",
+                       [this](const String &name) { SetName(name); },
+                       [this]() { return GetName(); },
+                       BANG_REFLECT_HINT_SHOWN(false));
 
     BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayer,
                                    "Visible",

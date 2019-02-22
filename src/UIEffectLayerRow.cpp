@@ -174,11 +174,13 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
         p_addNewMaskButton->GetGameObject()->SetParent(p_addNewMaskRow);
 
-        p_addNewMaskButton->AddClickedCallback([this]() { AddNewMaskRow(); });
+        p_addNewMaskButton->AddClickedCallback([this]() {
+            UIEffectLayerMaskRow *maskRow = AddNewMaskRow();
+            maskRow->GetEffectLayerMask()->SetName(
+                maskRow->GetNameLabel()->GetText()->GetContent());
+        });
     }
     p_addNewMaskRow->SetParent(this);
-
-    AddNewMaskRow();
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()
@@ -246,12 +248,29 @@ void UIEffectLayerRow::Update()
 
 void UIEffectLayerRow::UpdateFromEffectLayer()
 {
+    p_layerNameLabel->GetText()->SetContent(GetEffectLayer()->GetName());
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
+
+    GetMaskRowsList()->Clear();
+    p_maskRows.Clear();
+
+    for (auto it = GetEffectLayer()->GetMasks().RBegin();
+         it != GetEffectLayer()->GetMasks().REnd();
+         ++it)
+    {
+        EffectLayerMask *mask = *it;
+        UIEffectLayerMaskRow *maskRow = AddNewMaskRow(mask);
+        maskRow->UpdateFromEffectLayerMask();
+    }
 }
 
-UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow()
+UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow(
+    EffectLayerMask *layerMask)
 {
-    EffectLayerMask *layerMask = GetEffectLayer()->AddNewMask();
+    if (!layerMask)
+    {
+        layerMask = GetEffectLayer()->AddNewMask();
+    }
 
     UIEffectLayerMaskRow *newMaskRow =
         new UIEffectLayerMaskRow(this, layerMask);
