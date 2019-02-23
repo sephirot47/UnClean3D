@@ -91,6 +91,16 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(effectRow);
 
+        p_addNewMaskButton = GameObjectFactory::CreateUIButton(
+            "", EditorTextureFactory::GetAddIcon());
+        p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
+        p_addNewMaskButton->GetGameObject()->SetParent(effectRow);
+        p_addNewMaskButton->AddClickedCallback([this]() {
+            UIEffectLayerMaskRow *maskRow = AddNewMaskRow();
+            maskRow->GetEffectLayerMask()->SetName(
+                maskRow->GetNameLabel()->GetText()->GetContent());
+        });
+
         p_visibleButton = GameObjectFactory::CreateUIToolButton(
             "", EditorTextureFactory::GetEyeIcon());
         p_visibleButton->GetIcon()->SetTint(Color::Black());
@@ -147,40 +157,6 @@ UIEffectLayerRow::UIEffectLayerRow(UIEffectLayers *uiEffectLayers,
     p_maskRowsList->EventEmitter<IEventsUIList>::RegisterListener(this);
 
     p_maskRowsList->GetGameObject()->SetParent(this);
-
-    p_addNewMaskRow = GameObjectFactory::CreateUIGameObject();
-    {
-        UIHorizontalLayout *hl =
-            p_addNewMaskRow->AddComponent<UIHorizontalLayout>();
-        hl->SetSpacing(5);
-        hl->SetPaddings(5);
-        hl->SetPaddingRight(15);
-
-        UIImageRenderer *bg = p_addNewMaskRow->AddComponent<UIImageRenderer>();
-        bg->SetTint(Color::White());
-
-        UILabel *addLabel = GameObjectFactory::CreateUILabel();
-        addLabel->GetText()->SetContent("Add New Mask");
-        addLabel->GetText()->SetHorizontalAlign(HorizontalAlignment::RIGHT);
-        addLabel->GetGameObject()->SetParent(p_addNewMaskRow);
-
-        UIFocusable *focusable = p_addNewMaskRow->AddComponent<UIFocusable>();
-        focusable->AddEventCallback([](UIFocusable *, const UIEvent &) {
-            return UIEventResult::INTERCEPT;
-        });
-
-        p_addNewMaskButton = GameObjectFactory::CreateUIButton(
-            "", EditorTextureFactory::GetAddIcon());
-        p_addNewMaskButton->GetIcon()->SetTint(Color::Green());
-        p_addNewMaskButton->GetGameObject()->SetParent(p_addNewMaskRow);
-
-        p_addNewMaskButton->AddClickedCallback([this]() {
-            UIEffectLayerMaskRow *maskRow = AddNewMaskRow();
-            maskRow->GetEffectLayerMask()->SetName(
-                maskRow->GetNameLabel()->GetText()->GetContent());
-        });
-    }
-    p_addNewMaskRow->SetParent(this);
 }
 
 UIEffectLayerRow::~UIEffectLayerRow()
@@ -243,7 +219,6 @@ void UIEffectLayerRow::Update()
     {
         maskRow->SetEnabled(showMaskRows);
     }
-    p_addNewMaskRow->SetEnabled(showMaskRows);
 
     UpdateEffectLayerFromUI();
 }

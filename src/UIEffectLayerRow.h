@@ -70,7 +70,6 @@ private:
     UIList *p_maskRowsList = nullptr;
     Array<UIEffectLayerMaskRow *> p_maskRows;
 
-    GameObject *p_addNewMaskRow = nullptr;
     UIToolButton *p_visibleButton = nullptr;
     UIButton *p_addNewMaskButton = nullptr;
     UIFocusable *p_focusable = nullptr;
