@@ -38,6 +38,7 @@ public:
 
     void Update() override;
     void UpdateFromEffectLayerMask();
+    void UpdateEffectLayerMaskFromUI();
 
     void SetUIEffectLayerRow(UIEffectLayerRow *uiEffectLayerRow);
     void SetEffectLayerMask(EffectLayerMask *effectLayerMask);

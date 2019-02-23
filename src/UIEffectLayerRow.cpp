@@ -244,6 +244,8 @@ void UIEffectLayerRow::Update()
         maskRow->SetEnabled(showMaskRows);
     }
     p_addNewMaskRow->SetEnabled(showMaskRows);
+
+    UpdateEffectLayerFromUI();
 }
 
 void UIEffectLayerRow::UpdateFromEffectLayer()
@@ -262,6 +264,11 @@ void UIEffectLayerRow::UpdateFromEffectLayer()
         UIEffectLayerMaskRow *maskRow = AddNewMaskRow(mask);
         maskRow->UpdateFromEffectLayerMask();
     }
+}
+
+void UIEffectLayerRow::UpdateEffectLayerFromUI()
+{
+    GetEffectLayer()->SetName(UIEffectLayerRow::GetName());
 }
 
 UIEffectLayerMaskRow *UIEffectLayerRow::AddNewMaskRow(

@@ -19,14 +19,12 @@ TextureContainer::TextureContainer(const String &label)
     UIVerticalLayout *vl = AddComponent<UIVerticalLayout>();
     vl->SetSpacing(5);
 
-    UILayoutElement *goLE = AddComponent<UILayoutElement>();
-    goLE->SetFlexibleSize(Vector2(1.0f));
-
     p_label = GameObjectFactory::CreateUILabel();
     p_label->GetText()->SetTextSize(20);
     p_label->GetText()->SetTextColor(Color::White());
-    p_label->GetText()->SetContent(label);
+    SetLabel(label);
     p_label->GetGameObject()->SetParent(this);
+
     UILayoutElement *textureLabelLE =
         p_label->GetGameObject()->AddComponent<UILayoutElement>();
     textureLabelLE->SetMinHeight(30);
@@ -36,7 +34,7 @@ TextureContainer::TextureContainer(const String &label)
     p_imageRenderer = GameObjectFactory::CreateUIImage();
     UILayoutElement *imgLE =
         p_imageRenderer->GetGameObject()->AddComponent<UILayoutElement>();
-    imgLE->SetPreferredSize(Vector2i(50));
+    imgLE->SetMinSize(Vector2i(300));
     imgLE->SetFlexibleSize(Vector2(1.0f));
     p_imageRenderer->GetGameObject()->SetParent(this);
 
@@ -53,6 +51,12 @@ TextureContainer::~TextureContainer()
 void TextureContainer::Update()
 {
     GameObject::Update();
+}
+
+void TextureContainer::SetLabel(const String &label)
+{
+    String ellidedLabel = label.ElideRight(20);
+    GetLabel()->GetText()->SetContent(ellidedLabel);
 }
 
 UILabel *TextureContainer::GetLabel() const

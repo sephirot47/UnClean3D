@@ -473,17 +473,15 @@ void ControlPanel::ExportModel()
 
 void ControlPanel::ImportEffect()
 {
-    Path effectPath = GetInitialDir().Append("Effect.fx");
-    // Dialog::OpenFilePath("Import effect", {"fx"}, GetInitialDir());
+    Path effectPath =
+        Dialog::OpenFilePath("Import effect", {"fx"}, GetInitialDir());
 
     MetaNode meta;
     meta.Import(effectPath);
 
     const auto &effectLayerMetas = meta.GetChildren("EffectLayerChildren");
-    for (auto it = effectLayerMetas.RBegin(); it != effectLayerMetas.REnd();
-         ++it)
+    for (const MetaNode &effectLayerMeta : effectLayerMetas)
     {
-        const MetaNode &effectLayerMeta = *it;
         UIEffectLayerRow *effectLayerRow = CreateNewEffectLayer();
         EffectLayer *effectLayer = effectLayerRow->GetEffectLayer();
         effectLayer->ImportMeta(effectLayerMeta);
@@ -494,14 +492,15 @@ void ControlPanel::ImportEffect()
 
 void ControlPanel::ExportEffect()
 {
-    Path effectPath =
-        GetInitialDir().Append("Effect.fx");  // Dialog::SaveFilePath(
-    // "Export effect", "fx", GetInitialDir(), "MyEffect");
+    Path effectPath = Dialog::SaveFilePath(
+        "Export effect", "fx", GetInitialDir(), "MyEffect");
 
     MetaNode wholeEffectMeta;
     wholeEffectMeta.SetName("Effect");
-    for (EffectLayer *effectLayer : GetView3DScene()->GetAllEffectLayers())
+    auto allEffectLayers = GetView3DScene()->GetAllEffectLayers();
+    for (auto it = allEffectLayers.RBegin(); it != allEffectLayers.REnd(); ++it)
     {
+        EffectLayer *effectLayer = *it;
         MetaNode effectMeta;
         effectLayer->ExportMeta(&effectMeta);
         wholeEffectMeta.AddChild(effectMeta, "EffectLayerChildren");
@@ -526,7 +525,7 @@ UIEffectLayerRow *ControlPanel::CreateNewEffectLayer()
 void ControlPanel::RemoveEffectLayer(uint effectLayerIdx)
 {
     GetView3DScene()->RemoveEffectLayer(effectLayerIdx);
-    p_uiEffectLayers->RemoveEffectLayer(effectLayerIdx);
+    p_uiEffectLayers->RemoveEffectLayerRow(effectLayerIdx, false);
 }
 
 void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
@@ -538,22 +537,37 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
     bool seeMask = (GetSeeMode() == SeeMode::ACCUM_MASK);
     seeMask |= (GetSeeMode() == SeeMode::ISOLATED_MASK &&
                 GetSelectedEffectLayerMask());
-    sp->SetBool("SeeMask", seeMask);
 
     Texture2D *maskTexToSee = TextureFactory::GetWhiteTexture();
     if (seeMask)
     {
         if (GetSeeMode() == SeeMode::ACCUM_MASK)
         {
-            maskTexToSee = GetSelectedEffectLayer()->GetMergedMaskTexture();
+            if (GetSelectedEffectLayer())
+            {
+                maskTexToSee = GetSelectedEffectLayer()->GetMergedMaskTexture();
+            }
+            else
+            {
+                seeMask = false;
+            }
         }
         else
         {
-            maskTexToSee = GetSelectedEffectLayerMask()
-                               ->GetImplementation()
-                               ->GetMaskTextureToSee();
+            if (GetSelectedEffectLayerMask())
+            {
+                maskTexToSee = GetSelectedEffectLayerMask()
+                                   ->GetImplementation()
+                                   ->GetMaskTextureToSee();
+            }
+            else
+            {
+                seeMask = false;
+            }
         }
     }
+
+    sp->SetBool("SeeMask", seeMask);
     sp->SetTexture2D("MaskTextureToSee", maskTexToSee);
 }
 

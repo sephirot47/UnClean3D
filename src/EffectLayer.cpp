@@ -318,9 +318,9 @@ void EffectLayer::MoveMask(EffectLayerMask *effectLayerMask, uint newIndex)
 
 void EffectLayer::RemoveMask(EffectLayerMask *mask)
 {
-    delete mask;
     m_masks.Remove(mask);
     Invalidate();
+    delete mask;
 }
 
 void EffectLayer::Invalidate(bool recursiveDown)

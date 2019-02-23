@@ -73,7 +73,7 @@ UIEffectLayers::UIEffectLayers()
         addEffectLayerButton->GetIcon()->SetTint(Color::Green());
         addEffectLayerButton->AddClickedCallback([this]() {
             ControlPanel *cp = MainScene::GetInstance()->GetControlPanel();
-            cp->CreateNewEffectLayer();
+            UIEffectLayerRow *elRow = cp->CreateNewEffectLayer();
         });
         addEffectLayerButton->GetGameObject()->SetParent(topButtonsHLGo);
 
@@ -125,7 +125,7 @@ void UIEffectLayers::Update()
             }
             else if (Input::GetKeyDown(Key::DELETE))
             {
-                RemoveEffectLayer(GetSelectedEffectLayerRowIndex());
+                RemoveEffectLayerRow(GetSelectedEffectLayerRowIndex(), true);
             }
         }
     }
@@ -145,13 +145,17 @@ UIEffectLayerRow *UIEffectLayers::CreateNewEffectLayerRow(
     return effectLayerRow;
 }
 
-void UIEffectLayers::RemoveEffectLayer(uint effectLayerIdx)
+void UIEffectLayers::RemoveEffectLayerRow(uint effectLayerIdx,
+                                          bool removeEffectLayer)
 {
     UIEffectLayerRow *effectLayerRow = p_effectLayerRows[effectLayerIdx];
     p_uiList->RemoveItem(effectLayerRow);
     p_effectLayerRows.RemoveByIndex(effectLayerIdx);
-    MainScene::GetInstance()->GetView3DScene()->RemoveEffectLayer(
-        effectLayerIdx);
+    if (removeEffectLayer)
+    {
+        MainScene::GetInstance()->GetView3DScene()->RemoveEffectLayer(
+            effectLayerIdx);
+    }
 
     if (effectLayerIdx >= p_effectLayerRows.Size())
     {
@@ -168,8 +172,10 @@ void UIEffectLayers::UpdateFromEffectLayers()
     Clear();
 
     View3DScene *view3DScene = View3DScene::GetInstance();
-    for (EffectLayer *effectLayer : view3DScene->GetAllEffectLayers())
+    const auto &effectLayers = view3DScene->GetAllEffectLayers();
+    for (auto it = effectLayers.RBegin(); it != effectLayers.REnd(); ++it)
     {
+        EffectLayer *effectLayer = *it;
         UIEffectLayerRow *effectLayerRow = CreateNewEffectLayerRow(effectLayer);
         effectLayerRow->UpdateFromEffectLayer();
     }

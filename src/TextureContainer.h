@@ -23,6 +23,7 @@ public:
 
     // GameObject
     void Update() override;
+    void SetLabel(const String &label);
 
     UILabel *GetLabel() const;
     UIFocusable *GetFocusable() const;

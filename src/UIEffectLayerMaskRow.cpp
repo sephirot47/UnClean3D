@@ -159,6 +159,7 @@ void UIEffectLayerMaskRow::Update()
             GetNameLabel()->ShowFloatingInputText();
         }
     }
+    UpdateEffectLayerMaskFromUI();
 }
 
 void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
@@ -166,6 +167,14 @@ void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
     GetNameLabel()->GetText()->SetContent(GetEffectLayerMask()->GetName());
     p_maskTypeInput->SetSelectionByValue(
         SCAST<int>(GetEffectLayerMask()->GetType()));
+}
+
+void UIEffectLayerMaskRow::UpdateEffectLayerMaskFromUI()
+{
+    GetEffectLayerMask()->SetType(
+        SCAST<EffectLayerMask::Type>(p_maskTypeInput->GetSelectedValue()));
+    GetEffectLayerMask()->SetBlendMode(SCAST<EffectLayerMask::BlendMode>(
+        p_blendModeInput->GetSelectedValue()));
 }
 
 void UIEffectLayerMaskRow::SetUIEffectLayerRow(
@@ -202,14 +211,5 @@ void UIEffectLayerMaskRow::OnFloatingInputTextCommited(
 
 void UIEffectLayerMaskRow::OnValueChanged(EventEmitter<IEventsValueChanged> *ee)
 {
-    if (ee == p_maskTypeInput)
-    {
-        GetEffectLayerMask()->SetType(
-            SCAST<EffectLayerMask::Type>(p_maskTypeInput->GetSelectedValue()));
-    }
-    else if (ee == p_blendModeInput)
-    {
-        GetEffectLayerMask()->SetBlendMode(SCAST<EffectLayerMask::BlendMode>(
-            p_blendModeInput->GetSelectedValue()));
-    }
+    UpdateEffectLayerMaskFromUI();
 }

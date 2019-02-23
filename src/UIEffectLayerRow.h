@@ -44,6 +44,7 @@ public:
     // GameObject
     void Update() override;
     void UpdateFromEffectLayer();
+    void UpdateEffectLayerFromUI();
 
     UIEffectLayerMaskRow *AddNewMaskRow(EffectLayerMask *layerMask = nullptr);
     void Duplicate(UIEffectLayerMaskRow *maskRow);

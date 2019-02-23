@@ -78,7 +78,7 @@ void main()
         }
     }
 
-    OutColor = vec4(maskApportation, 0, 0, 0);
+    OutColor = vec4(vec3(maskApportation), 1);
 }
 
 

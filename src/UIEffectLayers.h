@@ -28,7 +28,7 @@ public:
     void Update() override;
 
     UIEffectLayerRow *CreateNewEffectLayerRow(EffectLayer *newEffectLayer);
-    void RemoveEffectLayer(uint effectLayerIdx);
+    void RemoveEffectLayerRow(uint effectLayerIdx, bool removeEffectLayer);
     void UpdateFromEffectLayers();
 
     void SetSelection(uint idx);

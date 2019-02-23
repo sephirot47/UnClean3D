@@ -15,6 +15,8 @@ class UILabel;
 
 class EffectLayer;
 class TextureContainer;
+class TextureContainerRow;
+class EffectLayerMask;
 class TexturesScene : public Scene
 {
 public:
@@ -24,10 +26,11 @@ public:
     // Scene
     void Update() override;
 
+    TextureContainerRow *CreateAndAddRow(EffectLayer *effectLayer = nullptr);
     void OnModelChanged(Model *model);
 
 private:
-    GameObject *p_gridGo = nullptr;
+    GameObject *p_mainContainerGo = nullptr;
     GameObject *p_bigImageGo = nullptr;
     UIImageRenderer *p_bigImageRenderer = nullptr;
     TextureContainer *p_originalAlbedoTexCont = nullptr;
@@ -38,10 +41,10 @@ private:
     TextureContainer *p_finalNormalTexCont = nullptr;
     TextureContainer *p_finalRoughnessTexCont = nullptr;
     TextureContainer *p_finalMetalnessTexCont = nullptr;
-    Map<EffectLayer *, TextureContainer *> m_effectLayerToTexCont;
-    Map<EffectLayer *, TextureContainer *> m_effectLayerToMaskTexCont;
 
-    TextureContainer *CreateAndAddTextureContainer(const String &label);
+    TextureContainerRow *p_originalRow = nullptr;
+    TextureContainerRow *p_finalRow = nullptr;
+    Map<EffectLayer *, TextureContainerRow *> p_effectLayerToRow;
 };
 
 #endif  // TEXTURESSCENE_H

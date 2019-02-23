@@ -7,6 +7,7 @@
 #include "Bang/RectTransform.h"
 #include "Bang/Texture2D.h"
 #include "Bang/Transform.h"
+#include "Bang/UIContentSizeFitter.h"
 #include "Bang/UIGridLayout.h"
 #include "Bang/UIHorizontalLayout.h"
 #include "Bang/UIImageRenderer.h"
@@ -22,6 +23,7 @@
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 #include "TextureContainer.h"
+#include "TextureContainerRow.h"
 #include "View3DScene.h"
 
 using namespace Bang;
@@ -31,30 +33,43 @@ TexturesScene::TexturesScene()
     GameObjectFactory::CreateUISceneInto(this);
 
     UIScrollPanel *scrollPanel = GameObjectFactory::CreateUIScrollPanel();
-    scrollPanel->SetForceHorizontalFit(true);
+    scrollPanel->SetHorizontalScrollEnabled(true);
+    scrollPanel->SetVerticalScrollEnabled(true);
+    scrollPanel->SetVerticalShowScrollMode(ShowScrollMode::ALWAYS);
+    scrollPanel->SetHorizontalShowScrollMode(ShowScrollMode::ALWAYS);
 
-    p_gridGo = GameObjectFactory::CreateUIGameObject();
-    UILayoutElement *gridLE = p_gridGo->AddComponent<UILayoutElement>();
-    gridLE->SetFlexibleSize(Vector2(1.0f));
-    UIGridLayout *gl = p_gridGo->AddComponent<UIGridLayout>();
-    gl->SetCellSize(Vector2i(200));
-    gl->SetSpacing(30);
-    gl->SetPaddings(10);
+    p_mainContainerGo = GameObjectFactory::CreateUIGameObject();
+    UIVerticalLayout *vl = p_mainContainerGo->AddComponent<UIVerticalLayout>();
+    vl->SetSpacing(45);
+    vl->SetPaddings(30);
 
-    p_originalAlbedoTexCont = CreateAndAddTextureContainer("Original Albedo");
-    p_originalNormalTexCont = CreateAndAddTextureContainer("Original Normal");
+    p_originalRow = CreateAndAddRow();
+    p_originalAlbedoTexCont =
+        p_originalRow->CreateAndAddTextureContainer("Original Albedo");
+    p_originalNormalTexCont =
+        p_originalRow->CreateAndAddTextureContainer("Original Normal");
     p_originalRoughnessTexCont =
-        CreateAndAddTextureContainer("Original Roughness");
+        p_originalRow->CreateAndAddTextureContainer("Original Roughness");
     p_originalMetalnessTexCont =
-        CreateAndAddTextureContainer("Original Metalness");
+        p_originalRow->CreateAndAddTextureContainer("Original Metalness");
 
-    p_finalAlbedoTexCont = CreateAndAddTextureContainer("Final Albedo");
-    p_finalNormalTexCont = CreateAndAddTextureContainer("Final Normal");
-    p_finalRoughnessTexCont = CreateAndAddTextureContainer("Final Roughness");
-    p_finalMetalnessTexCont = CreateAndAddTextureContainer("Final Metalness");
+    p_finalRow = CreateAndAddRow();
+    p_finalAlbedoTexCont =
+        p_finalRow->CreateAndAddTextureContainer("Final Albedo");
+    p_finalNormalTexCont =
+        p_finalRow->CreateAndAddTextureContainer("Final Normal");
+    p_finalRoughnessTexCont =
+        p_finalRow->CreateAndAddTextureContainer("Final Roughness");
+    p_finalMetalnessTexCont =
+        p_finalRow->CreateAndAddTextureContainer("Final Metalness");
+
+    auto csf = p_mainContainerGo->AddComponent<UIContentSizeFitter>();
+    csf->SetVerticalSizeType(LayoutSizeType::PREFERRED);
+    csf->SetHorizontalSizeType(LayoutSizeType::PREFERRED);
+    p_mainContainerGo->GetRectTransform()->SetPivotPosition(Vector2(-1, 1));
 
     scrollPanel->GetScrollArea()->GetBackground()->SetTint(Color::Black());
-    scrollPanel->GetScrollArea()->SetContainedGameObject(p_gridGo);
+    scrollPanel->GetScrollArea()->SetContainedGameObject(p_mainContainerGo);
     scrollPanel->GetGameObject()->SetParent(this);
 
     p_bigImageGo = GameObjectFactory::CreateUIGameObject();
@@ -73,14 +88,6 @@ TexturesScene::~TexturesScene()
 {
 }
 
-TextureContainer *TexturesScene::CreateAndAddTextureContainer(
-    const String &label)
-{
-    TextureContainer *textureContainer = new TextureContainer(label);
-    textureContainer->SetParent(p_gridGo);
-    return textureContainer;
-};
-
 void TexturesScene::Update()
 {
     GameObject::Update();
@@ -92,51 +99,113 @@ void TexturesScene::Update()
     for (uint i = 0; i < allEffectLayers.Size(); ++i)
     {
         EffectLayer *effectLayer = allEffectLayers[i];
-        if (!m_effectLayerToTexCont.ContainsKey(effectLayer))
+        if (!p_effectLayerToRow.ContainsKey(effectLayer))
         {
             // Effect
             {
-                String layerName = effectLayer->GetName();
-                TextureContainer *texCont =
-                    CreateAndAddTextureContainer(layerName);
-                m_effectLayerToTexCont.Add(effectLayer, texCont);
-            }
+                TextureContainerRow *texContRow = CreateAndAddRow(effectLayer);
 
-            // Effect Masks
-            for (EffectLayerMask *effectLayerMask : effectLayer->GetMasks())
-            {
-                String layerName = effectLayerMask->GetName();
-                TextureContainer *maskTexCont =
-                    CreateAndAddTextureContainer(layerName);
-                m_effectLayerToMaskTexCont.Add(effectLayer, maskTexCont);
+                TextureContainer *texCont =
+                    texContRow->CreateAndAddEffectColorTextureContainer(
+                        effectLayer);
+                texCont->GetImageRenderer()->SetImageTexture(
+                    effectLayer->GetEffectColorTexture());
+
+                TextureContainer *mergedMaskTexCont =
+                    texContRow->CreateAndAddMergedMaskTextureContainer(
+                        effectLayer);
+                mergedMaskTexCont->GetImageRenderer()->SetImageTexture(
+                    effectLayer->GetMergedMaskTexture());
+
+                p_effectLayerToRow.Add(effectLayer, texContRow);
             }
         }
-        ASSERT(m_effectLayerToTexCont.ContainsKey(effectLayer));
+        ASSERT(p_effectLayerToRow.ContainsKey(effectLayer));
 
-        TextureContainer *effectLayerTexCont =
-            m_effectLayerToTexCont.Get(effectLayer);
-        effectLayerTexCont->GetImageRenderer()->SetImageTexture(
-            effectLayer->GetEffectColorTexture());
-
-        TextureContainer *effectMaskTexCont =
-            m_effectLayerToMaskTexCont.Get(effectLayer);
-        effectMaskTexCont->GetImageRenderer()->SetImageTexture(
-            effectLayer->GetMergedMaskTexture());
+        // Effect Masks
+        TextureContainerRow *texContRow = p_effectLayerToRow.Get(effectLayer);
+        for (EffectLayerMask *effectLayerMask : effectLayer->GetMasks())
+        {
+            if (!texContRow->GetMaskTextureContainersMap().ContainsKey(
+                    effectLayerMask))
+            {
+                texContRow->CreateAndAddMaskTextureContainer(effectLayerMask);
+            }
+        }
     }
 
-    // Remove non used effect layers
-    for (auto &it : m_effectLayerToTexCont)
+    // Remove non used texture containers
+    const auto effectLayersOfTextureContGroups = p_effectLayerToRow.GetKeys();
+    for (EffectLayer *effectLayer : effectLayersOfTextureContGroups)
     {
-        EffectLayer *effectLayer = it.first;
+        TextureContainerRow *texContRow = p_effectLayerToRow.Get(effectLayer);
         if (!allEffectLayers.Contains(effectLayer))
         {
-            TextureContainer *texCont = it.second;
-            TextureContainer *texMaskCont =
-                m_effectLayerToMaskTexCont.Get(it.first);
-            GameObject::Destroy(texCont);
-            GameObject::Destroy(texMaskCont);
-            m_effectLayerToTexCont.Remove(effectLayer);
-            m_effectLayerToMaskTexCont.Remove(effectLayer);
+            texContRow->RemoveTextureContainer(
+                texContRow->GetEffectColorTextureContainer());
+            texContRow->RemoveTextureContainer(
+                texContRow->GetMergedMaskEffectTextureContainer());
+            for (auto &it : texContRow->GetMaskTextureContainersMap())
+            {
+                texContRow->RemoveTextureContainer(it.second);
+            }
+        }
+        else
+        {
+            // Remove non used texture container masks
+            Array<EffectLayerMask *> masksWithTextureContainers =
+                texContRow->GetMaskTextureContainersMap().GetKeys();
+            for (EffectLayerMask *effectLayerMask : masksWithTextureContainers)
+            {
+                if (!effectLayer->GetMasks().Contains(effectLayerMask))
+                {
+                    TextureContainer *maskTexCont =
+                        texContRow->GetMaskTextureContainersMap().Get(
+                            effectLayerMask);
+                    texContRow->RemoveTextureContainer(maskTexCont);
+                }
+            }
+        }
+    }
+
+    // Remove rows if needed
+    Array<TextureContainerRow *> texContRows = p_effectLayerToRow.GetValues();
+    for (TextureContainerRow *texContRow : texContRows)
+    {
+        if (texContRow->CanBeDestroyed())
+        {
+            GameObject::Destroy(texContRow);
+            p_effectLayerToRow.RemoveValues(texContRow);
+        }
+    }
+
+    // Update texture containers
+    for (auto &itEffectLayer : p_effectLayerToRow)
+    {
+        EffectLayer *effectLayer = itEffectLayer.first;
+        TextureContainerRow *texContRow = itEffectLayer.second;
+        ASSERT(allEffectLayers.Contains(effectLayer));
+
+        TextureContainer *effectTexCont =
+            texContRow->GetEffectColorTextureContainer();
+        TextureContainer *mergedMaskTexCont =
+            texContRow->GetMergedMaskEffectTextureContainer();
+        effectTexCont->SetLabel(effectLayer->GetName());
+        mergedMaskTexCont->SetLabel(effectLayer->GetName() + "_MergedMask");
+        effectTexCont->GetImageRenderer()->SetImageTexture(
+            effectLayer->GetEffectColorTexture());
+        mergedMaskTexCont->GetImageRenderer()->SetImageTexture(
+            effectLayer->GetMergedMaskTexture());
+
+        for (auto &itMask : texContRow->GetMaskTextureContainersMap())
+        {
+            EffectLayerMask *effectLayerMask = itMask.first;
+            TextureContainer *maskTexCont = itMask.second;
+            ASSERT(effectLayer->GetMasks().Contains(effectLayerMask));
+
+            maskTexCont->SetLabel(effectLayerMask->GetName());
+            maskTexCont->GetImageRenderer()->SetImageTexture(
+                effectLayerMask->GetMaskTexture());
         }
     }
 
@@ -160,6 +229,7 @@ void TexturesScene::Update()
                 overedTexCont->GetImageRenderer()->GetImageTexture());
         }
         p_bigImageGo->SetEnabled(overedTexCont != nullptr);
+        p_bigImageGo->SetEnabled(false);
     }
 
     if (GameObject *modelGo = view3DScene->GetModelGameObject())
@@ -204,6 +274,13 @@ void TexturesScene::Update()
         p_finalMetalnessTexCont->GetImageRenderer()->SetImageTexture(
             compositer->GetFinalMetalnessTexture());
     }
+}
+
+TextureContainerRow *TexturesScene::CreateAndAddRow(EffectLayer *effectLayer)
+{
+    TextureContainerRow *row = new TextureContainerRow(effectLayer);
+    row->SetParent(p_mainContainerGo);
+    return row;
 }
 
 void TexturesScene::OnModelChanged(Model *)
