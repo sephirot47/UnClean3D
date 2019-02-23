@@ -552,7 +552,12 @@ void View3DScene::RemoveEffectLayer(uint effectLayerIdx)
         Array<EffectLayer *> &effectLayers = it.second.effectLayers;
         effectLayers.RemoveByIndex(effectLayerIdx);
     }
+
     InvalidateAll();
+    if (GetAllEffectLayers().IsEmpty())
+    {
+        CompositeTextures();
+    }
 }
 
 void View3DScene::ApplyControlPanelSettingsToModel()
