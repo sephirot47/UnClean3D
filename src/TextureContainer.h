@@ -10,6 +10,7 @@ namespace Bang
 {
 class UILabel;
 class UIFocusable;
+class UILayoutElement;
 class UIImageRenderer;
 }
 
@@ -24,13 +25,19 @@ public:
     // GameObject
     void Update() override;
     void SetLabel(const String &label);
+    void SetCanBeFocused(bool canBeFocused);
 
     UILabel *GetLabel() const;
+    UIImageRenderer *GetBorder() const;
     UIFocusable *GetFocusable() const;
     UIImageRenderer *GetImageRenderer() const;
+    UILayoutElement *GetImageLayoutElement() const;
 
 private:
+    bool m_canBeFocused = false;
+    UIImageRenderer *p_border = nullptr;
     UIImageRenderer *p_imageRenderer = nullptr;
+    UILayoutElement *p_imageLE = nullptr;
     UIFocusable *p_focusable = nullptr;
     UILabel *p_label = nullptr;
 };

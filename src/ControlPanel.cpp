@@ -31,6 +31,7 @@
 #include "EffectLayerMask.h"
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
+#include "TextureContainer.h"
 #include "UIEffectLayerMaskRow.h"
 #include "UIEffectLayerParameters.h"
 #include "UIEffectLayerRow.h"
@@ -336,15 +337,23 @@ ControlPanel::ControlPanel()
                 SkyboxButton(View3DScene::Environment environment)
                 {
                     GameObjectFactory::CreateUIGameObjectInto(this);
-                    auto img = AddComponent<UIImageRenderer>();
-                    img->SetImageTexture(
+
+                    AddComponent<UIVerticalLayout>();
+
+                    TextureContainer *texCont = new TextureContainer();
+                    texCont->SetParent(this);
+                    texCont->GetLabel()->GetGameObject()->SetEnabled(false);
+                    texCont->SetCanBeFocused(true);
+                    texCont->GetImageRenderer()->SetImageTexture(
                         View3DScene::GetInstance()->GetEnvironmentSnapshot(
                             environment));
 
+                    Vector2i size(64);
+                    texCont->GetImageLayoutElement()->SetMinSize(size);
                     auto le = AddComponent<UILayoutElement>();
-                    le->SetMinSize(Vector2i(64));
+                    le->SetMinSize(size);
 
-                    auto focusable = AddComponent<UIFocusable>();
+                    auto focusable = texCont->GetFocusable();
                     focusable->SetCursorType(Cursor::Type::HAND);
                     focusable->AddEventCallback([this, environment](
                         UIFocusable *, const UIEvent &event) {

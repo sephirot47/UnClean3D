@@ -43,6 +43,7 @@ TextureContainer *TextureContainerRow::CreateAndAddTextureContainer(
     const String &name)
 {
     TextureContainer *texCont = new TextureContainer(name);
+    texCont->SetCanBeFocused(false);
     texCont->SetParent(this);
     return texCont;
 }

@@ -32,16 +32,34 @@ TextureContainer::TextureContainer(const String &label)
     textureLabelLE->SetLayoutPriority(2);
 
     p_imageRenderer = GameObjectFactory::CreateUIImage();
-    UILayoutElement *imgLE =
+    p_imageLE =
         p_imageRenderer->GetGameObject()->AddComponent<UILayoutElement>();
-    imgLE->SetMinSize(Vector2i(300));
-    imgLE->SetFlexibleSize(Vector2(1.0f));
+    p_imageLE->SetMinSize(Vector2i(300));
+    p_imageLE->SetFlexibleSize(Vector2(1.0f));
     p_imageRenderer->GetGameObject()->SetParent(this);
 
-    p_focusable = AddComponent<UIFocusable>();
+    p_border = GameObjectFactory::AddOuterBorder(
+        p_imageRenderer->GetGameObject(), Vector2i(2), Color::Black());
 
-    GameObjectFactory::AddOuterBorder(
-        p_imageRenderer->GetGameObject(), Vector2i(2), Color::White());
+    p_focusable = AddComponent<UIFocusable>();
+    p_focusable->AddEventCallback([this](UIFocusable *, const UIEvent &event) {
+        if (m_canBeFocused)
+        {
+            switch (event.type)
+            {
+                case UIEvent::Type::MOUSE_ENTER:
+                    p_border->SetTint(Color::Orange());
+                    break;
+
+                case UIEvent::Type::MOUSE_EXIT:
+                    p_border->SetTint(Color::Black());
+                    break;
+
+                default: break;
+            }
+            return UIEventResult::IGNORE;
+        }
+    });
 }
 
 TextureContainer::~TextureContainer()
@@ -59,9 +77,27 @@ void TextureContainer::SetLabel(const String &label)
     GetLabel()->GetText()->SetContent(ellidedLabel);
 }
 
+void TextureContainer::SetCanBeFocused(bool canBeFocused)
+{
+    m_canBeFocused = canBeFocused;
+    if (!canBeFocused)
+    {
+        p_border->SetTint(Color::White());
+    }
+    else
+    {
+        p_border->SetTint(Color::Black());
+    }
+}
+
 UILabel *TextureContainer::GetLabel() const
 {
     return p_label;
+}
+
+UIImageRenderer *TextureContainer::GetBorder() const
+{
+    return p_border;
 }
 
 UIFocusable *TextureContainer::GetFocusable() const
@@ -72,4 +108,9 @@ UIFocusable *TextureContainer::GetFocusable() const
 UIImageRenderer *TextureContainer::GetImageRenderer() const
 {
     return p_imageRenderer;
+}
+
+UILayoutElement *TextureContainer::GetImageLayoutElement() const
+{
+    return p_imageLE;
 }

@@ -21,6 +21,7 @@
 #include "Bang/ShaderProgram.h"
 #include "Bang/ShaderProgramFactory.h"
 #include "Bang/TextureFactory.h"
+#include "Bang/Thread.h"
 #include "Bang/Transform.h"
 #include "Bang/VAO.h"
 #include "Bang/VBO.h"
@@ -328,6 +329,8 @@ void View3DScene::Update()
             p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
         }
     }
+
+    Thread::SleepCurrentThread(0.033f);
 }
 
 void View3DScene::Render(RenderPass rp, bool renderChildren)
