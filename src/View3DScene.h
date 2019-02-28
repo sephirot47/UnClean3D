@@ -22,6 +22,7 @@ class Model;
 class Framebuffer;
 class MeshRenderer;
 class LineRenderer;
+class DirectionalLight;
 };
 using namespace Bang;
 
@@ -106,6 +107,10 @@ private:
     Vector3 m_cameraOffset = Vector3::Zero();
     Vector3 m_cameraOrbitPoint = Vector3::Zero();
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
+
+    float m_currentCamAngleY = 0.0f;
+    float m_currentCamAngleX = 0.0f;
+    DirectionalLight *p_dirLight = nullptr;
 
     AH<Texture2D> m_openSeaSS;
     AH<TextureCubeMap> m_parkCM;

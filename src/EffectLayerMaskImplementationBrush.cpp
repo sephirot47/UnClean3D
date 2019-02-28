@@ -188,7 +188,6 @@ void EffectLayerMaskImplementationBrush::PaintMaskBrush()
         sp->SetBool("MaskBrushDepthAware", m_depthAware);
         sp->SetBool("MaskBrushErasing", m_erasing);
         sp->SetVector2("MaskBrushCenter", Vector2(Input::GetMousePosition()));
-        sp->SetFloat("MaskBrushHardness", m_hardness);
         sp->SetFloat("MaskBrushSize", m_size);
         sp->SetFloat("MaskBrushStrength", m_strength);
 

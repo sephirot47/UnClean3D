@@ -88,4 +88,5 @@ void BrushInspectorWidget::InitInnerWidgets()
 
 void BrushInspectorWidget::UpdateFromReference()
 {
+    SerializableInspectorWidget::UpdateFromReference();
 }

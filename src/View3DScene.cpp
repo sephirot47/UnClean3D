@@ -112,14 +112,14 @@ View3DScene::View3DScene()
 
     // Light
     GameObject *dlGo = GameObjectFactory::CreateGameObject();
-    DirectionalLight *dl = dlGo->AddComponent<DirectionalLight>();
-    dl->SetShadowStrength(1.0f);
-    dl->SetShadowDistance(100.0f);
-    dl->SetIntensity(3.0f);
-    dl->SetShadowBias(0.003f);
-    dl->SetCastShadows(true);
-    dl->SetShadowSoftness(2);
-    dl->SetShadowMapSize(Vector2i(1024));
+    p_dirLight = dlGo->AddComponent<DirectionalLight>();
+    p_dirLight->SetShadowStrength(1.0f);
+    p_dirLight->SetShadowDistance(100.0f);
+    p_dirLight->SetIntensity(3.0f);
+    p_dirLight->SetShadowBias(0.003f);
+    p_dirLight->SetCastShadows(true);
+    p_dirLight->SetShadowSoftness(2);
+    p_dirLight->SetShadowMapSize(Vector2i(1024));
     dlGo->GetTransform()->SetPosition(Vector3(5, 10, 10));
     dlGo->GetTransform()->LookAt(Vector3::Zero());
     dlGo->SetParent(this);
@@ -250,6 +250,7 @@ void View3DScene::Update()
         GetControlPanel()->GetMaskBrushEnabled());
 
     // Camera movement
+    const Sphere goSphere = p_modelContainer->GetBoundingSphereWorld();
     {
         if (Input::IsMouseInsideContext() &&
             Input::GetMouseButtonDown(MouseButton::RIGHT))
@@ -303,7 +304,6 @@ void View3DScene::Update()
                 (-Input::GetMouseWheel().y * 0.1f) * m_currentCameraZoom;
         }
 
-        Sphere goSphere = p_modelContainer->GetBoundingSphereWorld();
         if (goSphere.GetRadius() > 0.0f)
         {
             float halfFov = Math::DegToRad(p_cam->GetFovDegrees() / 2.0f);
@@ -323,6 +323,19 @@ void View3DScene::Update()
 
             p_cam->SetZNear(0.01f);
             p_cam->SetZFar((camDist + goSphere.GetRadius() * 2.0f) * 1.2f);
+        }
+    }
+
+    // Directional light movement
+    {
+        if (GetControlPanel()->GetRotateLights())
+        {
+            float angleDeltaX = Time::GetDeltaTime().GetSeconds() * 0.5f;
+            float angleDeltaY = Time::GetDeltaTime().GetSeconds() * 0.7f;
+            p_dirLight->GetGameObject()->GetTransform()->RotateLocal(
+                Quaternion::AngleAxis(angleDeltaY, Vector3::Up()));
+            p_dirLight->GetGameObject()->GetTransform()->RotateLocal(
+                Quaternion::AngleAxis(angleDeltaX, Vector3::Right()));
         }
     }
 

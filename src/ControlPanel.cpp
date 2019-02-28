@@ -336,6 +336,11 @@ ControlPanel::ControlPanel()
             HorizontalAlignment::LEFT);
         CreateRow("", environmentLabel->GetGameObject())->SetParent(sceneTab);
 
+        p_rotateLightsInput = GameObjectFactory::CreateUICheckBox();
+        p_rotateLightsInput->SetChecked(true);
+        CreateRow("Rotate light", p_rotateLightsInput->GetGameObject())
+            ->SetParent(sceneTab);
+
         GameObject *skyboxesRow = GameObjectFactory::CreateUIGameObject();
         {
             auto hl = skyboxesRow->AddComponent<UIHorizontalLayout>();
@@ -625,6 +630,11 @@ float ControlPanel::GetBaseRoughness() const
 float ControlPanel::GetBaseMetalness() const
 {
     return p_baseMetalnessInput->GetValue();
+}
+
+bool ControlPanel::GetRotateLights() const
+{
+    return p_rotateLightsInput->IsChecked();
 }
 
 Vector2i ControlPanel::GetTextureSize() const

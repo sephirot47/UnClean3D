@@ -11,6 +11,7 @@ namespace Bang
 {
 class UIButton;
 class UILabel;
+class UICheckBox;
 class UISlider;
 class UIComboBox;
 class UIToolButton;
@@ -68,6 +69,7 @@ public:
     void ReloadShaders();
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
+    bool GetRotateLights() const;
     Vector2i GetTextureSize() const;
     Texture2D *GetBrushTexture() const;
     ControlPanel::SeeMode GetSeeMode() const;
@@ -115,6 +117,9 @@ private:
     // Effect layer params
     GameObject *p_effectLayerParamsGo = nullptr;
     UILabel *p_effectLayerParamsTitle = nullptr;
+
+    // Scene
+    UICheckBox *p_rotateLightsInput = nullptr;
 
     // SerializableWidget
     UIEffectLayerParameters *p_effectParametersWidget = nullptr;
