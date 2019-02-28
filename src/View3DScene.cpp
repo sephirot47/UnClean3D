@@ -79,38 +79,33 @@ View3DScene::View3DScene()
         LoadCM(&m_hotelCM, &m_hotelSS, "Hotel");
     }
 
-    // Init mask brush
-    GameObject *maskBrushRendGo = GameObjectFactory::CreateGameObject();
+    // Init mask brush and preview related stuff
+    GameObject *maskBrushPreviewRendererGo =
+        GameObjectFactory::CreateGameObject();
     {
-        p_maskBrushRend = maskBrushRendGo->AddComponent<LineRenderer>();
-        Array<Vector3> circlePoints;
-        constexpr int CircleSegments = 100;
-        constexpr float step = (1.0f / CircleSegments);
-        for (uint i = 0; i < CircleSegments; ++i)
-        {
-            float angle = (2.0f * Math::Pi) * i * step;
-            Vector3 point(Math::Cos(angle), Math::Sin(angle), 0);
-            circlePoints.PushBack(point);
-        }
+        p_maskBrushPreviewRenderer =
+            maskBrushPreviewRendererGo->AddComponent<MeshRenderer>();
+        p_maskBrushPreviewRenderer->SetMesh(MeshFactory::GetPlane().Get());
 
-        for (uint i = 0; i < CircleSegments + 1; ++i)
-        {
-            p_maskBrushRend->SetPoint(i * 2, circlePoints[i % CircleSegments]);
-            p_maskBrushRend->SetPoint(i * 2 + 1,
-                                      circlePoints[(i + 1) % CircleSegments]);
-        }
+        m_brushPreviewSP.Set(ShaderProgramFactory::Get(
+            Paths::GetProjectAssetsDir().Append("Shaders").Append(
+                "BrushPreview.bushader")));
+        p_maskBrushPreviewRenderer->GetMaterial()->SetShaderProgram(
+            m_brushPreviewSP.Get());
 
-        p_maskBrushRend->GetMaterial()
+        p_maskBrushPreviewRenderer->GetMaterial()
             ->GetShaderProgramProperties()
             .SetLineWidth(1.0f);
-        p_maskBrushRend->GetMaterial()
+        p_maskBrushPreviewRenderer->GetMaterial()
             ->GetShaderProgramProperties()
             .SetRenderPass(RenderPass::CANVAS);
-        p_maskBrushRend->SetViewProjMode(GL::ViewProjMode::CANVAS);
-        p_maskBrushRend->GetMaterial()->SetAlbedoColor(Color::Red());
-        p_maskBrushRend->GetMaterial()->SetReceivesLighting(false);
+        p_maskBrushPreviewRenderer->SetViewProjMode(GL::ViewProjMode::CANVAS);
+        p_maskBrushPreviewRenderer->GetMaterial()->SetAlbedoColor(Color::Red());
+        p_maskBrushPreviewRenderer->GetMaterial()->SetReceivesLighting(false);
 
-        maskBrushRendGo->SetParent(this);
+        maskBrushPreviewRendererGo->GetTransform()->SetLocalScale(
+            Vector3(0.3f));
+        maskBrushPreviewRendererGo->SetParent(this);
     }
 
     m_glslRayCaster = new GLSLRayCaster();
@@ -240,7 +235,7 @@ void View3DScene::Update()
     // Mask brush line rendering handling
     if (GetControlPanel()->GetMaskBrushEnabled())
     {
-        GameObject *brushGo = p_maskBrushRend->GetGameObject();
+        GameObject *brushGo = p_maskBrushPreviewRenderer->GetGameObject();
         Transform *brushTR = brushGo->GetTransform();
         brushGo->SetEnabled(GetControlPanel()->GetMaskBrushEnabled());
         brushTR->SetPosition(Vector3(Input::GetMousePosition(), 0));
@@ -251,7 +246,8 @@ void View3DScene::Update()
                     ->GetImplementation());
         brushTR->SetScale(maskBrush->GetBrushSize());
     }
-    p_maskBrushRend->SetEnabled(GetControlPanel()->GetMaskBrushEnabled());
+    p_maskBrushPreviewRenderer->SetEnabled(
+        GetControlPanel()->GetMaskBrushEnabled());
 
     // Camera movement
     {
@@ -340,9 +336,8 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
         ApplyControlPanelSettingsToModel();
         ApplyCompositeTexturesToModel();
 
-        ShaderProgram *sp = m_view3DShaderProgram.Get();
-        sp->Bind();
-        GetControlPanel()->SetControlPanelUniforms(sp);
+        GetControlPanel()->SetControlPanelUniforms(m_brushPreviewSP.Get());
+        GetControlPanel()->SetControlPanelUniforms(m_view3DShaderProgram.Get());
     }
 
     Scene::Render(rp, renderChildren);
@@ -355,6 +350,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 
 void View3DScene::ReloadShaders()
 {
+    m_brushPreviewSP.Get()->ReImport();
     m_view3DShaderProgram.Get()->ReImport();
     m_effectLayerCompositer->ReloadShaders();
     GetControlPanel()->ReloadShaders();

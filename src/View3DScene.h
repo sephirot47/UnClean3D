@@ -88,7 +88,8 @@ private:
 
     Time m_lastTimeTexturesValidated = Time::Zero();
     GLSLRayCaster *m_glslRayCaster = nullptr;
-    LineRenderer *p_maskBrushRend = nullptr;
+    MeshRenderer *p_maskBrushPreviewRenderer = nullptr;
+    AH<ShaderProgram> m_brushPreviewSP;
 
     FPSChrono m_fpsChrono;
     AH<Mesh> m_textureMesh;

@@ -57,15 +57,6 @@ void EffectLayerMaskImplementationBrush::Reflect()
                       BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
                           BANG_REFLECT_HINT_STEP_VALUE(0.1f));
 
-    ReflectVar<float>("Hardness",
-                      [this](float hardness) {
-                          m_hardness = hardness;
-                          Invalidate();
-                      },
-                      [this]() { return m_hardness; },
-                      BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
-
     ReflectVar<float>("Size",
                       [this](float size) {
                           m_size = size;
@@ -200,8 +191,6 @@ void EffectLayerMaskImplementationBrush::PaintMaskBrush()
         sp->SetFloat("MaskBrushHardness", m_hardness);
         sp->SetFloat("MaskBrushSize", m_size);
         sp->SetFloat("MaskBrushStrength", m_strength);
-        sp->SetTexture2D("MaskBrushTexture",
-                         ControlPanel::GetInstance()->GetBrushTexture());
 
         GetControlPanel()->SetControlPanelUniforms(m_paintMaskBrushSP.Get());
     }

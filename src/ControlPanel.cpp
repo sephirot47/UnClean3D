@@ -596,6 +596,8 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
     }
 
     sp->SetBool("SeeMask", seeMask);
+    sp->SetTexture2D("MaskBrushTexture",
+                     ControlPanel::GetInstance()->GetBrushTexture());
     sp->SetTexture2D("MaskTextureToSee", maskTexToSee);
 }
 

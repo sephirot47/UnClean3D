@@ -1,7 +1,6 @@
 #include "Common.glsl"
 
 uniform vec2  MaskBrushCenter;
-uniform float MaskBrushHardness;
 uniform float MaskBrushStrength;
 uniform float MaskBrushSize;
 uniform sampler2D MaskBrushTexture;
