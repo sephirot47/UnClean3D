@@ -86,6 +86,7 @@ void TextureContainer::SetCanBeFocused(bool canBeFocused)
     }
     else
     {
+        GetFocusable()->SetCursorType(Cursor::Type::HAND);
         p_border->SetTint(Color::Black());
     }
 }

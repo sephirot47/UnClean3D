@@ -4,6 +4,7 @@ uniform vec2  MaskBrushCenter;
 uniform float MaskBrushHardness;
 uniform float MaskBrushStrength;
 uniform float MaskBrushSize;
+uniform sampler2D MaskBrushTexture;
 
 float GetMaskBrushApportationFromCurrentMousePositionProj(vec2 posProj,
                                                           vec2 viewportSize)
@@ -11,14 +12,16 @@ float GetMaskBrushApportationFromCurrentMousePositionProj(vec2 posProj,
     vec2 fragPos = posProj;
     fragPos *= viewportSize;
 
-    float dist = distance(MaskBrushCenter, fragPos);
-    if (dist < MaskBrushSize)
+    vec2 relativeFragPos = (fragPos - (MaskBrushCenter - MaskBrushSize * 0.5));
+    if (relativeFragPos.x > 0 &&
+        relativeFragPos.y > 0 &&
+        relativeFragPos.x < MaskBrushSize &&
+        relativeFragPos.y < MaskBrushSize)
     {
-        float distNorm = (dist / MaskBrushSize);
-        float halfHardness = (MaskBrushHardness * 0.5f);
-        float hh = halfHardness;
-        float brushIntensity = smoothstep(hh, 1 - hh, (1.0 - distNorm + hh));
+        vec2 brushUv = relativeFragPos / MaskBrushSize;
+        float brushIntensity = texture(MaskBrushTexture, brushUv).a;
         brushIntensity *= MaskBrushStrength;
+        brushIntensity = clamp(brushIntensity, 0, 1);
         return brushIntensity;
     }
     return 0.0f;

@@ -26,6 +26,7 @@
 #include "BangEditor/UITabContainer.h"
 #include "BangEditor/UITabHeader.h"
 
+#include "BrushInspectorWidget.h"
 #include "EffectLayer.h"
 #include "EffectLayerCompositer.h"
 #include "EffectLayerMask.h"
@@ -272,6 +273,8 @@ ControlPanel::ControlPanel()
                 p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
             subVL->SetSpacing(5);
 
+            p_brushTexture.Set(TextureFactory::GetWhiteTexture());
+
             p_maskLabel = GameObjectFactory::CreateUILabel();
             p_maskLabel->GetText()->SetContent("Mask");
             p_maskLabel->GetText()->SetTextSize(14);
@@ -279,6 +282,12 @@ ControlPanel::ControlPanel()
                 HorizontalAlignment::LEFT);
             CreateRow("", p_maskLabel->GetGameObject())
                 ->SetParent(p_maskParamsGo);
+
+            p_brushInspectorWidget = new BrushInspectorWidget();
+            p_brushInspectorWidget->Init();
+            p_brushInspectorWidget->SetParent(p_maskParamsGo);
+            p_brushInspectorWidget->GetInspectorWidgetTitle()->SetEnabled(
+                false);
 
             p_maskSerializableWidget = new SerializableInspectorWidget();
             p_maskSerializableWidget->Init();
@@ -354,7 +363,6 @@ ControlPanel::ControlPanel()
                     le->SetMinSize(size);
 
                     auto focusable = texCont->GetFocusable();
-                    focusable->SetCursorType(Cursor::Type::HAND);
                     focusable->AddEventCallback([this, environment](
                         UIFocusable *, const UIEvent &event) {
                         if (event.type == UIEvent::Type::MOUSE_CLICK_FULL)
@@ -425,8 +433,19 @@ void ControlPanel::Update()
             {
                 p_maskLabel->GetText()->SetContent("Mask " +
                                                    impl->GetTypeName());
-                p_maskSerializableWidget->SetSerializable(impl);
-                p_maskSerializableWidget->UpdateFromReference();
+                SerializableInspectorWidget *maskWidget =
+                    p_maskSerializableWidget;
+                p_maskSerializableWidget->SetEnabled(false);
+                p_brushInspectorWidget->SetEnabled(false);
+                if (impl->GetEffectLayerMaskType() ==
+                    EffectLayerMask::Type::BRUSH)
+                {
+                    maskWidget = p_brushInspectorWidget;
+                }
+                maskWidget->SetEnabled(true);
+                maskWidget->SetSerializable(impl);
+                maskWidget->UpdateFromReference();
+
                 enableMaskParams = true;
                 enableEffectParams = false;
             }
@@ -580,6 +599,11 @@ void ControlPanel::SetControlPanelUniforms(ShaderProgram *sp)
     sp->SetTexture2D("MaskTextureToSee", maskTexToSee);
 }
 
+void ControlPanel::SetBrushTexture(Texture2D *brushTexture)
+{
+    p_brushTexture.Set(brushTexture);
+}
+
 bool ControlPanel::GetMaskBrushEnabled() const
 {
     return (GetSelectedEffectLayerMask() &&
@@ -605,6 +629,11 @@ Vector2i ControlPanel::GetTextureSize() const
 {
     return Vector2i(p_texturesSizeInput->GetSelectedValue(),
                     p_texturesSizeInput->GetSelectedValue());
+}
+
+Texture2D *ControlPanel::GetBrushTexture() const
+{
+    return p_brushTexture.Get();
 }
 
 ControlPanel::SeeMode ControlPanel::GetSeeMode() const
@@ -671,6 +700,11 @@ uint ControlPanel::GetSelectedUIEffectLayerMaskIndex() const
 void ControlPanel::SetSceneModeOnComboBox(MainScene::SceneMode sceneMode)
 {
     p_sceneModeComboBox->SetSelectionByValue(SCAST<uint>(sceneMode));
+}
+
+ControlPanel *ControlPanel::GetInstance()
+{
+    return MainScene::GetInstance()->GetControlPanel();
 }
 
 Path ControlPanel::GetInitialDir() const

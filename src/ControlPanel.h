@@ -24,6 +24,7 @@ class SerializableInspectorWidget;
 }
 
 class EffectLayer;
+class BrushInspectorWidget;
 class EffectLayerMask;
 class UIEffectLayerParameters;
 class UIEffectLayers;
@@ -61,12 +62,14 @@ public:
 
     void FillSelectedMask();
     void ClearSelectedMask();
+    void SetBrushTexture(Texture2D *brushTexture);
     bool GetMaskBrushEnabled() const;
 
     void ReloadShaders();
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
     Vector2i GetTextureSize() const;
+    Texture2D *GetBrushTexture() const;
     ControlPanel::SeeMode GetSeeMode() const;
     EffectLayer *GetSelectedEffectLayer() const;
     EffectLayerMask *GetSelectedEffectLayerMask() const;
@@ -76,6 +79,8 @@ public:
     uint GetSelectedUIEffectLayerMaskIndex() const;
 
     void SetSceneModeOnComboBox(MainScene::SceneMode sceneMode);
+
+    static ControlPanel *GetInstance();
 
 private:
     Path m_openModelPath = Path::Empty();
@@ -102,6 +107,7 @@ private:
     GameObject *p_maskParamsGo = nullptr;
     GameObject *p_maskSubParamsGo = nullptr;
     UILabel *p_maskLabel = nullptr;
+    AH<Texture2D> p_brushTexture;
 
     // Effect layers
     UIEffectLayers *p_uiEffectLayers = nullptr;
@@ -113,6 +119,7 @@ private:
     // SerializableWidget
     UIEffectLayerParameters *p_effectParametersWidget = nullptr;
     SerializableInspectorWidget *p_maskSerializableWidget = nullptr;
+    BrushInspectorWidget *p_brushInspectorWidget = nullptr;
 
     Path GetInitialDir() const;
     Path GetOpenModelPath() const;

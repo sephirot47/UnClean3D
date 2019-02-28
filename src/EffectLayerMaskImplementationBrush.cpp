@@ -200,6 +200,8 @@ void EffectLayerMaskImplementationBrush::PaintMaskBrush()
         sp->SetFloat("MaskBrushHardness", m_hardness);
         sp->SetFloat("MaskBrushSize", m_size);
         sp->SetFloat("MaskBrushStrength", m_strength);
+        sp->SetTexture2D("MaskBrushTexture",
+                         ControlPanel::GetInstance()->GetBrushTexture());
 
         GetControlPanel()->SetControlPanelUniforms(m_paintMaskBrushSP.Get());
     }
