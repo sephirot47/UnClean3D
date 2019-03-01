@@ -2,9 +2,15 @@
 
 #include "Bang/Bang.h"
 #include "Bang/GameObject.h"
-#include "Bang/UIImageRenderer.h"
 
 class MainScene;
+
+namespace Bang
+{
+class Texture2D;
+class UIFocusable;
+class UIImageRenderer;
+}
 
 class SceneImage : public GameObject
 {
@@ -16,6 +22,9 @@ public:
 
     void SetImageTexture(Texture2D *texture);
 
+    UIFocusable *GetFocusable() const;
+
 private:
+    UIFocusable *p_focusable = nullptr;
     UIImageRenderer *p_sceneImgRend = nullptr;
 };

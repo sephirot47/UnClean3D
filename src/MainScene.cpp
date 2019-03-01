@@ -142,6 +142,11 @@ void MainScene::SetSceneMode(MainScene::SceneMode sceneMode)
     }
 }
 
+bool MainScene::IsMouseOverView3DScene() const
+{
+    return GetSceneImage()->GetFocusable()->IsMouseOver();
+}
+
 Model *MainScene::GetCurrentModel() const
 {
     return p_currentModel.Get();

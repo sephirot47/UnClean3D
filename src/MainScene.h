@@ -37,6 +37,7 @@ public:
     void LoadModel(const Path &modelPath);
     void SetSceneMode(MainScene::SceneMode sceneMode);
 
+    bool IsMouseOverView3DScene() const;
     Model *GetCurrentModel() const;
     GameObject *GetCurrentModelGameObject() const;
     View3DScene *GetView3DScene() const;

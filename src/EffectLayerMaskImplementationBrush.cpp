@@ -177,7 +177,9 @@ void EffectLayerMaskImplementationBrush::Update()
 
     // Generate needed textures
     if (Input::GetMouseButton(MouseButton::LEFT) &&
-        GetControlPanel()->GetSelectedEffectLayerMask() == GetEffectLayerMask())
+        GetControlPanel()->GetSelectedEffectLayerMask() ==
+            GetEffectLayerMask() &&
+        MainScene::GetInstance()->IsMouseOverView3DScene())
     {
         PaintMaskBrush();
     }
