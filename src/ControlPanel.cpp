@@ -536,7 +536,7 @@ void ControlPanel::ImportEffect()
     {
         UIEffectLayerRow *effectLayerRow = CreateNewEffectLayer();
         EffectLayer *effectLayer = effectLayerRow->GetEffectLayer();
-        effectLayer->ImportMeta(effectLayerMeta);
+        effectLayer->ImportMetaForSave(effectLayerMeta);
     }
 
     UpdateFromEffectLayers();
@@ -554,7 +554,7 @@ void ControlPanel::ExportEffect()
     {
         EffectLayer *effectLayer = *it;
         MetaNode effectMeta;
-        effectLayer->ExportMeta(&effectMeta);
+        effectLayer->ExportMetaForSave(&effectMeta);
         wholeEffectMeta.AddChild(effectMeta, "EffectLayerChildren");
     }
 

@@ -90,6 +90,64 @@ void EffectLayerMaskImplementationBrush::Reflect()
                         [this]() { GetEffectLayerMask()->FillMask(); });
 }
 
+void EffectLayerMaskImplementationBrush::ImportMetaForSave(const MetaNode &meta)
+{
+    EffectLayerMaskImplementation::ImportMetaForSave(meta);
+    ImportImage(meta);
+}
+
+void EffectLayerMaskImplementationBrush::ExportMetaForSave(MetaNode *meta)
+{
+    EffectLayerMaskImplementation::ExportMetaForSave(meta);
+    ExportImage(meta);
+}
+
+void EffectLayerMaskImplementationBrush::ExportImage(MetaNode *metaNode) const
+{
+    Texture2D *maskTex = GetEffectLayerMask()->GetMaskTexture();
+    Image maskImg = maskTex->ToImage();
+    Vector2i texSize = maskTex->GetSize();
+    metaNode->Set("TextureSize", texSize);
+
+    String imgString;
+    for (uint y = 0; y < texSize.y; ++y)
+    {
+        for (uint x = 0; x < texSize.x; ++x)
+        {
+            const Color &color = maskImg.GetPixel(x, y);
+            imgString += String(SCAST<int>(color.r * 255)) + " ";
+            imgString += String(SCAST<int>(color.g * 255)) + " ";
+            imgString += String(SCAST<int>(color.b * 255)) + " ";
+            imgString += String(SCAST<int>(color.a * 255)) + " ";
+        }
+    }
+    metaNode->Set("MaskTextureString", imgString);
+}
+
+void EffectLayerMaskImplementationBrush::ImportImage(const MetaNode &metaNode)
+{
+    Serializable::ImportMeta(metaNode);
+
+    Vector2i texSize = metaNode.Get<Vector2i>("TextureSize");
+
+    Image maskImg;
+    maskImg.Create(texSize.x, texSize.y);
+    String imgString = metaNode.Get<String>("MaskTextureString");
+    std::istringstream iss(imgString);
+    for (uint i = 0; i < texSize.x * texSize.y; ++i)
+    {
+        Vector2i pixCoord = Vector2i(i % texSize.x, i / texSize.x);
+        Color color;
+        iss >> color.r;
+        iss >> color.g;
+        iss >> color.b;
+        iss >> color.a;
+        color /= 255.0f;
+        maskImg.SetPixel(pixCoord.x, pixCoord.y, color);
+    }
+    GetEffectLayerMask()->GetMaskTexture()->Import(maskImg);
+}
+
 EffectLayerMask::Type
 EffectLayerMaskImplementationBrush::GetEffectLayerMaskType() const
 {

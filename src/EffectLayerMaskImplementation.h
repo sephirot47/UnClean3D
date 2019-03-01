@@ -50,6 +50,9 @@ public:
     virtual void Reflect() override;
     void Invalidate();
 
+    virtual void ImportMetaForSave(const MetaNode &meta);
+    virtual void ExportMetaForSave(MetaNode *meta);
+
 protected:
     bool m_isValid = false;
 

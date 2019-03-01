@@ -94,3 +94,13 @@ void EffectLayerMaskImplementation::Invalidate()
     m_isValid = false;
     GetEffectLayerMask()->Invalidate();
 }
+
+void EffectLayerMaskImplementation::ImportMetaForSave(const MetaNode &meta)
+{
+    ImportMeta(meta);
+}
+
+void EffectLayerMaskImplementation::ExportMetaForSave(MetaNode *meta)
+{
+    ExportMeta(meta);
+}

@@ -65,6 +65,8 @@ public:
     // Serializable
     void ImportMeta(const MetaNode &meta) override;
     void ExportMeta(MetaNode *meta) const override;
+    void ImportMetaForSave(const MetaNode &meta);
+    void ExportMetaForSave(MetaNode *meta);
 
     // IReflectable
     virtual void Reflect() override;

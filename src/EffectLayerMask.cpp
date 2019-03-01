@@ -229,6 +229,30 @@ void EffectLayerMask::ExportMeta(MetaNode *meta) const
     }
 }
 
+void EffectLayerMask::ImportMetaForSave(const MetaNode &meta)
+{
+    ImportMeta(meta);
+    if (GetImplementation())
+    {
+        if (const MetaNode *implMeta = meta.GetChild("ImplementationMeta", 0))
+        {
+            GetImplementation()->ImportMetaForSave(*implMeta);
+        }
+    }
+}
+
+void EffectLayerMask::ExportMetaForSave(MetaNode *meta)
+{
+    ExportMeta(meta);
+    if (GetImplementation())
+    {
+        if (MetaNode *implMeta = meta->GetChild("ImplementationMeta", 0))
+        {
+            GetImplementation()->ExportMetaForSave(implMeta);
+        }
+    }
+}
+
 void EffectLayerMask::Reflect()
 {
     Serializable::Reflect();

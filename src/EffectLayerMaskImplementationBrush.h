@@ -21,8 +21,13 @@ public:
 
     float GetBrushSize() const;
 
+    void ExportImage(MetaNode *metaNode) const;
+    void ImportImage(const MetaNode &metaNode);
+
     // Serializable
     virtual void Reflect() override;
+    virtual void ImportMetaForSave(const MetaNode &meta);
+    virtual void ExportMetaForSave(MetaNode *meta);
 
 protected:
     // EffectLayerMaskImplementation

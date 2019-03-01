@@ -434,6 +434,34 @@ void EffectLayer::ExportMeta(MetaNode *meta) const
     }
 }
 
+void EffectLayer::ImportMetaForSave(const MetaNode &meta)
+{
+    EffectLayer::ImportMeta(meta);
+    int i = 0;
+    for (EffectLayerMask *mask : GetMasks())
+    {
+        if (const MetaNode *maskMeta = meta.GetChild("EffectLayerMasksMeta", i))
+        {
+            mask->ImportMetaForSave(*maskMeta);
+            ++i;
+        }
+    }
+}
+
+void EffectLayer::ExportMetaForSave(MetaNode *meta)
+{
+    EffectLayer::ExportMeta(meta);
+    int i = 0;
+    for (EffectLayerMask *mask : GetMasks())
+    {
+        if (MetaNode *maskMeta = meta->GetChild("EffectLayerMasksMeta", i))
+        {
+            mask->ExportMetaForSave(maskMeta);
+            ++i;
+        }
+    }
+}
+
 Texture2D *EffectLayer::GetEffectColorTexture() const
 {
     return m_effectColorTexture.Get();
