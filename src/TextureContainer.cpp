@@ -91,6 +91,18 @@ void TextureContainer::SetCanBeFocused(bool canBeFocused)
     }
 }
 
+void TextureContainer::SetSelected(bool selected)
+{
+    if (selected)
+    {
+        GameObjectFactory::MakeBorderFocused(p_border);
+    }
+    else
+    {
+        GameObjectFactory::MakeBorderNotFocused(p_border);
+    }
+}
+
 UILabel *TextureContainer::GetLabel() const
 {
     return p_label;

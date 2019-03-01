@@ -20,6 +20,8 @@ public:
     virtual void InitInnerWidgets() override;
     virtual void UpdateFromReference() override;
 
+    const Array<TextureContainer *> &GetTextureContainers() const;
+
 private:
     Array<TextureContainer *> p_textureContainers;
     GameObject *p_brushesImagesContainer = nullptr;

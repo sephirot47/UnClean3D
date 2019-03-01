@@ -89,4 +89,18 @@ void BrushInspectorWidget::InitInnerWidgets()
 void BrushInspectorWidget::UpdateFromReference()
 {
     SerializableInspectorWidget::UpdateFromReference();
+
+    ControlPanel *cp = ControlPanel::GetInstance();
+    for (TextureContainer *texCont : GetTextureContainers())
+    {
+        const bool selected = (cp->GetBrushTexture() ==
+                               texCont->GetImageRenderer()->GetImageTexture());
+        texCont->SetSelected(selected);
+    }
+}
+
+const Array<TextureContainer *> &BrushInspectorWidget::GetTextureContainers()
+    const
+{
+    return p_textureContainers;
 }

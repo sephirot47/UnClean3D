@@ -66,6 +66,7 @@ public:
     Camera *GetCamera() const;
     GLSLRayCaster *GetGLSLRayCaster() const;
     GameObject *GetModelGameObject() const;
+    View3DScene::Environment GetEnvironment() const;
     const Vector3 &GetModelOriginalLocalScale() const;
     Array<EffectLayer *> GetAllEffectLayers() const;
     Array<EffectLayer *> GetSelectedEffectLayers() const;
@@ -107,6 +108,7 @@ private:
     Vector3 m_cameraOffset = Vector3::Zero();
     Vector3 m_cameraOrbitPoint = Vector3::Zero();
     Vector2 m_currentCameraRotAngles = Vector2::Zero();
+    Environment m_environment = Environment::OPEN_SEA;
 
     float m_currentCamAngleY = 0.0f;
     float m_currentCamAngleX = 0.0f;

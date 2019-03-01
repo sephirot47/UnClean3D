@@ -646,6 +646,7 @@ void View3DScene::MoveEffectLayer(EffectLayer *effectLayer, uint newIndex)
 
 void View3DScene::SetEnvironment(View3DScene::Environment environment)
 {
+    m_environment = environment;
     AH<TextureCubeMap> cm;
     switch (environment)
     {
@@ -682,6 +683,11 @@ GameObject *View3DScene::GetModelGameObject() const
                               ? p_modelContainer->GetChild(0)
                               : nullptr;
     return modelGo;
+}
+
+View3DScene::Environment View3DScene::GetEnvironment() const
+{
+    return m_environment;
 }
 
 const Vector3 &View3DScene::GetModelOriginalLocalScale() const

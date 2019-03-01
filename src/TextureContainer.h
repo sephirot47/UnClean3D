@@ -26,6 +26,7 @@ public:
     void Update() override;
     void SetLabel(const String &label);
     void SetCanBeFocused(bool canBeFocused);
+    void SetSelected(bool selected);
 
     UILabel *GetLabel() const;
     UIImageRenderer *GetBorder() const;

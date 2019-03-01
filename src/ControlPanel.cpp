@@ -273,8 +273,6 @@ ControlPanel::ControlPanel()
                 p_maskSubParamsGo->AddComponent<UIVerticalLayout>();
             subVL->SetSpacing(5);
 
-            p_brushTexture.Set(TextureFactory::GetWhiteTexture());
-
             p_maskLabel = GameObjectFactory::CreateUILabel();
             p_maskLabel->GetText()->SetContent("Mask");
             p_maskLabel->GetText()->SetTextSize(14);
@@ -348,26 +346,29 @@ ControlPanel::ControlPanel()
 
             struct SkyboxButton : public GameObject
             {
+                View3DScene::Environment m_environment;
+                TextureContainer *p_texCont = nullptr;
                 SkyboxButton(View3DScene::Environment environment)
                 {
+                    m_environment = environment;
                     GameObjectFactory::CreateUIGameObjectInto(this);
 
                     AddComponent<UIVerticalLayout>();
 
-                    TextureContainer *texCont = new TextureContainer();
-                    texCont->SetParent(this);
-                    texCont->GetLabel()->GetGameObject()->SetEnabled(false);
-                    texCont->SetCanBeFocused(true);
-                    texCont->GetImageRenderer()->SetImageTexture(
+                    p_texCont = new TextureContainer();
+                    p_texCont->SetParent(this);
+                    p_texCont->GetLabel()->GetGameObject()->SetEnabled(false);
+                    p_texCont->SetCanBeFocused(true);
+                    p_texCont->GetImageRenderer()->SetImageTexture(
                         View3DScene::GetInstance()->GetEnvironmentSnapshot(
                             environment));
 
                     Vector2i size(64);
-                    texCont->GetImageLayoutElement()->SetMinSize(size);
+                    p_texCont->GetImageLayoutElement()->SetMinSize(size);
                     auto le = AddComponent<UILayoutElement>();
                     le->SetMinSize(size);
 
-                    auto focusable = texCont->GetFocusable();
+                    auto focusable = p_texCont->GetFocusable();
                     focusable->AddEventCallback([this, environment](
                         UIFocusable *, const UIEvent &event) {
                         if (event.type == UIEvent::Type::MOUSE_CLICK_FULL)
@@ -377,6 +378,15 @@ ControlPanel::ControlPanel()
                         }
                         return UIEventResult::IGNORE;
                     });
+                }
+
+                void Update() override
+                {
+                    GameObject::Update();
+                    const bool selected =
+                        (m_environment ==
+                         View3DScene::GetInstance()->GetEnvironment());
+                    p_texCont->SetSelected(selected);
                 }
             };
 
@@ -458,6 +468,15 @@ void ControlPanel::Update()
     }
     p_maskParamsGo->SetEnabled(enableMaskParams);
     p_effectLayerParamsGo->SetEnabled(enableEffectParams);
+
+    if (!GetBrushTexture() &&
+        p_brushInspectorWidget->GetTextureContainers().Size() >= 1)
+    {
+        SetBrushTexture(p_brushInspectorWidget->GetTextureContainers()
+                            .Front()
+                            ->GetImageRenderer()
+                            ->GetImageTexture());
+    }
 
     MainScene::GetInstance()->SetSceneMode(
         SCAST<MainScene::SceneMode>(p_sceneModeComboBox->GetSelectedValue()));
