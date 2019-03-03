@@ -17,6 +17,7 @@
 #include "EffectLayerMaskImplementationBlur.h"
 #include "EffectLayerMaskImplementationBrush.h"
 #include "EffectLayerMaskImplementationFractal.h"
+#include "EffectLayerMaskImplementationNormal.h"
 #include "View3DScene.h"
 
 using namespace Bang;
@@ -65,6 +66,10 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
 
         switch (type)
         {
+            case EffectLayerMask::Type::NORMAL:
+                m_implementation = new EffectLayerMaskImplementationNormal();
+                break;
+
             case EffectLayerMask::Type::FRACTAL:
                 m_implementation = new EffectLayerMaskImplementationFractal();
                 break;

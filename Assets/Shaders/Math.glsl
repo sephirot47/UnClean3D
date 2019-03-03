@@ -19,6 +19,11 @@ float side(vec2 p1, vec2 p2, vec2 p3)
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
+float Map(float value, float srcMin, float srcMax, float destMin, float destMax)
+{
+    return ((value - srcMin) / (srcMax - srcMin)) * (destMax - destMin) + destMin;
+}
+
 vec3 GetProjectedPoint(vec3 point, vec3 planePoint, vec3 planeNormal)
 {
     float dist = dot(point - planePoint, planeNormal);

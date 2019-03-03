@@ -4,7 +4,6 @@ uniform mat4 SceneModelMatrix;
 
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
-layout(location = 2) in vec3 vinNormal;
 layout(location = 3) in float vinTriId;
 
 out vec3 inWorldPosition;

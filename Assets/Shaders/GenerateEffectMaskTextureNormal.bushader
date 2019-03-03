@@ -1,0 +1,53 @@
+#vertex
+
+uniform mat4 SceneModelMatrix;
+uniform mat4 SceneNormalMatrix;
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+layout(location = 2) in vec3 vinNormal;
+
+out vec3 inWorldPosition;
+out vec3 inWorldNormal;
+
+void main()
+{
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    inWorldNormal = (SceneModelMatrix * vec4(vinNormal, 0)).xyz;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "Math.glsl"
+
+uniform vec3 Normal;
+uniform float Fadeout;
+uniform float Intensity;
+
+in vec3 inWorldPosition;
+in vec3 inWorldNormal;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    vec3 worldNormal = normalize(inWorldNormal);
+    vec3 normal = normalize(Normal);
+
+    float invFadeout = (1.0f - Fadeout);
+    invFadeout = max(invFadeout, 0.01);
+
+    float maskIntensity = dot(worldNormal, normal);
+    maskIntensity -= invFadeout;
+    maskIntensity = clamp(maskIntensity, 0, 1);
+    maskIntensity = Map(maskIntensity, 0, invFadeout, 0, 1);
+    maskIntensity *= Intensity;
+    maskIntensity = clamp(maskIntensity, 0, 1);
+
+    OutColor = vec4(maskIntensity, 0, 0, 1);
+}
+
+

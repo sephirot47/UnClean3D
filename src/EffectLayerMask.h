@@ -31,6 +31,7 @@ public:
     enum class Type
     {
         FRACTAL,
+        NORMAL,
         AMBIENT_OCCLUSION,
         BRUSH,
         BLUR
