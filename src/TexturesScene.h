@@ -39,6 +39,7 @@ private:
     TextureContainer *p_originalMetalnessTexCont = nullptr;
     TextureContainer *p_finalAlbedoTexCont = nullptr;
     TextureContainer *p_finalNormalTexCont = nullptr;
+    TextureContainer *p_finalHeightfieldTexCont = nullptr;
     TextureContainer *p_finalRoughnessTexCont = nullptr;
     TextureContainer *p_finalMetalnessTexCont = nullptr;
 

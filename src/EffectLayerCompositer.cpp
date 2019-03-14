@@ -207,11 +207,19 @@ void EffectLayerCompositer::CompositeLayers(
         std::swap(metalnessDrawTex, metalnessReadTex);
     }
 
+    p_finalAlbedoTexture.Set(albedoReadTex);
+    p_finalHeightTexture.Set(heightReadTex);
+    p_finalRoughnessTexture.Set(roughnessReadTex);
+    p_finalMetalnessTexture.Set(metalnessReadTex);
+
+    m_pullPush->PullPushTexture(GetFinalAlbedoTexture());
+    m_pullPush->PullPushTexture(GetFinalHeightTexture());
+    m_pullPush->PullPushTexture(GetFinalMetalnessTexture());
+    m_pullPush->PullPushTexture(GetFinalRoughnessTexture());
+
     sp = m_heightfieldToNormalTextureSP.Get();
     {
         sp->Bind();
-        // GEngine::GetInstance()->CopyTexture(normalOriginalTex,
-        //                                     p_finalNormalTexture.Get());
         m_framebuffer->SetAttachmentTexture(p_finalNormalTexture.Get(),
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
@@ -219,18 +227,11 @@ void EffectLayerCompositer::CompositeLayers(
         GEngine::GetInstance()->RenderViewportPlane();
     }
 
+    m_pullPush->PullPushTexture(GetFinalNormalTexture());
+
     GL::Pop(GL::Pushable::BLEND_STATES);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
 
-    p_finalAlbedoTexture.Set(albedoReadTex);
-    p_finalHeightTexture.Set(heightReadTex);
-    p_finalRoughnessTexture.Set(roughnessReadTex);
-    p_finalMetalnessTexture.Set(metalnessReadTex);
-
-    m_pullPush->PullPushTexture(GetFinalAlbedoTexture());
-    m_pullPush->PullPushTexture(GetFinalNormalTexture());
-    m_pullPush->PullPushTexture(GetFinalMetalnessTexture());
-    m_pullPush->PullPushTexture(GetFinalRoughnessTexture());
 }

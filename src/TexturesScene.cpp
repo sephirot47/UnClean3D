@@ -58,6 +58,8 @@ TexturesScene::TexturesScene()
         p_finalRow->CreateAndAddTextureContainer("Final Albedo");
     p_finalNormalTexCont =
         p_finalRow->CreateAndAddTextureContainer("Final Normal");
+    p_finalHeightfieldTexCont =
+        p_finalRow->CreateAndAddTextureContainer("Final Heightfield");
     p_finalRoughnessTexCont =
         p_finalRow->CreateAndAddTextureContainer("Final Roughness");
     p_finalMetalnessTexCont =
@@ -229,7 +231,6 @@ void TexturesScene::Update()
                 overedTexCont->GetImageRenderer()->GetImageTexture());
         }
         p_bigImageGo->SetEnabled(overedTexCont != nullptr);
-        p_bigImageGo->SetEnabled(false);
     }
 
     if (GameObject *modelGo = view3DScene->GetModelGameObject())
@@ -269,6 +270,8 @@ void TexturesScene::Update()
             compositer->GetFinalAlbedoTexture());
         p_finalNormalTexCont->GetImageRenderer()->SetImageTexture(
             compositer->GetFinalNormalTexture());
+        p_finalHeightfieldTexCont->GetImageRenderer()->SetImageTexture(
+            compositer->GetFinalHeightTexture());
         p_finalRoughnessTexCont->GetImageRenderer()->SetImageTexture(
             compositer->GetFinalRoughnessTexture());
         p_finalMetalnessTexCont->GetImageRenderer()->SetImageTexture(

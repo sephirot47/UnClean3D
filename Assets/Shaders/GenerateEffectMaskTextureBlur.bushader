@@ -110,7 +110,8 @@ void main()
                     for (int j = 0; j < 3; ++j)
                     {
                         vec3 thisTriEdgeNorm = thisTriEdgesNorm[j];
-                        vec3 thisTriEdgePlaneNormal = cross(thisTriEdgeNorm, triNormalsMean);
+                        vec3 thisTriEdgePlaneNormal = normalize(
+                                    cross(thisTriEdgeNorm, triNormalsMean));
 
                         float distToEdgePlane =
                             IntersectRayPlaneDist(thisWorldPosition, sampleWorldOffsetDir,
