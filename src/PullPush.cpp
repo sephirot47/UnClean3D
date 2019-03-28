@@ -147,11 +147,6 @@ void PullPush::PullPushTexture(Texture2D *originalTextureToPullPush)
                                          GetPullTexture(currentTexSize.x));
         m_pullPushSP.Get()->SetTexture2D("CurrentPushedTexture",
                                          GetPushTexture(currentTexSize.x));
-        Debug_Log("PreviousPulledTexture" << GetPullTexture(prevIterTexSize.x)->GetSize());
-        Debug_Log("PreviousPushedTexture" << GetPushTexture(prevIterTexSize.x)->GetSize());
-        Debug_Log("CurrentPulledTexture" << GetPullTexture(currentTexSize.x)->GetSize());
-        Debug_Log("CurrentPushedTexture" << GetPushTexture(currentTexSize.x)->GetSize());
-        Debug_Log("=================");
 
         GEngine::GetInstance()->RenderViewportPlane();
     }
