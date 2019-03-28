@@ -223,7 +223,7 @@ void EffectLayerCompositer::CompositeLayers(
         m_framebuffer->SetAttachmentTexture(p_finalNormalTexture.Get(),
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
-        sp->SetTexture2D("HeightfieldTexture", heightReadTex);
+        sp->SetTexture2D("HeightfieldTexture", GetFinalHeightTexture());
         GEngine::GetInstance()->RenderViewportPlane();
     }
 

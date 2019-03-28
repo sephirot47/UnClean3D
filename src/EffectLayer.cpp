@@ -511,6 +511,27 @@ void EffectLayer::Reflect()
                        [this]() { return GetName(); },
                        BANG_REFLECT_HINT_SHOWN(false));
 
+    ReflectVarMemberEnum<EffectLayer, BlendMode>("ColorBlendMode",
+                                                 &EffectLayer::SetColorBlendMode,
+                                                 &EffectLayer::GetColorBlendMode,
+                                                 this,
+                                                 BANG_REFLECT_HINT_SHOWN(false));
+    ReflectVarMemberEnum<EffectLayer, BlendMode>("HeightBlendMode",
+                                                 &EffectLayer::SetHeightBlendMode,
+                                                 &EffectLayer::GetHeightBlendMode,
+                                                 this,
+                                                 BANG_REFLECT_HINT_SHOWN(false));
+    ReflectVarMemberEnum<EffectLayer, BlendMode>("RoughnessBlendMode",
+                                                 &EffectLayer::SetRoughnessBlendMode,
+                                                 &EffectLayer::GetRoughnessBlendMode,
+                                                 this,
+                                                 BANG_REFLECT_HINT_SHOWN(false));
+    ReflectVarMemberEnum<EffectLayer, BlendMode>("MetalnessBlendMode",
+                                                 &EffectLayer::SetMetalnessBlendMode,
+                                                 &EffectLayer::GetMetalnessBlendMode,
+                                                 this,
+                                                 BANG_REFLECT_HINT_SHOWN(false));
+
     BANG_REFLECT_VAR_MEMBER_HINTED(EffectLayer,
                                    "Visible",
                                    SetVisible,

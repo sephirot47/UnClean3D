@@ -87,11 +87,11 @@ void PullPush::PullPushTexture(Texture2D *originalTextureToPullPush)
     m_pullPushSP.Get()->Bind();
     m_pullPushSP.Get()->SetVector2(
         "TextureToPullPushSize", Vector2(originalTextureToPullPush->GetSize()));
-    m_pullPushSP.Get()->SetVector2("OriginalTextureToPullPushTexelSize",
-                                   (1.0f / Vector2(originalTexSize)));
     m_pullPushSP.Get()->SetInt("ShaderPhase", PULLING);
 
     m_pullPushSP.Get()->SetTexture2D("CurrentPulledTexture",
+                                     TextureFactory::GetWhiteTexture());
+    m_pullPushSP.Get()->SetTexture2D("CurrentPushedTexture",
                                      TextureFactory::GetWhiteTexture());
     m_pullPushSP.Get()->SetTexture2D("PreviousPulledTexture",
                                      TextureFactory::GetWhiteTexture());
@@ -125,7 +125,7 @@ void PullPush::PullPushTexture(Texture2D *originalTextureToPullPush)
     m_pullPushSP.Get()->SetInt("ShaderPhase", PUSHING);
     for (int i = 0; i < 99999; ++i)
     {
-        if (currentTexSize.x > originalTexSize.x)
+        if (currentTexSize.x >= originalTexSize.x)
         {
             break;
         }
@@ -139,10 +139,19 @@ void PullPush::PullPushTexture(Texture2D *originalTextureToPullPush)
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
 
         Vector2i prevIterTexSize = (currentTexSize / 2);
-        m_pullPushSP.Get()->SetTexture2D("CurrentPulledTexture",
-                                         GetPullTexture(currentTexSize.x));
+        m_pullPushSP.Get()->SetTexture2D("PreviousPulledTexture",
+                                         GetPullTexture(prevIterTexSize.x));
         m_pullPushSP.Get()->SetTexture2D("PreviousPushedTexture",
                                          GetPushTexture(prevIterTexSize.x));
+        m_pullPushSP.Get()->SetTexture2D("CurrentPulledTexture",
+                                         GetPullTexture(currentTexSize.x));
+        m_pullPushSP.Get()->SetTexture2D("CurrentPushedTexture",
+                                         GetPushTexture(currentTexSize.x));
+        Debug_Log("PreviousPulledTexture" << GetPullTexture(prevIterTexSize.x)->GetSize());
+        Debug_Log("PreviousPushedTexture" << GetPushTexture(prevIterTexSize.x)->GetSize());
+        Debug_Log("CurrentPulledTexture" << GetPullTexture(currentTexSize.x)->GetSize());
+        Debug_Log("CurrentPushedTexture" << GetPushTexture(currentTexSize.x)->GetSize());
+        Debug_Log("=================");
 
         GEngine::GetInstance()->RenderViewportPlane();
     }
@@ -163,7 +172,7 @@ Texture2D *PullPush::GetPullPushTexture(int size, bool pull)
     if (!textureMap.ContainsKey(size))
     {
         AH<Texture2D> texture = Assets::Create<Texture2D>();
-        texture.Get()->Fill(Color::Zero(), size, size);
+        texture.Get()->CreateEmpty(size, size);
         texture.Get()->SetFormat(GL::ColorFormat::RGBA8);
         texture.Get()->SetFilterMode(GL::FilterMode::BILINEAR);
 

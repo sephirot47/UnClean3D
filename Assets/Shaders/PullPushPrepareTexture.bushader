@@ -26,6 +26,7 @@ void main()
     vec4 texColor = texture(TextureToPullPush, uvs);
     texColor.rgb *= texColor.a;
     OutColor = texColor;
+    OutColor.a = texColor.a > 0.0 ? 1.0f : 0.0f;
 }
 
 

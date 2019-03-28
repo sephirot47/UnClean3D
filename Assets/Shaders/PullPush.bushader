@@ -11,9 +11,10 @@ const int PULLING = 0;
 const int PUSHING = 1;
 
 uniform int ShaderPhase;
-uniform sampler2D CurrentPulledTexture;
 uniform sampler2D PreviousPulledTexture;
 uniform sampler2D PreviousPushedTexture;
+uniform sampler2D CurrentPulledTexture;
+uniform sampler2D CurrentPushedTexture;
 
 in vec2 B_FIn_AlbedoUv;
 
@@ -56,10 +57,10 @@ void main()
     }
     else
     {
-        vec4 pulledTexColor = texture(CurrentPulledTexture, uv);
-        if (pulledTexColor.a == 1)
+        vec4 currentPulledTexColor = texture(CurrentPulledTexture, uv);
+        if (currentPulledTexColor.a == 1)
         {
-            OutColor = pulledTexColor;
+            OutColor = currentPulledTexColor;
         }
         else
         {

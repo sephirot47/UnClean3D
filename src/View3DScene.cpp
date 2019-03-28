@@ -100,7 +100,7 @@ View3DScene::View3DScene()
             ->GetShaderProgramProperties()
             .SetRenderPass(RenderPass::CANVAS);
         p_maskBrushPreviewRenderer->SetViewProjMode(GL::ViewProjMode::CANVAS);
-        p_maskBrushPreviewRenderer->GetMaterial()->SetAlbedoColor(Color::Red());
+        p_maskBrushPreviewRenderer->GetMaterial()->SetAlbedoColor(Color::White());
         p_maskBrushPreviewRenderer->GetMaterial()->SetReceivesLighting(false);
 
         maskBrushPreviewRendererGo->GetTransform()->SetLocalScale(
@@ -423,7 +423,7 @@ void View3DScene::OnModelChanged(Model *newModel)
             if (!mat->GetAlbedoTexture())
             {
                 AH<Texture2D> defaultAlbedoTex = Assets::Create<Texture2D>();
-                defaultAlbedoTex.Get()->Fill(Color::Red(), 1, 1);
+                defaultAlbedoTex.Get()->Fill(Color::White(), 1, 1);
                 mat->SetAlbedoTexture(defaultAlbedoTex.Get());
             }
 
