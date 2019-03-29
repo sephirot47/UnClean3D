@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(BANG_EDITOR_DIR ${CMAKE_CURRENT_LIST_DIR}/BangEditor)
+set(BANG_PROJECT_ROOT ${BANG_EDITOR_DIR}/Bang)
 add_subdirectory("${BANG_EDITOR_DIR}")
 
 project(UnClean3D C CXX)

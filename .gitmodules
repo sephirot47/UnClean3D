@@ -1,4 +1,0 @@
-[submodule "BangEditor"]
-	path = BangEditor
-	url = https://github.com/sephirot47/BangEditor
-	ignore = untracked
