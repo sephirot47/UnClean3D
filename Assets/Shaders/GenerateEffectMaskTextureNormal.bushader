@@ -47,7 +47,7 @@ void main()
     maskIntensity *= Intensity;
     maskIntensity = clamp(maskIntensity, 0, 1);
 
-    OutColor = vec4(maskIntensity, 0, 0, 1);
+    OutColor = vec4(vec3(maskIntensity), 1);
 }
 
 
