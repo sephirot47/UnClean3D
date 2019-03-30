@@ -1,0 +1,3 @@
+[submodule "BangEditor"]
+	path = BangEditor
+	url = https://github.com/Bang3DEngine/BangEditor

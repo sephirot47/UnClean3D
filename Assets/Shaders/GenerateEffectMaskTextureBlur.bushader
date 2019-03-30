@@ -138,7 +138,7 @@ void main()
                                     PointInTriangle(sampleWorldPosition,
                                                     nTriWorldPosition);
 
-                                if (isInsideNeighborTriangleAfterProjected)
+                                if (false && isInsideNeighborTriangleAfterProjected)
                                 {
                                     isInsideNeighborTriangleAfterProjected =
                                             (distance(thisWorldPosition, sampleWorldPosition) <
@@ -178,7 +178,7 @@ void main()
                     float weight = exp(-sampleWorldOffsetLength * 1.0);
                     totalWeight += weight;
                     accumulatedColor += weight * sampleColor;
-                    break; // This break makes it much faster, but fail in some cases...
+                    // break; // This break makes it much faster, but fail in some cases...
                 }
             }
         }
