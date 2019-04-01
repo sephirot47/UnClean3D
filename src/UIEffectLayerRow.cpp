@@ -225,6 +225,8 @@ void UIEffectLayerRow::Update()
 
 void UIEffectLayerRow::UpdateFromEffectLayer()
 {
+    this->EventListener<IEventsValueChanged>::SetReceiveEvents(false);
+
     p_layerNameLabel->GetText()->SetContent(GetEffectLayer()->GetName());
     p_visibleButton->SetOn(GetEffectLayer()->GetVisible());
 
@@ -239,6 +241,8 @@ void UIEffectLayerRow::UpdateFromEffectLayer()
         UIEffectLayerMaskRow *maskRow = AddNewMaskRow(mask);
         maskRow->UpdateFromEffectLayerMask();
     }
+
+    this->EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
 
 void UIEffectLayerRow::UpdateEffectLayerFromUI()

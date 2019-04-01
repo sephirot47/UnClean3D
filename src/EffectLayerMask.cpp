@@ -268,6 +268,18 @@ void EffectLayerMask::Reflect()
                        [this](const String &name) { SetName(name); },
                        [this]() { return GetName(); },
                        BANG_REFLECT_HINT_SHOWN(false));
+
+    ReflectVar<bool>("LayerMaskVisible",
+                     [this](bool visible) { m_visible = visible; },
+                     [this]() { return m_visible; },
+                     BANG_REFLECT_HINT_SHOWN(false));
+
+    ReflectVarMemberEnum<EffectLayerMask, BlendMode>(
+                "BlendMode",
+                &EffectLayerMask::SetBlendMode,
+                &EffectLayerMask::GetBlendMode,
+                this,
+                BANG_REFLECT_HINT_SHOWN(false));
 }
 
 ControlPanel *EffectLayerMask::GetControlPanel() const

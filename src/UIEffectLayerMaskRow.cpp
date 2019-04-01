@@ -166,9 +166,15 @@ void UIEffectLayerMaskRow::Update()
 
 void UIEffectLayerMaskRow::UpdateFromEffectLayerMask()
 {
+    this->EventListener<IEventsValueChanged>::SetReceiveEvents(false);
+
     GetNameLabel()->GetText()->SetContent(GetEffectLayerMask()->GetName());
     p_maskTypeInput->SetSelectionByValue(
         SCAST<int>(GetEffectLayerMask()->GetType()));
+    p_blendModeInput->SetSelectionByValue(
+        SCAST<int>(GetEffectLayerMask()->GetBlendMode()));
+
+    this->EventListener<IEventsValueChanged>::SetReceiveEvents(true);
 }
 
 void UIEffectLayerMaskRow::UpdateEffectLayerMaskFromUI()
