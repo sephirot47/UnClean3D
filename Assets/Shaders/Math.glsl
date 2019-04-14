@@ -24,6 +24,10 @@ float Map(float value, float srcMin, float srcMax, float destMin, float destMax)
     return ((value - srcMin) / (srcMax - srcMin)) * (destMax - destMin) + destMin;
 }
 
+float GetProjectedDistance(vec3 point, vec3 planePoint, vec3 planeNormal)
+{
+    return dot(point - planePoint, planeNormal);
+}
 vec3 GetProjectedPoint(vec3 point, vec3 planePoint, vec3 planeNormal)
 {
     float dist = dot(point - planePoint, planeNormal);
@@ -69,7 +73,7 @@ vec3 GetBarycentricCoordinates(vec3 point, vec3[3] trianglePoints)
 
 bool PointInTriangle(vec3 baryCoords)
 {
-    const float Epsilon = 1e-4f;
+    const float Epsilon = 1e-2f;
     return (baryCoords[0] >= -Epsilon && baryCoords[0] <= 1.0f + Epsilon &&
             baryCoords[1] >= -Epsilon && baryCoords[1] <= 1.0f + Epsilon &&
             baryCoords[2] >= -Epsilon && baryCoords[2] <= 1.0f + Epsilon);
