@@ -99,6 +99,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_maskTypeInput->AddItem(
             "Ambient occlusion",
             SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
+        p_maskTypeInput->AddItem("White noise",
+                                 SCAST<int>(EffectLayerMask::Type::WHITE_NOISE));
         p_maskTypeInput->AddItem("Brush",
                                  SCAST<int>(EffectLayerMask::Type::BRUSH));
         p_maskTypeInput->AddItem("Normal",

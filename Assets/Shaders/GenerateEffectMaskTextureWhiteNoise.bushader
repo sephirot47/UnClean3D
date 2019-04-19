@@ -1,0 +1,43 @@
+#vertex
+
+uniform mat4 SceneModelMatrix;
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 inWorldPosition;
+out vec2 inTexturePosition;
+
+void main()
+{
+    inTexturePosition = vinTexturePosition.xy;
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+
+#include "Math.glsl"
+
+uniform float NoiseSeed;
+uniform float NoiseOffset;
+uniform float NoiseIntensity;
+uniform float NoiseFrequency;
+
+in vec3 inWorldPosition;
+in vec2 inTexturePosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    float noiseValue = rand(inWorldPosition + vec3(NoiseSeed) * NoiseFrequency);
+    noiseValue *= NoiseIntensity;
+    noiseValue += NoiseOffset;
+    OutColor = vec4(vec3(noiseValue), 1);
+}
+
+

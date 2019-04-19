@@ -33,6 +33,7 @@ public:
         FRACTAL,
         NORMAL,
         AMBIENT_OCCLUSION,
+        WHITE_NOISE,
         BRUSH,
         BLUR
     };

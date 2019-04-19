@@ -16,6 +16,7 @@
 #include "EffectLayerMaskImplementationAmbientOcclusion.h"
 #include "EffectLayerMaskImplementationBlur.h"
 #include "EffectLayerMaskImplementationBrush.h"
+#include "EffectLayerMaskImplementationWhiteNoise.h"
 #include "EffectLayerMaskImplementationFractal.h"
 #include "EffectLayerMaskImplementationNormal.h"
 #include "View3DScene.h"
@@ -72,6 +73,10 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
 
             case EffectLayerMask::Type::FRACTAL:
                 m_implementation = new EffectLayerMaskImplementationFractal();
+                break;
+
+            case EffectLayerMask::Type::WHITE_NOISE:
+                m_implementation = new EffectLayerMaskImplementationWhiteNoise();
                 break;
 
             case EffectLayerMask::Type::AMBIENT_OCCLUSION:
