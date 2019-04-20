@@ -40,7 +40,7 @@ void main()
     float noiseValue = snoiseFull(inWorldPosition,
                                   frequency,
                                   FractalFrequencyMultiply,
-                                  amplitude,
+                                  FractalAmplitude,
                                   FractalAmplitudeMultiply,
                                   FractalOctaves,
                                   FractalSeed);

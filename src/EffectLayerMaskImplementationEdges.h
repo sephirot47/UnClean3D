@@ -4,13 +4,9 @@
 #include "Bang/Bang.h"
 #include "BangEditor/BangEditor.h"
 
-#include "GLSLArrayOfArrays.h"
 #include "EffectLayerMaskImplementationGPU.h"
-
-namespace Bang
-{
-class VBO;
-};
+#include "GLSLArrayOfArrays.h"
+#include "MeshUniformGrid.h"
 
 using namespace Bang;
 
@@ -23,6 +19,14 @@ public:
     EffectLayerMaskImplementationEdges();
     virtual ~EffectLayerMaskImplementationEdges() override;
 
+    void SetNumRays(int numRays);
+    void SetEdgeThreshold(float edgeThreshold);
+    void SetEdgeAmplitude(float edgeAmplitude);
+
+    int GetNumRays() const;
+    float GetEdgeThreshold() const;
+    float GetEdgeAmplitude() const;
+
     // Serializable
     virtual void Reflect() override;
 
@@ -33,14 +37,14 @@ protected:
     virtual Path GetGenerateEffectTextureShaderProgramPath() const override;
     virtual void SetGenerateEffectUniforms(ShaderProgram *sp,
                                            MeshRenderer *meshRend) override;
+    void GenerateEffectMaskTexture(Texture2D *maskTexture,
+                                   MeshRenderer *meshRend) override;
+    virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:
-    AH<Texture2D> m_curvaturesTexture;
-    bool m_curvaturesCreated = false;
-    GLSLArrayOfArrays m_curvaturesGLSLArray;
-    // VBO *m_curvaturesVBO = nullptr;
-
-    float m_threshold = 1.0f;
+    int m_numRays = 5;
+    float m_edgeThreshold = 0.1f;
+    float m_edgeAmplitude = 0.5f;
 };
 
 #endif  // EFFECTLAYERMASKIMPLEMENTATIONEDGES_H

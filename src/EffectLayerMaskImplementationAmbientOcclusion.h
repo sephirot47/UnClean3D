@@ -40,7 +40,7 @@ protected:
     virtual bool CanGenerateEffectMaskTextureInRealTime() const override;
 
 private:
-    int m_numRays = 15;
+    int m_numRays = 5;
     float m_maxDistance = 0.05f;
     bool m_generatedTextureArrays = false;
 };

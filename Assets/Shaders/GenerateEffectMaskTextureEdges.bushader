@@ -1,30 +1,18 @@
 #vertex
 
 uniform mat4 SceneModelMatrix;
-uniform sampler2D CurvaturesTexture;
 
 layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
+layout(location = 3) in float vinTriId;
 
-out float curvature;
 out vec3 inWorldPosition;
-out vec2 inTexturePosition;
+flat out int inTriId;
 
 void main()
 {
-    int vertexId = gl_VertexID;
-    int triId = vertexId / 3;
-    int cornerId = triId * 3 + (vertexId % 3);
-    vec2 texSize = textureSize(CurvaturesTexture, 0);
-    vec2 curvatureTextureUv =
-            vec2(vertexId % int(texSize.x),
-                 vertexId / int(texSize.x));
-    curvatureTextureUv /= texSize;
-    // curvatureTextureUv.y = 1.0f - texSize.y;
-    curvature = texture(CurvaturesTexture, curvatureTextureUv).r;
-
-    inTexturePosition = vinTexturePosition.xy;
     inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    inTriId = int(vinTriId);
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -34,21 +22,86 @@ void main()
 #define BANG_FRAGMENT
 
 #include "Math.glsl"
+#include "RayCast.glsl"
 
-uniform float Threshold;
+uniform int NumRays;
+uniform float EdgeThreshold;
+uniform float EdgeAmplitude;
 
-in float curvature;
 in vec3 inWorldPosition;
-in vec2 inTexturePosition;
+flat in int inTriId;
 
 layout(location = 0) out vec4 OutColor;
 
+vec3[3] GetTrianglePoints(int triId)
+{
+    vec3 triPoints[3];
+    for (int vi = 0; vi < 3; ++vi)
+    {
+        triPoints[vi] = GetTrianglePositionsElement(triId, vi).xyz;
+    }
+    return triPoints;
+}
+
 void main()
 {
-    float curv = abs(curvature);
-    curv = clamp(curv, 0, 1);
-    // curv /= 2;
-    OutColor = vec4(vec3(curv), 1);
+    vec3 worldPosition = inWorldPosition;
+
+    vec3[3] triWorldPosition = GetTrianglePoints(inTriId);
+    vec3 worldNormal = normalize( cross(triWorldPosition[1] - triWorldPosition[0],
+                                        triWorldPosition[2] - triWorldPosition[0]) );
+
+    float edgeAmplitude = EdgeAmplitude * 0.01f;
+    float totalRays = NumRays;
+    float maxDistance = EdgeThreshold * 0.001f;
+    float raysIntersectedStrength = 0.0f;
+    for (int iRay = 0; iRay < totalRays; ++iRay)
+    {
+        vec3 randomVector = rand3(worldPosition + vec3(iRay));
+        randomVector = normalize(randomVector * 2 - 1);
+        randomVector *= edgeAmplitude;
+
+        vec3 planePos = worldPosition + worldNormal * maxDistance * 0.5f;
+        vec3 planeNormal = worldNormal;
+        vec3 randomPoint = worldPosition + randomVector;
+
+        vec3 rayOrigin = GetProjectedPoint(randomPoint, planePos, planeNormal);
+        vec3 rayDirection = -worldNormal;
+
+        int hitTriId;
+        float hitDistance;
+        vec3 triBaryCoords;
+        if (RayCast(rayOrigin, rayDirection,
+                    maxDistance, hitDistance,
+                    hitTriId, triBaryCoords))
+        {
+            float distFactor = (hitDistance / maxDistance);
+            raysIntersectedStrength += 1.0f;
+        }
+        else
+        {
+            // Check if the point is inside
+            if (RayCast(rayOrigin, rayDirection,
+                        99999.9f, hitDistance,
+                        hitTriId, triBaryCoords))
+            {
+                vec3[3] hitTriWorldPosition = GetTrianglePoints(hitTriId);
+                vec3 hitTriNormal = normalize( cross(hitTriWorldPosition[1] - hitTriWorldPosition[0],
+                                                     hitTriWorldPosition[2] - hitTriWorldPosition[0]) );
+                bool pointIsInside = (dot(rayDirection, hitTriNormal) >= 0);
+                if (pointIsInside)
+                {
+                    raysIntersectedStrength += 1.0f;
+                }
+            }
+        }
+    }
+
+    float edgeStrength = raysIntersectedStrength;
+    edgeStrength /= totalRays;
+    edgeStrength = 1.0f - edgeStrength;
+
+    OutColor = vec4(vec3(edgeStrength), 1);
 }
 
 
