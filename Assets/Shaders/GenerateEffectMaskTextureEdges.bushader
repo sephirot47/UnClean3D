@@ -1,0 +1,54 @@
+#vertex
+
+uniform mat4 SceneModelMatrix;
+uniform sampler2D CurvaturesTexture;
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out float curvature;
+out vec3 inWorldPosition;
+out vec2 inTexturePosition;
+
+void main()
+{
+    int vertexId = gl_VertexID;
+    int triId = vertexId / 3;
+    int cornerId = triId * 3 + (vertexId % 3);
+    vec2 texSize = textureSize(CurvaturesTexture, 0);
+    vec2 curvatureTextureUv =
+            vec2(vertexId % int(texSize.x),
+                 vertexId / int(texSize.x));
+    curvatureTextureUv /= texSize;
+    // curvatureTextureUv.y = 1.0f - texSize.y;
+    curvature = texture(CurvaturesTexture, curvatureTextureUv).r;
+
+    inTexturePosition = vinTexturePosition.xy;
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+
+#include "Math.glsl"
+
+uniform float Threshold;
+
+in float curvature;
+in vec3 inWorldPosition;
+in vec2 inTexturePosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    float curv = abs(curvature);
+    curv = clamp(curv, 0, 1);
+    // curv /= 2;
+    OutColor = vec4(vec3(curv), 1);
+}
+
+

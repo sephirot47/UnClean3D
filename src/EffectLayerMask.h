@@ -34,6 +34,7 @@ public:
         NORMAL,
         AMBIENT_OCCLUSION,
         WHITE_NOISE,
+        EDGES,
         BRUSH,
         BLUR
     };

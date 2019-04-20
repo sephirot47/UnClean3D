@@ -68,14 +68,14 @@ void EffectLayerMaskImplementationWhiteNoise::Reflect()
                       BANG_REFLECT_HINT_SLIDER(0.0f, 1.0f) +
                           BANG_REFLECT_HINT_STEP_VALUE(0.1f));
 
-    ReflectVar<float>("Frequency",
-                      [this](float frequency) {
-                          m_frequency = frequency;
-                          Invalidate();
-                      },
-                      [this]() { return m_frequency; },
-                      BANG_REFLECT_HINT_SLIDER(0.01f, 10.0f) +
-                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+    // ReflectVar<float>("Frequency",
+    //                   [this](float frequency) {
+    //                       m_frequency = frequency;
+    //                       Invalidate();
+    //                   },
+    //                   [this]() { return m_frequency; },
+    //                   BANG_REFLECT_HINT_SLIDER(0.01f, 10.0f) +
+    //                       BANG_REFLECT_HINT_STEP_VALUE(0.1f));
 
 }
 

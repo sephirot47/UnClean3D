@@ -530,6 +530,8 @@ void View3DScene::OnModelChanged(Model *newModel)
 
                 m_textureMesh.Set(textureMesh);
             }
+
+            mesh->UpdateCornerTablesIfNeeded();
         }
 
         Path prevModelPath =
