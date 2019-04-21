@@ -460,6 +460,11 @@ void View3DScene::OnModelChanged(Model *newModel)
                 AH<Texture2D>(mat->GetMetalnessTexture());
             m_meshRendererToInfo.Add(mr, mrInfo);
 
+            mrInfo.originalAlbedoTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+            mrInfo.originalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+            mrInfo.originalRoughnessTexture.Get()->SetFormat(GL::ColorFormat::R16F);
+            mrInfo.originalMetalnessTexture.Get()->SetFormat(GL::ColorFormat::R16F);
+
             mat->SetShaderProgram(m_view3DShaderProgram.Get());
 
             m_glslRayCaster->SetMeshRenderer(mr);

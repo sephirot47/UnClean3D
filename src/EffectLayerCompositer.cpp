@@ -31,6 +31,16 @@ EffectLayerCompositer::EffectLayerCompositer()
     m_metalnessPingPongTexture0 = Assets::Create<Texture2D>();
     m_metalnessPingPongTexture1 = Assets::Create<Texture2D>();
 
+    m_albedoPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_albedoPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_heightPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_heightPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    p_finalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_roughnessPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_roughnessPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_metalnessPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_metalnessPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+
     m_compositeLayersSP.Set(ShaderProgramFactory::Get(
         Paths::GetProjectAssetsDir().Append("Shaders").Append(
             "CompositeLayers.bushader")));

@@ -16,9 +16,13 @@ layout(location = 0) out vec4 OutNormalTextureColor;
 void main()
 {
     vec2 uv = B_FIn_AlbedoUv;
-    vec2 step = B_GetViewportStep() * 1.0f;
+    vec2 step = 1.0f / textureSize(HeightfieldTexture, 0);
+
+    const vec2 size = vec2(2.0,0.0);
+    const ivec3 off = ivec3(-1,0,1);
 
     float heightIntensity = 15;
+
     float thisHeight  = -(texture2D(HeightfieldTexture, uv).r * 2 - 1);
     float rightHeight = -(texture2D(HeightfieldTexture, uv + step * vec2(1,0)).r * 2 - 1);
     float upHeight    = -(texture2D(HeightfieldTexture, uv + step * vec2(0,1)).r * 2 - 1);

@@ -36,7 +36,8 @@ public:
         WHITE_NOISE,
         EDGES,
         BRUSH,
-        BLUR
+        BLUR,
+        PEELING
     };
 
     EffectLayerMask();
