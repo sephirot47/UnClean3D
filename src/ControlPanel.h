@@ -69,7 +69,9 @@ public:
     void ReloadShaders();
     float GetBaseRoughness() const;
     float GetBaseMetalness() const;
+    float GetNormalMapSmoothness() const;
     bool GetRotateLights() const;
+    bool GetShadows() const;
     Vector2i GetTextureSize() const;
     Texture2D *GetBrushTexture() const;
     ControlPanel::SeeMode GetSeeMode() const;
@@ -104,6 +106,7 @@ private:
     UISlider *p_baseRoughnessInput = nullptr;
     UISlider *p_baseMetalnessInput = nullptr;
     UIComboBox *p_texturesSizeInput = nullptr;
+    UISlider *p_normalMapSmoothnessInput = nullptr;
 
     // Mask
     GameObject *p_maskParamsGo = nullptr;
@@ -120,6 +123,7 @@ private:
 
     // Scene
     UICheckBox *p_rotateLightsInput = nullptr;
+    UICheckBox *p_shadowsInput = nullptr;
 
     // SerializableWidget
     UIEffectLayerParameters *p_effectParametersWidget = nullptr;

@@ -7,6 +7,7 @@
 #define BANG_FRAGMENT
 #include "Common.glsl"
 
+uniform float Smoothness;
 uniform sampler2D HeightfieldTexture;
 
 in vec2 B_FIn_AlbedoUv;
@@ -16,23 +17,25 @@ layout(location = 0) out vec4 OutNormalTextureColor;
 void main()
 {
     vec2 uv = B_FIn_AlbedoUv;
-    vec2 step = 1.0f / textureSize(HeightfieldTexture, 0);
+    vec2 step = 0.1f * Smoothness * B_GetViewportStep();
 
-    const vec2 size = vec2(2.0,0.0);
-    const ivec3 off = ivec3(-1,0,1);
+    float heightIntensity = 15.0f;
 
-    float heightIntensity = 15;
+    float tl = (texture(HeightfieldTexture, uv + vec2(-1, -1) * step).r);
+    float l  = (texture(HeightfieldTexture, uv + vec2(-1, +0) * step).r);
+    float bl = (texture(HeightfieldTexture, uv + vec2(-1, +1) * step).r);
+    float b  = (texture(HeightfieldTexture, uv + vec2(+0, +1) * step).r);
+    float br = (texture(HeightfieldTexture, uv + vec2(+1, +1) * step).r);
+    float r  = (texture(HeightfieldTexture, uv + vec2(+1, +0) * step).r);
+    float tr = (texture(HeightfieldTexture, uv + vec2(+1, -1) * step).r);
+    float t  = (texture(HeightfieldTexture, uv + vec2(+0, -1) * step).r);
 
-    float thisHeight  = -(texture2D(HeightfieldTexture, uv).r * 2 - 1);
-    float rightHeight = -(texture2D(HeightfieldTexture, uv + step * vec2(1,0)).r * 2 - 1);
-    float upHeight    = -(texture2D(HeightfieldTexture, uv + step * vec2(0,1)).r * 2 - 1);
-    thisHeight  *= heightIntensity;
-    rightHeight *= heightIntensity;
-    upHeight    *= heightIntensity;
+    float dX = tr + 2 * r + br - tl - 2 * l - bl;
+    float dY = bl + 2 * b + br - tl - 2 * t - tr;
 
-    vec3 rightVector = (vec3(1, 0, (rightHeight-thisHeight)));
-    vec3 upVector = (vec3(0, 1, (upHeight-thisHeight)));
-    vec3 normal = normalize(cross(rightVector, upVector));
+    vec3 rightVector = (vec3(1, 0, dX));
+    vec3 upVector = (vec3(0, 1, dY));
+    vec3 normal = normalize( vec3(dX, dY, 1.0f / heightIntensity) );
 
     vec3 normalForTexture = normal * 0.5 + 0.5;
     OutNormalTextureColor = vec4(normalForTexture, 1);

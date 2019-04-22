@@ -326,7 +326,7 @@ void View3DScene::Update()
         }
     }
 
-    // Directional light movement
+    // Some scene options
     {
         if (GetControlPanel()->GetRotateLights())
         {
@@ -336,6 +336,13 @@ void View3DScene::Update()
                 Quaternion::AngleAxis(angleDeltaY, Vector3::Up()));
             p_dirLight->GetGameObject()->GetTransform()->RotateLocal(
                 Quaternion::AngleAxis(angleDeltaX, Vector3::Right()));
+        }
+
+        for (auto &it : m_meshRendererToInfo)
+        {
+            MeshRenderer *mr = it.first;
+            mr->SetCastsShadows( GetControlPanel()->GetShadows() );
+            mr->SetReceivesShadows( GetControlPanel()->GetShadows() );
         }
     }
 
@@ -418,34 +425,33 @@ void View3DScene::OnModelChanged(Model *newModel)
             }
 
             Material *mat = mr->GetMaterial();
+            bool hadAlbedoTexture = mat->GetAlbedoTexture();
+            bool hadNormalMapTexture = mat->GetNormalMapTexture();
+            bool hadRoughnessTexture = mat->GetRoughnessTexture();
+            bool hadMetalnessTexture = mat->GetMetalnessTexture();
 
             // Create default textures if they do not exist
             if (!mat->GetAlbedoTexture())
             {
                 AH<Texture2D> defaultAlbedoTex = Assets::Create<Texture2D>();
-                defaultAlbedoTex.Get()->Fill(Color::White(), 1, 1);
                 mat->SetAlbedoTexture(defaultAlbedoTex.Get());
             }
 
             if (!mat->GetNormalMapTexture())
             {
                 AH<Texture2D> defaultNormalTex = Assets::Create<Texture2D>();
-                defaultNormalTex.Get()->Fill(
-                    Color(0.5f, 0.5f, 1.0f, 1.0f), 1, 1);
                 mat->SetNormalMapTexture(defaultNormalTex.Get());
             }
 
             if (!mat->GetRoughnessTexture())
             {
                 AH<Texture2D> defaultRoughnessTex = Assets::Create<Texture2D>();
-                defaultRoughnessTex.Get()->Fill(Color(1.0f), 1, 1);
                 mat->SetRoughnessTexture(defaultRoughnessTex.Get());
             }
 
             if (!mat->GetMetalnessTexture())
             {
                 AH<Texture2D> defaultMetalnessTex = Assets::Create<Texture2D>();
-                defaultMetalnessTex.Get()->Fill(Color(1.0f), 1, 1);
                 mat->SetMetalnessTexture(defaultMetalnessTex.Get());
             }
 
@@ -461,9 +467,29 @@ void View3DScene::OnModelChanged(Model *newModel)
             m_meshRendererToInfo.Add(mr, mrInfo);
 
             mrInfo.originalAlbedoTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
-            mrInfo.originalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+            mrInfo.originalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
             mrInfo.originalRoughnessTexture.Get()->SetFormat(GL::ColorFormat::R16F);
             mrInfo.originalMetalnessTexture.Get()->SetFormat(GL::ColorFormat::R16F);
+
+            if (!hadAlbedoTexture)
+            {
+                mat->GetAlbedoTexture()->Fill(Color::White(), 32, 32);
+            }
+
+            if (!hadNormalMapTexture)
+            {
+                mat->GetNormalMapTexture()->Fill(Color(0.5f, 0.5f, 1.0f, 1.0f), 1, 1);
+            }
+
+            if (!hadRoughnessTexture)
+            {
+                mat->GetRoughnessTexture()->Fill(Color(1.0f), 1, 1);
+            }
+
+            if (!hadMetalnessTexture)
+            {
+                mat->GetMetalnessTexture()->Fill(Color(1.0f), 1, 1);
+            }
 
             mat->SetShaderProgram(m_view3DShaderProgram.Get());
 

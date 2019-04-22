@@ -218,6 +218,14 @@ ControlPanel::ControlPanel()
             CreateRow("Base metalness", p_baseMetalnessInput->GetGameObject())
                 ->SetParent(generalTab);
 
+
+            p_normalMapSmoothnessInput = GameObjectFactory::CreateUISlider(1, 100);
+            p_normalMapSmoothnessInput->SetValue(10.0f);
+            p_normalMapSmoothnessInput
+                ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
+            CreateRow("Normal smooth", p_normalMapSmoothnessInput->GetGameObject())
+                ->SetParent(generalTab);
+
             p_texturesSizeInput = GameObjectFactory::CreateUIComboBox();
             p_texturesSizeInput->AddItem("64", 64);
             p_texturesSizeInput->AddItem("128", 128);
@@ -338,6 +346,12 @@ ControlPanel::ControlPanel()
         p_rotateLightsInput->SetChecked(true);
         CreateRow("Rotate light", p_rotateLightsInput->GetGameObject())
             ->SetParent(sceneTab);
+
+        p_shadowsInput = GameObjectFactory::CreateUICheckBox();
+        p_shadowsInput->SetChecked(true);
+        CreateRow("Shadows", p_shadowsInput->GetGameObject())
+            ->SetParent(sceneTab);
+
 
         GameObject *skyboxesRow = GameObjectFactory::CreateUIGameObject();
         {
@@ -651,9 +665,19 @@ float ControlPanel::GetBaseMetalness() const
     return p_baseMetalnessInput->GetValue();
 }
 
+float ControlPanel::GetNormalMapSmoothness() const
+{
+    return p_normalMapSmoothnessInput->GetValue();
+}
+
 bool ControlPanel::GetRotateLights() const
 {
     return p_rotateLightsInput->IsChecked();
+}
+
+bool ControlPanel::GetShadows() const
+{
+    return p_shadowsInput->IsChecked();
 }
 
 Vector2i ControlPanel::GetTextureSize() const

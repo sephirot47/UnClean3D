@@ -33,9 +33,9 @@ EffectLayerCompositer::EffectLayerCompositer()
 
     m_albedoPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
     m_albedoPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
-    m_heightPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
-    m_heightPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
-    p_finalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA16F);
+    m_heightPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA32F);
+    m_heightPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA32F);
+    p_finalNormalTexture.Get()->SetFormat(GL::ColorFormat::RGBA32F);
     m_roughnessPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
     m_roughnessPingPongTexture1.Get()->SetFormat(GL::ColorFormat::RGBA16F);
     m_metalnessPingPongTexture0.Get()->SetFormat(GL::ColorFormat::RGBA16F);
@@ -170,7 +170,7 @@ void EffectLayerCompositer::CompositeLayers(
     for (int i = effectLayers.Size() - 1; i >= 0; --i)
     {
         EffectLayer *effectLayer = effectLayers[i];
-        if (!effectLayer->GetVisible())
+        if (!effectLayer->GetVisible() || effectLayer->GetMasks().Size() == 0)
         {
             continue;
         }
@@ -230,10 +230,15 @@ void EffectLayerCompositer::CompositeLayers(
     sp = m_heightfieldToNormalTextureSP.Get();
     {
         sp->Bind();
+        GL::SetViewport(0, 0, p_finalNormalTexture.Get()->GetWidth(),
+                        p_finalNormalTexture.Get()->GetHeight());
         m_framebuffer->SetAttachmentTexture(p_finalNormalTexture.Get(),
                                             GL::Attachment::COLOR0);
         m_framebuffer->SetDrawBuffers({GL::Attachment::COLOR0});
         sp->SetTexture2D("HeightfieldTexture", GetFinalHeightTexture());
+        sp->SetFloat("Smoothness",
+                     MainScene::GetInstance()->GetControlPanel()->
+                     GetNormalMapSmoothness());
         GEngine::GetInstance()->RenderViewportPlane();
     }
 
