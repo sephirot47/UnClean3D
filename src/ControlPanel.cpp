@@ -233,7 +233,7 @@ ControlPanel::ControlPanel()
             p_texturesSizeInput->AddItem("512", 512);
             p_texturesSizeInput->AddItem("1024", 1024);
             p_texturesSizeInput->AddItem("2048", 2048);
-            p_texturesSizeInput->AddItem("4096", 4096);
+            p_texturesSizeInput->AddItem("3072", 3072);
             p_texturesSizeInput->SetSelectionByIndex(4);
             p_texturesSizeInput
                 ->EventEmitter<IEventsValueChanged>::RegisterListener(this);
