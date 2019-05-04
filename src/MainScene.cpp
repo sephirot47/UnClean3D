@@ -55,7 +55,11 @@ void MainScene::Start()
         // modelPath = projAssets.Append("Models/MyTable/MyTable.dae");
         // modelPath = projAssets.Append("Models/MyTable/untitled.dae");
         // modelPath = projAssets.Append("Models/Character/Character.dae");
-        modelPath = projAssets.Append("Models/Dresser/Dresser.dae");
+        // modelPath = projAssets.Append("Models/Dresser/Dresser.dae");
+        // modelPath = projAssets.Append("Models/BrickWall/brickWall.ply");
+        // modelPath = projAssets.Append("Models/bunny.ply");
+        // modelPath = projAssets.Append("Models/armadillo.ply");
+        modelPath = projAssets.Append("Models/dragon.ply");
         // modelPath = projAssets.Append("Models/Column/Column.dae");
         // modelPath = projAssets.Append("Models/Bench/Bench.dae");
         GetControlPanel()->OpenModel(modelPath);
