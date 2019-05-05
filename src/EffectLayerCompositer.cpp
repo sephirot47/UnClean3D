@@ -10,6 +10,7 @@
 #include "ControlPanel.h"
 #include "EffectLayer.h"
 #include "EffectLayerMask.h"
+#include "View3DScene.h"
 #include "EffectLayerMaskImplementation.h"
 #include "MainScene.h"
 #include "PullPush.h"

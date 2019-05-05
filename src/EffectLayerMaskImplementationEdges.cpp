@@ -28,12 +28,17 @@ void EffectLayerMaskImplementationEdges::SetNumRays(int numRays)
     if (numRays != GetNumRays())
     {
         m_numRays = numRays;
+        Invalidate();
     }
 }
 
 void EffectLayerMaskImplementationEdges::SetEdgeThreshold(float edgeThreshold)
 {
-    m_edgeThreshold = edgeThreshold;
+    if (edgeThreshold != GetEdgeThreshold())
+    {
+        m_edgeThreshold = edgeThreshold;
+        Invalidate();
+    }
 }
 
 void EffectLayerMaskImplementationEdges::SetEdgeAmplitude(
@@ -42,6 +47,7 @@ void EffectLayerMaskImplementationEdges::SetEdgeAmplitude(
     if (edgeAmplitude != GetEdgeAmplitude())
     {
         m_edgeAmplitude = edgeAmplitude;
+        Invalidate();
     }
 }
 

@@ -554,6 +554,8 @@ void ControlPanel::ImportEffect()
     }
 
     UpdateFromEffectLayers();
+
+    MainScene::GetInstance()->GetView3DScene()->RegenerateAllEffectLayers();
 }
 
 void ControlPanel::ExportEffect()

@@ -28,6 +28,7 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetNumRays(int numRays)
     if (numRays != GetNumRays())
     {
         m_numRays = numRays;
+        Invalidate();
     }
 }
 
@@ -37,6 +38,7 @@ void EffectLayerMaskImplementationAmbientOcclusion::SetMaxDistance(
     if (maxDistance != GetMaxDistance())
     {
         m_maxDistance = maxDistance;
+        Invalidate();
     }
 }
 

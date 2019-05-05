@@ -37,7 +37,7 @@ public:
     EffectLayer(MeshRenderer *mr = nullptr);
     virtual ~EffectLayer() override;
 
-    virtual void GenerateEffectTexture();
+    virtual void GenerateEffectTexture(bool alsoNonRealTime = false);
     void MergeMasks(MeshRenderer *mr);
     void ReloadShaders();
 

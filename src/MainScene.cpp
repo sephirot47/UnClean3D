@@ -59,7 +59,8 @@ void MainScene::Start()
         // modelPath = projAssets.Append("Models/BrickWall/brickWall.ply");
         // modelPath = projAssets.Append("Models/bunny.ply");
         // modelPath = projAssets.Append("Models/armadillo.ply");
-        modelPath = projAssets.Append("Models/dragon.ply");
+        modelPath = projAssets.Append("Models/streetLamp.ply");
+        // modelPath = projAssets.Append("Models/dragon.ply");
         // modelPath = projAssets.Append("Models/Column/Column.dae");
         // modelPath = projAssets.Append("Models/Bench/Bench.dae");
         GetControlPanel()->OpenModel(modelPath);

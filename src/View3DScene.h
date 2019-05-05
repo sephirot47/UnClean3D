@@ -61,6 +61,7 @@ public:
     void RestoreOriginalAlbedoTexturesToModel();
     void MoveEffectLayer(EffectLayer *effectLayer, uint newIndex);
     void SetEnvironment(Environment environment);
+    void RegenerateAllEffectLayers();
     void InvalidateAll();
 
     Camera *GetCamera() const;
@@ -75,6 +76,7 @@ public:
     Texture2D *GetEnvironmentSnapshot(Environment environment) const;
     Model *GetCurrentModel() const;
     Mesh *GetTextureMesh() const;
+    EffectLayerCompositer *GetCompositer() const;
 
     static View3DScene *GetInstance();
 

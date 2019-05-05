@@ -76,7 +76,7 @@ EffectLayer::~EffectLayer()
     }
 }
 
-void EffectLayer::GenerateEffectTexture()
+void EffectLayer::GenerateEffectTexture(bool alsoNonRealTime)
 {
     Vector2i texSize = GetControlPanel()->GetTextureSize();
     GetEffectColorTexture()->ResizeConservingData(texSize.x, texSize.y);
@@ -87,7 +87,8 @@ void EffectLayer::GenerateEffectTexture()
         for (EffectLayerMask *mask : GetMasks())
         {
             if (!mask->IsValid() &&
-                mask->CanGenerateEffectMaskTextureInRealTime())
+                (alsoNonRealTime ||
+                 mask->CanGenerateEffectMaskTextureInRealTime()))
             {
                 mask->GenerateMask();
             }

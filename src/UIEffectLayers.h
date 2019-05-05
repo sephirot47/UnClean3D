@@ -10,6 +10,7 @@
 namespace Bang
 {
 class UIList;
+class UIButton;
 class UIToolButton;
 class UIScrollPanel;
 }
@@ -49,6 +50,7 @@ private:
     UIToolButton *p_allLayersVisibleButton = nullptr;
     UIScrollPanel *p_scrollPanel = nullptr;
     GameObject *p_listContainer = nullptr;
+    UIButton *p_regenerateAllLayers = nullptr;
     UIList *p_uiList = nullptr;
 
     // IEventsUIList

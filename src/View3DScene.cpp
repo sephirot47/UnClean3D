@@ -691,6 +691,16 @@ void View3DScene::SetEnvironment(View3DScene::Environment environment)
     p_cam->SetSkyBoxTexture(cm.Get());
 }
 
+void View3DScene::RegenerateAllEffectLayers()
+{
+    auto effectLayers = GetAllEffectLayers();
+    for (auto &effectLayer : effectLayers)
+    {
+        effectLayer->GenerateEffectTexture(true);
+    }
+    CompositeTextures();
+}
+
 void View3DScene::InvalidateAll()
 {
     Array<EffectLayer *> effectLayers = GetAllEffectLayers();
@@ -805,6 +815,11 @@ Model *View3DScene::GetCurrentModel() const
 Mesh *View3DScene::GetTextureMesh() const
 {
     return m_textureMesh.Get();
+}
+
+EffectLayerCompositer *View3DScene::GetCompositer() const
+{
+    return m_effectLayerCompositer;
 }
 
 View3DScene *View3DScene::GetInstance()

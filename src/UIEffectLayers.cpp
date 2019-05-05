@@ -10,6 +10,7 @@
 #include "Bang/UIImageRenderer.h"
 #include "Bang/UILabel.h"
 #include "Bang/UILayoutElement.h"
+#include "Bang/UIButton.h"
 #include "Bang/UIList.h"
 #include "Bang/UIScrollArea.h"
 #include "Bang/UIScrollBar.h"
@@ -55,6 +56,15 @@ UIEffectLayers::UIEffectLayers()
 
         GameObjectFactory::CreateUIHSpacer(LayoutSizeType::FLEXIBLE, 1.0f)
             ->SetParent(topButtonsHLGo);
+
+        p_regenerateAllLayers =
+                GameObjectFactory::CreateUIButton("Regenerate all");
+        p_regenerateAllLayers->AddClickedCallback([]()
+        {
+            MainScene::GetInstance()->GetView3DScene()->
+                    RegenerateAllEffectLayers();
+        });
+        p_regenerateAllLayers->GetGameObject()->SetParent(topButtonsHLGo);
 
         p_allLayersVisibleButton = GameObjectFactory::CreateUIToolButton(
             "", EditorTextureFactory::GetEyeIcon());
