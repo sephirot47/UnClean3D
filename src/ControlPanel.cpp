@@ -513,6 +513,8 @@ void ControlPanel::OpenModel(const Path &modelPath)
         MainScene::GetInstance()->LoadModel(modelPath);
         p_uiEffectLayers->Clear();
         CreateNewEffectLayer();
+        Debug_Peek(GetView3DScene()->GetCurrentModel()->GetMeshes().
+                   Front().Get()->GetNumTriangles());
     }
 }
 

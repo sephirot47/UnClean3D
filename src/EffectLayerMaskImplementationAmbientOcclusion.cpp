@@ -122,6 +122,7 @@ void EffectLayerMaskImplementationAmbientOcclusion::GenerateEffectMaskTexture(
     Vector2i texSize = maskTexture->GetSize();
     GL::SetViewport(0, 0, texSize.x, texSize.y);
 
+    Time timeBefore = Time::GetNow();
     if (ShaderProgram *sp = GetGenerateEffectTextureShaderProgram())
     {
         sp->Bind();
@@ -140,6 +141,9 @@ void EffectLayerMaskImplementationAmbientOcclusion::GenerateEffectMaskTexture(
                        triId * 3);
         }
     }
+    GL::Flush();
+    GL::Finish();
+    Debug_Peek(Time::GetPassedTimeSince(timeBefore).GetSeconds());
 
     GL::Pop(GL::Pushable::VIEWPORT);
     GL::Pop(GL::Pushable::CULL_FACE);
