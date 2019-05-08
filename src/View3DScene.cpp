@@ -364,7 +364,7 @@ void View3DScene::Render(RenderPass rp, bool renderChildren)
 
     if (rp == RenderPass::SCENE_OPAQUE)
     {
-        RestoreOriginalAlbedoTexturesToModel();
+        RestoreOriginalTexturesToModel();
     }
 }
 
@@ -650,7 +650,7 @@ void View3DScene::CompositeTextures()
     }
 }
 
-void View3DScene::RestoreOriginalAlbedoTexturesToModel()
+void View3DScene::RestoreOriginalTexturesToModel()
 {
     for (const auto &it : m_meshRendererToInfo)
     {

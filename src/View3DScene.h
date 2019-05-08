@@ -58,7 +58,7 @@ public:
     void CompositeTextures();
     void ApplyControlPanelSettingsToModel();
     void ApplyCompositeTexturesToModel();
-    void RestoreOriginalAlbedoTexturesToModel();
+    void RestoreOriginalTexturesToModel();
     void MoveEffectLayer(EffectLayer *effectLayer, uint newIndex);
     void SetEnvironment(Environment environment);
     void RegenerateAllEffectLayers();

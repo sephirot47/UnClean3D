@@ -501,7 +501,7 @@ void ControlPanel::Update()
 void ControlPanel::OpenModel()
 {
     Path modelPath = Dialog::OpenFilePath(
-        "Open model", Extensions::GetModelExtensions(), GetInitialDir());
+        "Open model", Extensions::GetModelExtensions(), GetInitialDir().Append("Models"));
     OpenModel(modelPath);
 }
 
@@ -526,6 +526,7 @@ void ControlPanel::ExportModel()
         extension,
         GetInitialDir(),
         GetOpenModelPath().GetName() + String(".") + extension);
+    const Path exportedModelDir = exportedModelPath.GetDirectory();
 
     GetView3DScene()->ApplyCompositeTexturesToModel();
     Vector3 prevScale =
@@ -536,7 +537,43 @@ void ControlPanel::ExportModel()
                          exportedModelPath);
     GetView3DScene()->GetModelGameObject()->GetTransform()->SetLocalScale(
         prevScale);
-    GetView3DScene()->RestoreOriginalAlbedoTexturesToModel();
+
+    const String exportedModelName = exportedModelPath.GetName();
+    GetView3DScene()->GetEffectLayerCompositer()->GetFinalAlbedoTexture()->
+                      ToImage().Export(
+                exportedModelDir.Append(exportedModelName + "_Color.png"));
+    GetView3DScene()->GetEffectLayerCompositer()->GetFinalNormalTexture()->
+                      ToImage().Export(
+                exportedModelDir.Append(exportedModelName + "_Normal.png"));
+    GetView3DScene()->GetEffectLayerCompositer()->GetFinalRoughnessTexture()->
+                      ToImage().Export(
+                exportedModelDir.Append(exportedModelName + "_Roughness.png"));
+    GetView3DScene()->GetEffectLayerCompositer()->GetFinalMetalnessTexture()->
+                      ToImage().Export(
+                exportedModelDir.Append(exportedModelName + "_Metalness.png"));
+    GetView3DScene()->GetEffectLayerCompositer()->GetFinalHeightTexture()->
+                      ToImage().Export(
+                exportedModelDir.Append(exportedModelName + "_Height.png"));
+
+    const auto roughnessImg = GetView3DScene()->GetEffectLayerCompositer()->
+            GetFinalRoughnessTexture()->ToImage();
+    auto unityMetalnessImg =
+        GetView3DScene()->GetEffectLayerCompositer()->
+            GetFinalMetalnessTexture()->ToImage();
+    for (int y = 0; y < unityMetalnessImg.GetHeight(); ++y)
+    {
+        for (int x = 0; x < unityMetalnessImg.GetWidth(); ++x)
+        {
+            Color unityMetalnessColor = unityMetalnessImg.GetPixel(x,y);
+            const auto roughness = roughnessImg.GetPixel(x,y).r;
+            unityMetalnessColor.a = 255 - roughness;
+            unityMetalnessImg.SetPixel(x, y, unityMetalnessColor);
+        }
+    }
+    unityMetalnessImg.Export(
+                exportedModelDir.Append(exportedModelName + "_Metalness_Unity.png"));
+
+    GetView3DScene()->RestoreOriginalTexturesToModel();
 }
 
 void ControlPanel::ImportEffect()
