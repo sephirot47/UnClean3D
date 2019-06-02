@@ -35,6 +35,7 @@ public:
         AMBIENT_OCCLUSION,
         WHITE_NOISE,
         POLKA_DOTS_NOISE,
+        CELLS_NOISE,
         CRACKS_NOISE,
         SCRATCHES_NOISE,
         EDGES,

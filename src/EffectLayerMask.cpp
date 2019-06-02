@@ -19,6 +19,7 @@
 #include "EffectLayerMaskImplementationWhiteNoise.h"
 #include "EffectLayerMaskImplementationEdges.h"
 #include "EffectLayerMaskImplementationSimplexNoise.h"
+#include "EffectLayerMaskImplementationCellsNoise.h"
 #include "EffectLayerMaskImplementationCracksNoise.h"
 #include "EffectLayerMaskImplementationScratchesNoise.h"
 #include "EffectLayerMaskImplementationPolkaDotsNoise.h"
@@ -89,6 +90,10 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
 
             case EffectLayerMask::Type::CRACKS_NOISE:
                 m_implementation = new EffectLayerMaskImplementationCracksNoise();
+                break;
+
+            case EffectLayerMask::Type::CELLS_NOISE:
+                m_implementation = new EffectLayerMaskImplementationCellsNoise();
                 break;
 
             case EffectLayerMask::Type::SCRATCHES_NOISE:

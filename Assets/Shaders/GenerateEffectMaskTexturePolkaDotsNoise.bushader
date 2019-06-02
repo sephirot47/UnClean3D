@@ -6,10 +6,12 @@ layout(location = 0) in vec3 vinTexturePosition;
 layout(location = 1) in vec3 vinPosition;
 
 out vec3 inWorldPosition;
+out vec2 inUv;
 
 void main()
 {
     inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    inUv = vinTexturePosition.xy * 0.5 + 0.5;
     gl_Position = vec4(vinTexturePosition, 1);
 }
 
@@ -18,6 +20,7 @@ void main()
 #fragment
 #define BANG_FRAGMENT
 #include "Noises.glsl"
+#include "Math.glsl"
 
 uniform float Seed;
 uniform float Intensity;
@@ -26,14 +29,55 @@ uniform float Frequency;
 uniform float Sharpness;
 
 in vec3 inWorldPosition;
+in vec2 inUv;
+
+vec2 CellSize = vec2(0.1 / Frequency);
 
 layout(location = 0) out vec4 OutColor;
 
+vec2 GetClosestPoint(vec2 inPoint)
+{
+    vec2 cellPos = floor(inPoint / CellSize) * CellSize;
+    vec2 r = rand2(cellPos);
+    vec2 point = cellPos + r * CellSize;
+    return point;
+}
+
 void main()
 {
-    float noiseValue = SimplexPolkaDot3D(inWorldPosition.xyz * (Frequency * 30) + vec3(Seed), Size * (Frequency) * 0.01, (5 - Sharpness * 100)) * Intensity;
-    noiseValue = clamp(noiseValue, 0.0, 1.0);
+    vec2 uv = inUv;
+    vec2 firstClosestPoint = vec2(0);
+    float firstClosestDist = 99.9f;
+    for (int i = -1; i <= 1; ++i)
+    {
+        for (int j = -1; j <= 1; ++j)
+        {
+            vec2 ij = vec2(i, j);
+            vec2 ijPoint = GetClosestPoint(uv + ij * CellSize);
+            float ijDist = distance(uv, ijPoint);
+            if (ijDist < firstClosestDist)
+            {
+                firstClosestPoint = ijPoint;
+                firstClosestDist = ijDist;
+            }
+        }
+    }
 
-    OutColor = vec4(noiseValue, noiseValue, noiseValue, noiseValue);
+    float Fade = (10.0f - Sharpness * 5);
+    float MinDistThresh = 0.00002 *  Size;
+    float MaxDistThresh = MinDistThresh * Fade;
+    float distToFirstPoint = firstClosestDist;
+    if (distToFirstPoint < MaxDistThresh)
+    {
+        distToFirstPoint = (MaxDistThresh - distToFirstPoint);
+        distToFirstPoint = (distToFirstPoint / (MaxDistThresh - MinDistThresh));
+        distToFirstPoint = clamp(distToFirstPoint, 0, 1);
+        distToFirstPoint *= Intensity;
+        OutColor = vec4(vec3(distToFirstPoint), 1);
+        return;
+    }
+
+    OutColor = vec4(0);
 }
+
 

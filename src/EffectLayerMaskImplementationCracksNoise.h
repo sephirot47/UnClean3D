@@ -29,7 +29,8 @@ protected:
 
 private:
     float m_seed = 1.0f;
-    float m_size = 1.0f;
+    float m_size = 10.0f;
+    float m_fade = 5.0f;
     float m_intensity = 1.0f;
-    float m_sharpness = 1.0f;
+    float m_width = 1.0f;
 };

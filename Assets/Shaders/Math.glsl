@@ -9,6 +9,11 @@ float rand(vec3 co)
     return fract(sin(dot(co.xyz, vec3(12.9898, 78.233, 32.123))) * 43758.5453);
 }
 
+vec2 rand2(vec2 co)
+{
+    return vec2(rand(co.xyx), rand(co.yxy));
+}
+
 vec3 rand3(vec3 co)
 {
     return vec3(rand(co.xyz), rand(co.zxy), rand(co.yzx));
@@ -106,6 +111,18 @@ bool IsDegenerateTriangle(vec3[3] trianglePoints)
     }
 
     return false;
+}
+
+float DistToLineWithDir(vec2 linePt, vec2 lineDir, vec2 testPt)
+{
+    vec2 perpDir = vec2(lineDir.y, -lineDir.x);
+    vec2 dirToPt1 = linePt - testPt;
+    return abs(dot(normalize(perpDir), dirToPt1));
+}
+float DistToLine(vec2 pt1, vec2 pt2, vec2 testPt)
+{
+    vec2 lineDir = pt2 - pt1;
+    return DistToLineWithDir(pt1, lineDir, testPt);
 }
 
 bool PointInTriangle(vec3 point, vec3[3] trianglePoints)

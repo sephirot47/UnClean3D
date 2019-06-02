@@ -96,6 +96,8 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_maskTypeInput = GameObjectFactory::CreateUIComboBox();
         p_maskTypeInput->AddItem("Simplex Noise",
                                  SCAST<int>(EffectLayerMask::Type::SIMPLEX_NOISE));
+        p_maskTypeInput->AddItem("Cells Noise",
+                                 SCAST<int>(EffectLayerMask::Type::CELLS_NOISE));
         p_maskTypeInput->AddItem("Cracks Noise",
                                  SCAST<int>(EffectLayerMask::Type::CRACKS_NOISE));
         p_maskTypeInput->AddItem("Polka Dots Noise",

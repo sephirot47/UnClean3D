@@ -57,13 +57,21 @@ void EffectLayerMaskImplementationCracksNoise::Reflect()
                       [this]() { return m_size; },
                       BANG_REFLECT_HINT_SLIDER(0.01f, 200.0f) +
                           BANG_REFLECT_HINT_STEP_VALUE(0.1f));
-    ReflectVar<float>("Sharpness",
-                      [this](float sharpness) {
-                          m_sharpness = sharpness;
+    ReflectVar<float>("Width",
+                      [this](float width) {
+                          m_width = width;
                           Invalidate();
                       },
-                      [this]() { return m_sharpness; },
-                      BANG_REFLECT_HINT_SLIDER(0.01f, 2.0f) +
+                      [this]() { return m_width; },
+                      BANG_REFLECT_HINT_SLIDER(0.01f, 30.0f) +
+                          BANG_REFLECT_HINT_STEP_VALUE(0.1f));
+    ReflectVar<float>("Fade",
+                      [this](float fade) {
+                          m_fade = fade;
+                          Invalidate();
+                      },
+                      [this]() { return m_fade; },
+                      BANG_REFLECT_HINT_SLIDER(1.2f, 30.0f) +
                           BANG_REFLECT_HINT_STEP_VALUE(0.1f));
     ReflectVar<float>("Seed",
                       [this](float seed) {
@@ -100,6 +108,7 @@ void EffectLayerMaskImplementationCracksNoise::SetGenerateEffectUniforms(
 
     sp->SetFloat("Seed", m_seed);
     sp->SetFloat("Intensity", m_intensity);
-    sp->SetFloat("Sharpness", m_sharpness);
+    sp->SetFloat("Fade", m_fade);
+    sp->SetFloat("Width", m_width);
     sp->SetFloat("Size", m_size);
 }
