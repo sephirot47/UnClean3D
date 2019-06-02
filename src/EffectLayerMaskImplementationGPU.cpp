@@ -8,7 +8,10 @@
 #include "Bang/Transform.h"
 
 #include "EffectLayer.h"
+#include "PullPush.h"
 #include "EffectLayerMask.h"
+#include "View3DScene.h"
+#include "EffectLayerCompositer.h"
 
 using namespace Bang;
 
@@ -85,6 +88,7 @@ void EffectLayerMaskImplementationGPU::GenerateEffectMaskTexture(
     GL::Pop(GL::Pushable::SHADER_PROGRAM);
     GL::Pop(GL::Pushable::FRAMEBUFFER_AND_READ_DRAW_ATTACHMENTS);
 
+    // View3DScene::GetInstance()->GetEffectLayerCompositer()->m_pullPush->PullPushTexture(GetMaskTextureToSee());
     m_isValid = true;
 }
 

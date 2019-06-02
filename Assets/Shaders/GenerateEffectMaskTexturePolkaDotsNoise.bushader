@@ -1,0 +1,39 @@
+#vertex
+
+uniform mat4 SceneModelMatrix;
+
+layout(location = 0) in vec3 vinTexturePosition;
+layout(location = 1) in vec3 vinPosition;
+
+out vec3 inWorldPosition;
+
+void main()
+{
+    inWorldPosition = (SceneModelMatrix * vec4(vinPosition, 1)).xyz;
+    gl_Position = vec4(vinTexturePosition, 1);
+}
+
+// ===============================================================
+
+#fragment
+#define BANG_FRAGMENT
+#include "Noises.glsl"
+
+uniform float Seed;
+uniform float Intensity;
+uniform float Size;
+uniform float Frequency;
+uniform float Sharpness;
+
+in vec3 inWorldPosition;
+
+layout(location = 0) out vec4 OutColor;
+
+void main()
+{
+    float noiseValue = SimplexPolkaDot3D(inWorldPosition.xyz * (Frequency * 30) + vec3(Seed), Size * (Frequency) * 0.01, (5 - Sharpness * 100)) * Intensity;
+    noiseValue = clamp(noiseValue, 0.0, 1.0);
+
+    OutColor = vec4(noiseValue, noiseValue, noiseValue, noiseValue);
+}
+

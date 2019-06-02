@@ -18,7 +18,10 @@
 #include "EffectLayerMaskImplementationBrush.h"
 #include "EffectLayerMaskImplementationWhiteNoise.h"
 #include "EffectLayerMaskImplementationEdges.h"
-#include "EffectLayerMaskImplementationFractal.h"
+#include "EffectLayerMaskImplementationSimplexNoise.h"
+#include "EffectLayerMaskImplementationCracksNoise.h"
+#include "EffectLayerMaskImplementationScratchesNoise.h"
+#include "EffectLayerMaskImplementationPolkaDotsNoise.h"
 #include "EffectLayerMaskImplementationNormal.h"
 #include "View3DScene.h"
 
@@ -72,12 +75,24 @@ void EffectLayerMask::SetType(EffectLayerMask::Type type)
                 m_implementation = new EffectLayerMaskImplementationNormal();
                 break;
 
-            case EffectLayerMask::Type::FRACTAL:
-                m_implementation = new EffectLayerMaskImplementationFractal();
+            case EffectLayerMask::Type::SIMPLEX_NOISE:
+                m_implementation = new EffectLayerMaskImplementationSimplexNoise();
                 break;
 
             case EffectLayerMask::Type::WHITE_NOISE:
                 m_implementation = new EffectLayerMaskImplementationWhiteNoise();
+                break;
+
+            case EffectLayerMask::Type::POLKA_DOTS_NOISE:
+                m_implementation = new EffectLayerMaskImplementationPolkaDotsNoise();
+                break;
+
+            case EffectLayerMask::Type::CRACKS_NOISE:
+                m_implementation = new EffectLayerMaskImplementationCracksNoise();
+                break;
+
+            case EffectLayerMask::Type::SCRATCHES_NOISE:
+                m_implementation = new EffectLayerMaskImplementationScratchesNoise();
                 break;
 
             case EffectLayerMask::Type::EDGES:

@@ -30,10 +30,13 @@ public:
 
     enum class Type
     {
-        FRACTAL,
+        SIMPLEX_NOISE,
         NORMAL,
         AMBIENT_OCCLUSION,
         WHITE_NOISE,
+        POLKA_DOTS_NOISE,
+        CRACKS_NOISE,
+        SCRATCHES_NOISE,
         EDGES,
         BRUSH,
         BLUR,

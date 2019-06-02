@@ -98,8 +98,8 @@ private:
     float m_metalness = 0.0f;
     BlendMode m_colorBlendMode = BlendMode::MULTIPLY;
     BlendMode m_heightBlendMode = BlendMode::ADD;
-    BlendMode m_roughnessBlendMode = BlendMode::MULTIPLY;
-    BlendMode m_metalnessBlendMode = BlendMode::IGNORE;
+    BlendMode m_roughnessBlendMode = BlendMode::ADD;
+    BlendMode m_metalnessBlendMode = BlendMode::ADD;
 
     Framebuffer *m_framebuffer = nullptr;
     bool m_visible = true;

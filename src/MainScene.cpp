@@ -51,10 +51,10 @@ void MainScene::Start()
     {
         Path projAssets = Paths::GetProjectAssetsDir();
         Path modelPath;
-        modelPath = projAssets.Append("Models/cube.dae");
+        // modelPath = projAssets.Append("Models/cube.dae");
         // modelPath = projAssets.Append("Models/MyTable/MyTable.dae");
         // modelPath = projAssets.Append("Models/MyTable/untitled.dae");
-        // modelPath = projAssets.Append("Models/Character/Character.dae");
+        modelPath = projAssets.Append("Models/Character/Character.dae");
         // modelPath = projAssets.Append("Models/Dresser/Dresser.dae");
         // modelPath = projAssets.Append("Models/BrickWall/brickWall.ply");
         // modelPath = projAssets.Append("Models/bunny.ply");

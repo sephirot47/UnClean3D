@@ -54,6 +54,7 @@ layout(location = 0) out vec4 OutColor;
 
 void main()
 {
+    /*
     vec3 thisWorldPosition = inWorldPosition;
     int thisTriId = inTriId;
     vec2 thisUv = inUv;
@@ -159,19 +160,21 @@ void main()
                         ASSERT(closestNeighborIndex >= 0);
 
                         vec3[3] nTriWorldPosition = GetTrianglePoints(closestNeighborIndex);
-                        vec3 nTriEdge01 = (nTriWorldPosition[1] - nTriWorldPosition[0]);
-                        vec3 nTriEdge02 = (nTriWorldPosition[2] - nTriWorldPosition[0]);
+                        vec3 nTriEdge01 = normalize(nTriWorldPosition[1] - nTriWorldPosition[0]);
+                        vec3 nTriEdge02 = normalize(nTriWorldPosition[2] - nTriWorldPosition[0]);
                         vec3 nTriNormal = normalize(cross(nTriEdge01, nTriEdge02));
 
-                        vec3 perturbSampleDirection = thisTriNormal; // normalize(thisTriNormal + nTriNormal);
+                        // vec3 perturbSampleDirection = thisTriNormal;
+                        vec3 perturbSampleDirection = normalize(thisTriNormal + nTriNormal);
 
                         vec3 intersectionPointWithCutEdge = thisWorldPosition + sampleWorldOffsetDir * distToCutEdge;
                         vec3 nTriCenter = (nTriWorldPosition[0] + nTriWorldPosition[1] + nTriWorldPosition[2]) / 3.0f;
                         perturbSampleDirection *= sign( dot(nTriCenter - intersectionPointWithCutEdge, perturbSampleDirection) );
 
                         vec3 bendDirection =
-                            normalize(
-                                GetProjectedPoint(sampleWorldPosition + perturbSampleDirection * 0.05,
+                            normalize
+                            (
+                                GetProjectedPoint(sampleWorldPosition + perturbSampleDirection,
                                                   nTriWorldPosition[0],
                                                   nTriNormal) -
                                 intersectionPointWithCutEdge
@@ -220,7 +223,8 @@ void main()
     }
     OutColor = meanColor;
 
-    /*
+    /*/
+
     vec3 thisWorldPosition = inWorldPosition;
     int thisTriId = inTriId;
     vec2 thisUv = inUv;
@@ -360,7 +364,7 @@ void main()
         meanColor /= totalWeight;
     }
     OutColor = meanColor;
-    */
+    //*/
 }
 
 

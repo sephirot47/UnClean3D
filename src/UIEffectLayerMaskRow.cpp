@@ -94,13 +94,19 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_nameLabel->GetGameObject()->SetParent(innerHLGo);
 
         p_maskTypeInput = GameObjectFactory::CreateUIComboBox();
-        p_maskTypeInput->AddItem("Fractal",
-                                 SCAST<int>(EffectLayerMask::Type::FRACTAL));
+        p_maskTypeInput->AddItem("Simplex Noise",
+                                 SCAST<int>(EffectLayerMask::Type::SIMPLEX_NOISE));
+        p_maskTypeInput->AddItem("Cracks Noise",
+                                 SCAST<int>(EffectLayerMask::Type::CRACKS_NOISE));
+        p_maskTypeInput->AddItem("Polka Dots Noise",
+                                 SCAST<int>(EffectLayerMask::Type::POLKA_DOTS_NOISE));
+        p_maskTypeInput->AddItem("Scratches Noise",
+                                 SCAST<int>(EffectLayerMask::Type::SCRATCHES_NOISE));
+        p_maskTypeInput->AddItem("White noise",
+                                 SCAST<int>(EffectLayerMask::Type::WHITE_NOISE));
         p_maskTypeInput->AddItem(
             "Ambient occlusion",
             SCAST<int>(EffectLayerMask::Type::AMBIENT_OCCLUSION));
-        p_maskTypeInput->AddItem("White noise",
-                                 SCAST<int>(EffectLayerMask::Type::WHITE_NOISE));
         p_maskTypeInput->AddItem("Edges",
                                  SCAST<int>(EffectLayerMask::Type::EDGES));
         p_maskTypeInput->AddItem("Brush",
@@ -110,7 +116,7 @@ UIEffectLayerMaskRow::UIEffectLayerMaskRow(UIEffectLayerRow *uiEffectLayerRow,
         p_maskTypeInput->AddItem("Blur",
                                  SCAST<int>(EffectLayerMask::Type::BLUR));
         p_maskTypeInput->SetSelectionByValue(
-            SCAST<int>(EffectLayerMask::Type::FRACTAL));
+            SCAST<int>(EffectLayerMask::Type::SIMPLEX_NOISE));
         p_maskTypeInput->EventEmitter<IEventsValueChanged>::RegisterListener(
             this);
         p_maskTypeInput->GetGameObject()->SetParent(innerHLGo);

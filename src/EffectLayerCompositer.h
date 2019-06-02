@@ -36,8 +36,9 @@ public:
     Texture2D *GetFinalRoughnessTexture() const;
     Texture2D *GetFinalMetalnessTexture() const;
 
-private:
     PullPush *m_pullPush = nullptr;
+
+private:
     Framebuffer *m_framebuffer = nullptr;
 
     AH<Texture2D> m_albedoPingPongTexture0;
