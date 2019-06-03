@@ -38,14 +38,13 @@ layout(location = 0) out vec4 OutColor;
 vec2 GetClosestPoint(vec2 inPoint)
 {
     vec2 cellPos = floor(inPoint / CellSize) * CellSize;
-    vec2 r = rand2(cellPos);
+    vec2 r = rand2(cellPos + vec2(Seed));
     vec2 point = cellPos + r * CellSize;
     return point;
 }
 
 void main()
 {
-    vec2 uv = inUv;
     vec2 firstClosestPoint = vec2(0);
     float firstClosestDist = 99.9f;
     vec2 secondClosestPoint = vec2(0);
@@ -55,8 +54,8 @@ void main()
         for (int j = -1; j <= 1; ++j)
         {
             vec2 ij = vec2(i, j);
-            vec2 ijPoint = GetClosestPoint(uv + ij * CellSize);
-            float ijDist = distance(uv, ijPoint);
+            vec2 ijPoint = GetClosestPoint(inUv + ij * CellSize);
+            float ijDist = distance(inUv, ijPoint);
             if (ijDist < firstClosestDist)
             {
                 secondClosestPoint = firstClosestPoint;
@@ -77,16 +76,14 @@ void main()
     vec2 perpLineDir = vec2(-lineDir.y, lineDir.x);
     float MinDistThresh = 0.02 * Width * 0.01;
     float MaxDistThresh = MinDistThresh * Fade;
-    float distToLine = DistToLineWithDir(midPoint, perpLineDir, uv);
+    float distToLine = DistToLineWithDir(midPoint, perpLineDir, inUv);
     if (distToLine < MaxDistThresh)
     {
         distToLine = ((MaxDistThresh - distToLine) / (MaxDistThresh - MinDistThresh));
         distToLine = clamp(distToLine, 0, 1) * Intensity;
         OutColor = vec4(vec3(distToLine), 1);
-        return;
     }
-
-    OutColor = vec4(0); // vec4(noiseValue);
+    else { OutColor = vec4(0); }
 }
 
 
